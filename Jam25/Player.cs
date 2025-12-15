@@ -15,7 +15,7 @@ using Microsoft.Xna.Framework.Content;
 
 namespace Jam25
 {
-    internal class Player
+    public class Player
     {
         struct PlayerTexture
         {
