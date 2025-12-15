@@ -41,6 +41,7 @@ namespace Jam25.Screens
         public event EventHandler Exit;
         public event EventHandler Settings;
         public event EventHandler Start;
+        public event EventHandler Player;
 
         public StartScreen(
             GraphicsDevice gfxDevice,
@@ -114,6 +115,9 @@ namespace Jam25.Screens
 
                 if (currentSelection == MenuSelection.Start)
                     Start.Invoke(this, EventArgs.Empty);
+
+                if (currentSelection == MenuSelection.Player)
+                    Player.Invoke(this, EventArgs.Empty);
             }
             else if (KeyboardInput.HasBeenPressed(Keys.M))
             {
