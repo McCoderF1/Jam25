@@ -3,29 +3,26 @@ using System;
 
 namespace Jam25.NewFolder
 {
-    public class Tile
+    public enum TileType
     {
-        public bool IsBlocked;
-        public bool IsBlockSight;
-        public Tile(bool isBlocked, bool isBlockSight)
-        {
-            IsBlocked = isBlocked;
-            IsBlockSight = isBlockSight;
-        }
+        Empty,
+        Floor,
+        Wall
     }
 
     public class Player
     {
 
     }
+
     internal class GameMap
     {
 
-        private Tile[,] tiles;
+        public TileType[,] tiles;
         private readonly int width;
         private readonly int height;
 
-        public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight, Player player)
+        public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight)
         {
             Rectangle[] rooms = new Rectangle[maxRooms];
             int numRooms = 0;
@@ -36,7 +33,7 @@ namespace Jam25.NewFolder
             {
                 // Random width and height room
                 int width = rand.Next(minRoomSize, maxRoomSize);
-                int height = rand.Next(maxRoomSize, minRoomSize);
+                int height = rand.Next(minRoomSize, maxRoomSize);
 
                 // random position of room without going out of bounds of map
                 int x = rand.Next(0, mapWidth - width - 1);
@@ -53,10 +50,70 @@ namespace Jam25.NewFolder
                     else
                     {
                         // No intersection means room valid
-
                         // Paint room to map
+                        CreateRoom(newRoom);
 
+                        // Center coordinates of new room
 
+                        var newX = newRoom.Center.X;
+                        var newY = newRoom.Center.Y;
+
+                        if (numRooms == 0)
+                        {
+                            // This is the first room where the player starts
+
+                            int playerX = newX;
+                            int playerY = newY;
+
+                        }
+                        else
+                        {
+                            // All rooms after the first
+
+                            // Centre coordinates of previous room
+                            var prevX = rooms[numRooms - 1].Center.X;
+                            var prevY = rooms[numRooms - 1].Center.Y;
+
+                            // Flip a coin
+                            if (rand.Next(0, 1) == 0)
+                            {
+                                // Horizontal then vertical
+                                CreateHTunnel(prevX, newX, prevY);
+                                CreateVTunnel(prevY, newY, newX);
+
+                            }
+                            else
+                            {
+                                // Vertical then horizontal
+                                CreateVTunnel(prevY, newY, prevX);
+                                CreateHTunnel(prevX, newX, newY);
+                            }
+                        }
+                    }
+                }
+
+                // Add new room to list
+                rooms[numRooms] = newRoom;
+                numRooms += 1;
+            }
+
+            // Add walls around floors
+            //AddWalls(mapWidth, mapHeight);
+
+        }
+
+        private void AddWalls(int mapWidth, int mapHeight)
+        {
+            for (int x = 1; x < mapWidth - 1; x++)
+            {
+                for (int y = 1; y < mapHeight - 1; y++)
+                {
+                    if (tiles[x, y] == TileType.Floor)
+                    {
+                        for (int nx = -1; nx <= 1; nx++)
+                            for (int ny = -1; ny <= 1; ny++)
+                                if (tiles[x + nx, y + ny] == TileType.Empty)
+                                    tiles[x + nx, y + ny] = TileType.Wall;
                     }
                 }
             }
@@ -77,22 +134,35 @@ namespace Jam25.NewFolder
                 for (int y = room.Top + 1; y < room.Bottom; y++)
                 {
                     // Set map tile to floor
-                    this.tiles[x, y].IsBlocked = false;
-                    this.tiles[x, y].IsBlockSight = false;
+                    this.tiles[x, y] = TileType.Floor;
                 }
             }
         }
 
-        private void InitialiseTiles()
+        public void CreateHTunnel(int x1, int x2, int y)
         {
-            tiles = new Tile[width, height];
+            for (int x = Math.Min(x1, x2); x <= Math.Max(x1, x2); x++)
+            {
+                tiles[x, y] = TileType.Floor;
+            }
+        }
 
+        public void CreateVTunnel(int y1, int y2, int x)
+        {
+            for (int y = Math.Min(y1, y2); y <= Math.Max(y1, y2); y++)
+            {
+                tiles[x, y] = TileType.Floor;
+            }
+        }
+
+        public void InitialiseTiles()
+        {
+            tiles = new TileType[width, height];
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
                 {
-                    // Set all tiles to blocked
-                    tiles[x, y] = new Tile(true, true);
+                    tiles[x, y] = TileType.Wall;
                 }
             }
         }
