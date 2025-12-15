@@ -35,8 +35,6 @@ namespace Jam25
         PlayerTexture currentTexture { get => textures[Level - 1][lastState]; }
 
         // These need to be split into public/private
-        private Vector2 spritePosition;
-        private int vel;
         private int cellSize;
         private int animationStage;
         private int framesPerAnimation;
@@ -87,7 +85,6 @@ namespace Jam25
                 textures[level - 1] = newTextureSet;
             }
 
-            vel = 3;
             animationStage = 0;
             lastState = PlayerState.Idle;
         }
@@ -184,7 +181,7 @@ namespace Jam25
 
         public void TakeDamage(int damage)
         {
-            if ((lastState != PlayerState.Hurt && lastState != PlayerState.Dying))
+            if (lastState != PlayerState.Hurt && lastState != PlayerState.Dying)
             {
                 Health.TakeDamage(damage);
                 animationStage = 0;
@@ -265,13 +262,13 @@ namespace Jam25
             }
 
             // Get the column
-            int col = animationStage % currentTexture.cols;
+            int col = animationStage;
 
             Rectangle sourceRect = new Rectangle(
-                col * cellSize /*+ (cellSize / 4)*/,
-                row * cellSize/* + (cellSize / 4)*/,
-                cellSize /*/ 2*/,
-                cellSize /*/ 2*/
+                col * cellSize,
+                row * cellSize,
+                cellSize,
+                cellSize
             );
 
             Rectangle destinationRect = new Rectangle(
@@ -281,8 +278,7 @@ namespace Jam25
                 cellSize * textureScale
             );
 
-            // To make the sprite larger
-            spriteBatch.Draw(textures[Level][lastState].texture, Body.Position, new Rectangle(0, 0, 64, 64), Color.White, 0f, new Vector2(32, 32), Vector2.One, SpriteEffects.None, layerDepth: 1f);
+            spriteBatch.Draw(currentTexture.texture, Body.Position, sourceRect, Color.White, 0f, new Vector2(32, 32), Vector2.One, SpriteEffects.None, layerDepth: 1f);
         }
     }
 }
