@@ -4,11 +4,12 @@ namespace Jam25.Screens
 {
     public class ScreenManager : BasicScreenManager
     {
-        public ScreenManager(StartScreen startScreen, SettingsScreen settingsScreen)
+        public ScreenManager(StartScreen startScreen, SettingsScreen settingsScreen, GameScreen gameScreen)
         {
             //TODO: Screen navigation
             //startScreen.Stats += (_, _) => ChangeScreen(statScreen);
             startScreen.Settings += (_,_) => ChangeScreen(settingsScreen);
+            startScreen.Start += (_,_) => ChangeScreen(gameScreen);
 
             ChangeScreen(startScreen);
         }
