@@ -11,6 +11,7 @@ using System.Reflection.Metadata;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework.Content;
 
 namespace Jam25
 {
@@ -48,20 +49,24 @@ namespace Jam25
         int animationStage;
         int cellSize;
         int health;
+        int framesPerAnimation;
+        private int frameInAnimation;
         private int textureScale;
 
         SpriteBatch spriteBatch;
 
         public Player()
         {
-            lastDir = Direction.Up;
+            lastDir = Direction.Down;
             cellSize = 64;
             health = 100;
             textureScale = 5;
+            framesPerAnimation = 5;
+            frameInAnimation = 0;
             textures = new Dictionary<PlayerState, PlayerTexture>();
         }
 
-        public void Initalise(Microsoft.Xna.Framework.Content.ContentManager content, Microsoft.Xna.Framework.Graphics.GraphicsDevice graphicsDevice)
+        public void Initalise(ContentManager content, GraphicsDevice graphicsDevice)
         {
             // Can add the level 2, 3 textures later
             string prefix = "PlayerSprite/lvl1/";
@@ -81,6 +86,15 @@ namespace Jam25
             lastState = PlayerState.Idle;
         }
 
+        private void IncrementAnimation()
+        {
+            if (frameInAnimation++ >= framesPerAnimation)
+            {
+                animationStage = (animationStage + 1) % textures[lastState].cols;
+                frameInAnimation = 0;
+            }
+        }
+
         public void Update(KeyboardState keyboardState)
         {
             // Placeholder
@@ -93,7 +107,7 @@ namespace Jam25
             switch (lastState)
             {
                 case PlayerState.Idle:
-                    animationStage = (animationStage + 1) % 4;
+                    IncrementAnimation();
 
                     FindDirection(
                         keyboardState.IsKeyDown(Keys.W),
@@ -104,12 +118,13 @@ namespace Jam25
 
                     if (keyboardState.IsKeyDown(Keys.Space))
                     {
-                          lastState = PlayerState.Attacking;
+                        animationStage = 0;
+                        lastState = PlayerState.Attacking;
                     }
                     break;
 
                 case PlayerState.Running:
-                    animationStage = (animationStage + 1) % 4;
+                    IncrementAnimation();
 
                     FindDirection(
                         keyboardState.IsKeyDown(Keys.W),
@@ -121,32 +136,30 @@ namespace Jam25
 
                     if (keyboardState.IsKeyDown(Keys.Space))
                     {
+                        animationStage = 0;
                         lastState = PlayerState.Attacking;
                     }
                     break;
 
                 case PlayerState.Attacking:
-                    animationStage++;
-                    if (animationStage == textures[lastState].cols)
+                    IncrementAnimation();
+                    if (animationStage == 0)
                     {
-                        animationStage = 0;
                         lastState = PlayerState.Idle;
                     }
                     break;
 
                 case PlayerState.Hurt:
-                    animationStage++;
-                    if (animationStage == textures[lastState].cols)
+                    IncrementAnimation();
+                    if (animationStage == 0)
                     {
-                        animationStage = 0;
                         lastState = PlayerState.Idle;
                     }
                     break;
                 case PlayerState.Dying:
-                    animationStage++;
-                    if (animationStage >= textures[lastState].cols)
+                    if (animationStage != textures[lastState].cols - 1)
                     {
-                        animationStage = textures[lastState].cols - 1;
+                        IncrementAnimation();
                     }
                     break;
             }
