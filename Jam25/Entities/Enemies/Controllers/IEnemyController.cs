@@ -11,7 +11,7 @@ namespace Jam25.Entities.Enemies.Controllers
     /// <summary>
     /// Enemy AI controller interface.
     /// </summary>
-    internal interface IEnemyController
+    public interface IEnemyController
     {
 
         void Update(Scene scene, Enemy enemy, float deltaTime);
