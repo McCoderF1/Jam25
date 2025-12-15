@@ -2,19 +2,19 @@
 using System.Net;
 using HDT.Gaming.Audio;
 using HDT.Gaming.Networking.LibCopy;
-using Jam24.Graphics;
-using Jam24.Screens;
+using Jam25.Graphics;
+using Jam25.Screens;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 
-namespace Jam24
+namespace Jam25
 {
     public class Game1 : Game
     {
-        public const string TITLE = "WORKING TITLE";
+        public const string TITLE = "Last Ember";
 
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
@@ -29,8 +29,8 @@ namespace Jam24
             graphics = new GraphicsDeviceManager(this);
 
             //TODO: use saved settings <see cref="SettingsScreen"/>
-            graphics.PreferredBackBufferWidth = 1920;
-            graphics.PreferredBackBufferHeight = 1080;
+            graphics.PreferredBackBufferWidth = 1280;
+            graphics.PreferredBackBufferHeight = 720;
 
             content = new GameContent(Content);
 

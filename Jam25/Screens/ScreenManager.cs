@@ -1,6 +1,6 @@
 ﻿using HDT.Gaming;
 
-namespace Jam24.Screens
+namespace Jam25.Screens
 {
     public class ScreenManager : BasicScreenManager
     {

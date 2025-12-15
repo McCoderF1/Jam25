@@ -1,9 +1,9 @@
-﻿using Jam24.Graphics;
+﻿using Jam25.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Jam24
+namespace Jam25
 {
     /// <summary>
     /// A helper class for handling animated textures.
