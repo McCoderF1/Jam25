@@ -59,8 +59,9 @@ namespace Jam25
             var startScreen = new StartScreen(graphics.GraphicsDevice, spriteBatch, Content, audioController, this);
             var settingScreen = new SettingsScreen(spriteBatch, graphics, content, Content, audioController);
             var gameScreen = new GameScreen(graphics.GraphicsDevice, spriteBatch, Content, audioController, this);
+            var playerScreen = new PlayerScreen(spriteBatch, graphics, content, Content, audioController);
 
-            screenManager = new ScreenManager(startScreen, settingScreen, gameScreen);
+            screenManager = new ScreenManager(startScreen, settingScreen, gameScreen, playerScreen);
         }
 
         protected override void Update(GameTime gameTime)

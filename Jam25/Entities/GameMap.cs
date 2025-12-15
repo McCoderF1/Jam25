@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 
-namespace Jam25.NewFolder
+namespace Jam25.Entities
 {
     public enum TileType
     {
@@ -15,7 +15,7 @@ namespace Jam25.NewFolder
 
     }
 
-    internal class GameMap
+    public class GameMap
     {
 
         public TileType[,] tiles;
