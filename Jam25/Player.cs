@@ -39,19 +39,14 @@ namespace Jam25
         Dictionary<PlayerState, PlayerTexture>[] textures;
         PlayerTexture currentTexture { get => textures[level - 1][lastState]; }
 
-        /*private PlayerTexture attack;
-        private PlayerTexture idle;
-        private PlayerTexture run;
-        private PlayerTexture dying;
-        private PlayerTexture hurt;*/
-
+        // These need to be split into public/private
         private Vector2 spritePosition;
         private int vel;
-        int animationStage;
-        int cellSize;
-        int health;
-        int level;
-        int framesPerAnimation;
+        private int cellSize;
+        public int health;
+        public int level;
+        private int animationStage;
+        private int framesPerAnimation;
         private int frameInAnimation;
         private int textureScale;
 
@@ -65,7 +60,8 @@ namespace Jam25
             level = 1;  // NOTE: level is from 1-3, while level index in texture array is 0-2.
             textureScale = 5;
             framesPerAnimation = 5;
-            frameInAnimation = 0;
+            vel = 3;
+            ResetAnimation();
             textures = new Dictionary<PlayerState, PlayerTexture>[3];
         }
 
@@ -87,8 +83,6 @@ namespace Jam25
             }
 
             spritePosition = new Vector2(200, 200);
-            vel = 3;
-            animationStage = 0;
             spriteBatch = new SpriteBatch(graphicsDevice);
             lastState = PlayerState.Idle;
         }
@@ -100,6 +94,11 @@ namespace Jam25
                 animationStage = (animationStage + 1) % currentTexture.cols;
                 frameInAnimation = 0;
             }
+        }
+        private void ResetAnimation()
+        {
+            animationStage = 0;
+            frameInAnimation = 0;
         }
 
         public void Update(KeyboardState keyboardState)
@@ -131,7 +130,7 @@ namespace Jam25
 
                     if (keyboardState.IsKeyDown(Keys.Space))
                     {
-                        animationStage = 0;
+                        ResetAnimation();
                         lastState = PlayerState.Attacking;
                     }
                     break;
@@ -149,14 +148,14 @@ namespace Jam25
 
                     if (keyboardState.IsKeyDown(Keys.Space))
                     {
-                        animationStage = 0;
+                        ResetAnimation();
                         lastState = PlayerState.Attacking;
                     }
                     break;
 
                 case PlayerState.Attacking:
                     IncrementAnimation();
-                    if (animationStage == 0)
+                    if (animationStage == currentTexture.cols - 1)
                     {
                         lastState = PlayerState.Idle;
                     }
