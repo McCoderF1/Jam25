@@ -1,17 +1,17 @@
 ﻿using HDT.Gaming.Audio;
 using Jam25.Graphics;
-using Jam25.NewFolder;
 using Jam25.Screens;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
 using System;
 
 namespace Jam25
 {
     public class Game1 : Game
     {
-        public const string TITLE = "WORKING TITLE";
+        public const string TITLE = "Last Ember";
 
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
@@ -19,18 +19,7 @@ namespace Jam25
         private AudioController audioController;
         private ScreenManager screenManager;
         private GameContent content;
-        private Texture2D wallsFloor;
-        private GameMap gameMap;
 
-
-        private int mapWidth = 80;
-        private int mapHeight = 42;
-
-        private int maxRooms = 30;
-        private int maxRoomSize = 10;
-        private int minRoomSize = 6;
-
-        private int tileSize = 32;
 
         public Game1()
         {
@@ -38,8 +27,8 @@ namespace Jam25
             graphics = new GraphicsDeviceManager(this);
 
             //TODO: use saved settings <see cref="SettingsScreen"/>
-            graphics.PreferredBackBufferWidth = 1920;
-            graphics.PreferredBackBufferHeight = 1080;
+            graphics.PreferredBackBufferWidth = 1280;
+            graphics.PreferredBackBufferHeight = 720;
 
             content = new GameContent(Content);
 
@@ -51,9 +40,6 @@ namespace Jam25
         {
             base.Initialize();
             Window.Title = TITLE;
-
-            gameMap = new GameMap(mapWidth, mapHeight);
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight);
         }
 
         protected override void LoadContent()
@@ -64,11 +50,17 @@ namespace Jam25
             content.LoadFont(FontID.Heading, "Fonts/GameState");
             content.LoadFont(FontID.Body, "Fonts/Score");
 
-            wallsFloor = Content.Load<Texture2D>("Images/walls_floor");
+            audioController = new AudioController();
+            audioController.InstallMusic("The Flickering Flame", Content.Load<Song>("Sound/Music/The Flickering Flame"));
+            //add audio here
+
+            AudioManager.InstallController(audioController);
 
             var startScreen = new StartScreen(graphics.GraphicsDevice, spriteBatch, Content, audioController, this);
+            var settingScreen = new SettingsScreen(spriteBatch, graphics, content, Content, audioController);
+            var gameScreen = new GameScreen(graphics.GraphicsDevice, spriteBatch, Content, audioController, this);
 
-            screenManager = new ScreenManager(startScreen);
+            screenManager = new ScreenManager(startScreen, settingScreen, gameScreen);
         }
 
         protected override void Update(GameTime gameTime)
@@ -85,8 +77,6 @@ namespace Jam25
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
             spriteBatch.Begin();
-
-            DrawDungeon();
 
             screenManager.Draw();
 
@@ -111,38 +101,6 @@ namespace Jam25
             spriteBatch.End();
 
             base.Draw(gameTime);
-        }
-
-        private void DrawDungeon()
-        {
-            for (int x = 0; x < mapWidth; x++)
-            {
-                for (int y = 0; y < mapHeight; y++)
-                {
-                    Texture2D texture = gameMap.tiles[x, y] switch
-                    {
-                        TileType.Floor => wallsFloor,
-                        TileType.Wall => wallsFloor,
-                        _ => null,
-                    };
-
-                    if (texture != null)
-                    {
-                        Rectangle sourceRect = gameMap.tiles[x, y] switch
-                        {
-                            TileType.Floor => new Rectangle(8, 86, 32, 32),
-                            TileType.Wall => new Rectangle(8, 16, 32, 12),
-                            _ => Rectangle.Empty,
-                        };
-
-                        spriteBatch.Draw(
-                            texture,
-                            new Rectangle(x * tileSize, y * tileSize, tileSize, tileSize),
-                            sourceRect,
-                            Color.White);
-                    }
-                }
-            }
         }
 
         public void Exit()

@@ -28,14 +28,19 @@ namespace Jam25.Screens
 
         private enum MenuSelection
         {
+            Start,
+            Player,
+            Settings,
             Quit
         }
 
-        private MenuSelection currentSelection = MenuSelection.Quit;
+        private MenuSelection currentSelection = MenuSelection.Start;
 
         #endregion
 
         public event EventHandler Exit;
+        public event EventHandler Settings;
+        public event EventHandler Start;
 
         public StartScreen(
             GraphicsDevice gfxDevice,
@@ -60,31 +65,29 @@ namespace Jam25.Screens
 
         public void Draw()
         {
-            spriteBatch.Draw(title, new Microsoft.Xna.Framework.Vector2(0, 0),
+            spriteBatch.Draw(title,
                 new Rectangle(0, 0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
-                Color.White,
-                0f,
-                new Microsoft.Xna.Framework.Vector2(0, 0),
-                1f,
-                SpriteEffects.None,
-                0);
+                Color.White);
 
             DrawMenu();
         }
 
         private void DrawMenu()
         {
-            int ySelection = 750 + (int)currentSelection * 50;
+            int ySelection = 505 + (int)currentSelection * 50;
             spriteBatch.Draw(whiteRectangle, new Microsoft.Xna.Framework.Vector2(100, ySelection),
-                new Rectangle(0, 0, 210, 50),
-                Color.Black * 0.5f,
+                new Rectangle(0, 0, 160, 50),
+                new Color(232,190,84) * 0.5f,
                 0f,
                 new Microsoft.Xna.Framework.Vector2(0, 0),
                 1f,
                 SpriteEffects.None,
                 0);
-
-            spriteBatch.DrawString(font, "Quit", new Microsoft.Xna.Framework.Vector2(110, 1015), Color.WhiteSmoke);
+            
+            spriteBatch.DrawString(font, "Start", new Microsoft.Xna.Framework.Vector2(110, 505), Color.WhiteSmoke);
+            spriteBatch.DrawString(font, "Player", new Microsoft.Xna.Framework.Vector2(110, 555), Color.WhiteSmoke);
+            spriteBatch.DrawString(font, "Settings", new Microsoft.Xna.Framework.Vector2(110, 605), Color.WhiteSmoke);
+            spriteBatch.DrawString(font, "Quit", new Microsoft.Xna.Framework.Vector2(110, 655), Color.WhiteSmoke);
         }
 
         public void Hide()
@@ -93,7 +96,7 @@ namespace Jam25.Screens
 
         public void Show()
         {
-            //AudioManager.PlayMusic("MainTheme");
+            AudioManager.PlayMusic("The Flickering Flame");
         }
 
         public void Update(GameTime gameTime)
@@ -105,6 +108,12 @@ namespace Jam25.Screens
             {
                 if (currentSelection == MenuSelection.Quit)
                     game.Exit();
+
+                if (currentSelection == MenuSelection.Settings)
+                    Settings.Invoke(this, EventArgs.Empty);
+
+                if (currentSelection == MenuSelection.Start)
+                    Start.Invoke(this, EventArgs.Empty);
             }
             else if (KeyboardInput.HasBeenPressed(Keys.M))
             {
@@ -112,11 +121,11 @@ namespace Jam25.Screens
             }
             else if (KeyboardInput.HasBeenPressed(Keys.Down))
             {
-                currentSelection = (MenuSelection)(((int)currentSelection + 1) % 6);
+                currentSelection = (MenuSelection)(((int)currentSelection + 1) % 4);
             }
             else if (KeyboardInput.HasBeenPressed(Keys.Up))
             {
-                currentSelection = (MenuSelection)(((int)currentSelection + 5) % 6);
+                currentSelection = (MenuSelection)(((int)currentSelection + 3) % 4);
             }
         }
 
