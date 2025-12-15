@@ -94,7 +94,7 @@ namespace Jam25.Screens
 
         public void Show()
         {
-            //AudioManager.PlayMusic("MainTheme");
+            AudioManager.PlayMusic("The Flickering Flame");
         }
 
         public void Update(GameTime gameTime)

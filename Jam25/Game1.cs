@@ -52,6 +52,12 @@ namespace Jam25
             content.LoadFont(FontID.Heading, "Fonts/GameState");
             content.LoadFont(FontID.Body, "Fonts/Score");
 
+            audioController = new AudioController();
+            audioController.InstallMusic("The Flickering Flame", Content.Load<Song>("Sound/Music/The Flickering Flame"));
+            //add audio here
+
+            AudioManager.InstallController(audioController);
+
             var startScreen = new StartScreen(graphics.GraphicsDevice, spriteBatch, Content, audioController, this);
 
             screenManager = new ScreenManager(startScreen);
