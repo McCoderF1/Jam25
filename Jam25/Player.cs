@@ -12,6 +12,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Content;
+using Jam25.Models;
 
 namespace Jam25
 {
@@ -37,14 +38,12 @@ namespace Jam25
         private PlayerState lastState;
 
         Dictionary<PlayerState, PlayerTexture>[] textures;
-        PlayerTexture currentTexture { get => textures[level - 1][lastState]; }
+        PlayerTexture currentTexture { get => textures[Level - 1][lastState]; }
 
         // These need to be split into public/private
         private Vector2 spritePosition;
         private int vel;
         private int cellSize;
-        public int health;
-        public int level;
         private int animationStage;
         private int framesPerAnimation;
         private int frameInAnimation;
@@ -52,12 +51,15 @@ namespace Jam25
 
         SpriteBatch spriteBatch;
 
+        public Health Health;
+        public int Level;
+
         public Player()
         {
             lastDir = Direction.Down;
             cellSize = 64;
-            health = 100;
-            level = 1;  // NOTE: level is from 1-3, while level index in texture array is 0-2.
+            Health = new(100);
+            Level = 1;  // NOTE: level is from 1-3, while level index in texture array is 0-2.
             textureScale = 5;
             framesPerAnimation = 5;
             vel = 3;
@@ -110,9 +112,9 @@ namespace Jam25
             }
             if (keyboardState.IsKeyDown(Keys.L))
             {
-                level++;
-                if (level == 4)
-                    level = 1;
+                Level++;
+                if (Level == 4)
+                    Level = 1;
             }
 
             // Update based off the current state
@@ -181,10 +183,10 @@ namespace Jam25
         {
             if ((lastState != PlayerState.Hurt && lastState != PlayerState.Dying))
             {
-                health = Math.Max(0, health - damage);
+                Health.TakeDamage(damage);
                 animationStage = 0;
 
-                lastState = (health == 0) ? PlayerState.Dying : PlayerState.Hurt;
+                lastState = (Health.Current == 0) ? PlayerState.Dying : PlayerState.Hurt;
             }
         }
 
