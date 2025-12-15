@@ -59,8 +59,9 @@ namespace Jam25
             AudioManager.InstallController(audioController);
 
             var startScreen = new StartScreen(graphics.GraphicsDevice, spriteBatch, Content, audioController, this);
+            var settingScreen = new SettingsScreen(spriteBatch, graphics, content, Content, audioController);
 
-            screenManager = new ScreenManager(startScreen);
+            screenManager = new ScreenManager(startScreen, settingScreen);
         }
 
         protected override void Update(GameTime gameTime)
