@@ -7,8 +7,8 @@ namespace Jam25.Screens
         public ScreenManager(StartScreen startScreen, SettingsScreen settingsScreen)
         {
             //TODO: Screen navigation
-            //startScreen.Stats += (_, _) => ChangeScreen(statScreen);
             startScreen.Settings += (_,_) => ChangeScreen(settingsScreen);
+            settingsScreen.BackToMainMenu += (_,_) => ChangeScreen(startScreen);
 
             ChangeScreen(startScreen);
         }
