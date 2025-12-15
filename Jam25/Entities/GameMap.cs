@@ -10,19 +10,13 @@ namespace Jam25.NewFolder
         Wall
     }
 
-    public class Player
-    {
-
-    }
-
     internal class GameMap
     {
-
         public TileType[,] tiles;
         private readonly int width;
         private readonly int height;
 
-        public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight)
+        public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight, Player player)
         {
             Rectangle[] rooms = new Rectangle[maxRooms];
             int numRooms = 0;
@@ -61,10 +55,7 @@ namespace Jam25.NewFolder
                         if (numRooms == 0)
                         {
                             // This is the first room where the player starts
-
-                            int playerX = newX;
-                            int playerY = newY;
-
+                            player.Body.Position = new Vector2(newX * 32, newY * 32);
                         }
                         else
                         {
