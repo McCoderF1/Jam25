@@ -64,14 +64,15 @@ namespace Jam25
         public void Initalise(Microsoft.Xna.Framework.Content.ContentManager content, Microsoft.Xna.Framework.Graphics.GraphicsDevice graphicsDevice)
         {
             // Can add the level 2, 3 textures later
-            textures.Add(PlayerState.Idle, new PlayerTexture(content.Load<Texture2D>("Images/Swordsman_lvl1_Idle_with_shadow"), cellSize));
-            textures.Add(PlayerState.Running, new PlayerTexture(content.Load<Texture2D>("Images/Swordsman_lvl1_run_with_shadow"), cellSize));
-            textures.Add(PlayerState.Attacking, new PlayerTexture(content.Load<Texture2D>("Images/Swordsman_lvl1_attack_with_shadow"), cellSize));
-            textures.Add(PlayerState.Hurt, new PlayerTexture(content.Load<Texture2D>("Images/Swordsman_lvl1_Hurt_with_shadow"), cellSize));
-            textures.Add(PlayerState.Dying, new PlayerTexture(content.Load<Texture2D>("Images/Swordsman_lvl1_Death_with_shadow"), cellSize));
-            //textures.Add(null, new PlayerTexture(content.Load<Texture2D>("Images/Swordsman_lvl1_Run_Attack_with_shadow"), cellSize));
-            //textures.Add(null, new PlayerTexture(content.Load<Texture2D>("Images/Swordsman_lvl1_Walk_with_shadow"), cellSize));
-            //textures.Add(null, new PlayerTexture(content.Load<Texture2D>("Images/Swordsman_lvl1_Walk_Attack_with_shadow"), cellSize));
+            string prefix = "PlayerSprite/lvl1/";
+            textures.Add(PlayerState.Idle, new PlayerTexture(content.Load<Texture2D>(prefix + "Swordsman_lvl1_Idle_with_shadow"), cellSize));
+            textures.Add(PlayerState.Running, new PlayerTexture(content.Load<Texture2D>(prefix + "Swordsman_lvl1_run_with_shadow"), cellSize));
+            textures.Add(PlayerState.Attacking, new PlayerTexture(content.Load<Texture2D>(prefix + "Swordsman_lvl1_attack_with_shadow"), cellSize));
+            textures.Add(PlayerState.Hurt, new PlayerTexture(content.Load<Texture2D>(prefix + "Swordsman_lvl1_Hurt_with_shadow"), cellSize));
+            textures.Add(PlayerState.Dying, new PlayerTexture(content.Load<Texture2D>(prefix + "Swordsman_lvl1_Death_with_shadow"), cellSize));
+            //textures.Add(null, new PlayerTexture(content.Load<Texture2D>(prefix + "Images/Swordsman_lvl1_Run_Attack_with_shadow"), cellSize));  // Can add these later
+            //textures.Add(null, new PlayerTexture(content.Load<Texture2D>(prefix + "Images/Swordsman_lvl1_Walk_with_shadow"), cellSize));        // also keep in mind lvl2,3 sprites exist.
+            //textures.Add(null, new PlayerTexture(content.Load<Texture2D>(prefix + "Images/Swordsman_lvl1_Walk_Attack_with_shadow"), cellSize));
 
             spritePosition = new Vector2(200, 200);
             vel = 3;
@@ -83,7 +84,7 @@ namespace Jam25
         public void Update(KeyboardState keyboardState)
         {
             // Placeholder
-            if (keyboardState.IsKeyDown(Keys.T) && (lastState != PlayerState.Hurt && lastState != PlayerState.Dying))
+            if (keyboardState.IsKeyDown(Keys.T))
             {
                 TakeDamage(10);
             }
@@ -103,7 +104,7 @@ namespace Jam25
 
                     if (keyboardState.IsKeyDown(Keys.Space))
                     {
-                        lastState = PlayerState.Attacking;
+                          lastState = PlayerState.Attacking;
                     }
                     break;
 
@@ -153,10 +154,13 @@ namespace Jam25
 
         public void TakeDamage(int damage)
         {
-            health = Math.Max(0, health - damage);
-            animationStage = 0;
+            if ((lastState != PlayerState.Hurt && lastState != PlayerState.Dying))
+            {
+                health = Math.Max(0, health - damage);
+                animationStage = 0;
 
-            lastState = (health == 0) ? PlayerState.Dying : PlayerState.Hurt;
+                lastState = (health == 0) ? PlayerState.Dying : PlayerState.Hurt;
+            }
         }
 
         private void MovePlayer()
@@ -254,3 +258,4 @@ namespace Jam25
         }
     }
 }
+ 

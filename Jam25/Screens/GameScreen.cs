@@ -5,6 +5,7 @@ using Jam25.NewFolder;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace Jam25.Screens
 {
@@ -29,6 +30,8 @@ namespace Jam25.Screens
 
         private int tileSize = 32;
 
+        private Player player;
+
         #endregion
 
 
@@ -44,18 +47,20 @@ namespace Jam25.Screens
             this.audioController = audioController;
             this.game = game;
 
-
+            
 
             gameMap = new GameMap(mapWidth, mapHeight);
             gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight);
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
 
-
+            player = new Player();    // TODO: Pass attributes through this rather than being defined in constructor.
+            player.Initalise(content, graphicsDevice);
         }
 
         public void Draw()
         {
-            DrawDungeon();
+            //DrawDungeon();
+            player.Draw();
         }
 
         public void Hide()
@@ -69,7 +74,7 @@ namespace Jam25.Screens
         public void Update(GameTime gameTime)
         {
             KeyboardInput.GetInput();
-
+            player.Update(Keyboard.GetState());
         }
 
         private void DrawDungeon()
