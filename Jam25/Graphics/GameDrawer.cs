@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Jam24.Graphics
+namespace Jam25.Graphics
 {
     public class GameDrawer
     {

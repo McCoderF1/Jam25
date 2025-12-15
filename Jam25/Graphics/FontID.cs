@@ -1,4 +1,4 @@
-﻿namespace Jam24.Graphics
+﻿namespace Jam25.Graphics
 {
     public enum FontID
     {

@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 
-namespace Jam24.Screens
+namespace Jam25.Screens
 {
     public class StartScreen : IScreen
     {
