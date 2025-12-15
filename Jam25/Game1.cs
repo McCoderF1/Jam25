@@ -16,12 +16,14 @@ namespace Jam25
     {
         public const string TITLE = "Last Ember";
 
-        private GraphicsDeviceManager graphics;
-        private SpriteBatch spriteBatch;
 
         private AudioController audioController;
         private ScreenManager screenManager;
         private GameContent content;
+        private GraphicsDeviceManager graphics;
+        private SpriteBatch spriteBatch;
+
+        Player player;
 
         public Game1()
         {
@@ -36,12 +38,18 @@ namespace Jam25
 
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+
+            player = new();
         }
 
         protected override void Initialize()
         {
-            base.Initialize(); ;
+            base.Initialize();
             Window.Title = TITLE;
+            player.Initalise(Content, GraphicsDevice);
+
+            this.IsFixedTimeStep = true;
+            this.TargetElapsedTime = TimeSpan.FromSeconds(1d / 20d);
         }
 
         protected override void LoadContent()
@@ -62,6 +70,9 @@ namespace Jam25
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+
+            player.Update(Keyboard.GetState());
+
             screenManager.Update(gameTime);
             base.Update(gameTime);
         }
@@ -73,6 +84,8 @@ namespace Jam25
             spriteBatch.Begin();
             screenManager.Draw();
             spriteBatch.End();
+
+            player.Draw();
 
             base.Draw(gameTime);
         }
