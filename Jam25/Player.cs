@@ -1,6 +1,8 @@
 ﻿using HDT.Gaming.Physics;
 using Jam25.Graphics;
+using Jam25.Models;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -8,7 +10,7 @@ using System.Collections.Generic;
 
 namespace Jam25
 {
-    internal class Player
+    public class Player
     {
         public struct PlayerTexture
         {
@@ -29,18 +31,16 @@ namespace Jam25
         public enum PlayerState { Idle, Running, Attacking, Hurt, Dying }  // There are textures for walking and run w/ attack too, can include later
         private PlayerState lastState;
 
-        Dictionary<PlayerState, PlayerTexture> textures;
+        Dictionary<PlayerState, PlayerTexture>[] textures;
+        PlayerTexture currentTexture { get => textures[Level - 1][lastState]; }
 
-        /*private PlayerTexture attack;
-        private PlayerTexture idle;
-        private PlayerTexture run;
-        private PlayerTexture dying;
-        private PlayerTexture hurt;*/
-
+        // These need to be split into public/private
+        private Vector2 spritePosition;
         private int vel;
-        int animationStage;
-        int cellSize;
-        int health;
+        private int cellSize;
+        private int animationStage;
+        private int framesPerAnimation;
+        private int frameInAnimation;
         private int textureScale;
         private readonly SpriteBatch spriteBatch;
 
@@ -50,13 +50,18 @@ namespace Jam25
 
         public int MovementSpeed { get; set; }
 
+        public Health Health { get; set; }
+
+        public int Level { get; set; }
+
         public Player(SpriteBatch spriteBatch)
         {
-            lastDir = Direction.Up;
+            lastDir = Direction.Down;
             cellSize = 64;
-            health = 100;
+            Health = new(100);
+            Level = 1;  // NOTE: level is from 1-3, while level index in texture array is 0-2.
             textureScale = 5;
-            textures = new Dictionary<PlayerState, PlayerTexture>();
+            textures = new Dictionary<PlayerState, PlayerTexture>[3];
 
             Body = new Body()
             {
@@ -65,36 +70,61 @@ namespace Jam25
             this.spriteBatch = spriteBatch;
         }
 
-        public void Initalise(Microsoft.Xna.Framework.Content.ContentManager content, Microsoft.Xna.Framework.Graphics.GraphicsDevice graphicsDevice)
+        public void Initalise(ContentManager content, GraphicsDevice graphicsDevice)
         {
-            // Can add the level 2, 3 textures later
-            textures.Add(PlayerState.Idle, new PlayerTexture(content.Load<Texture2D>("PlayerSprite/lvl1/Swordsman_lvl1_idle_with_shadow"), cellSize));
-            textures.Add(PlayerState.Running, new PlayerTexture(content.Load<Texture2D>("PlayerSprite/lvl1/Swordsman_lvl1_run_with_shadow"), cellSize));
-            textures.Add(PlayerState.Attacking, new PlayerTexture(content.Load<Texture2D>("PlayerSprite/lvl1/Swordsman_lvl1_attack_with_shadow"), cellSize));
-            textures.Add(PlayerState.Hurt, new PlayerTexture(content.Load<Texture2D>("PlayerSprite/lvl1/Swordsman_lvl1_Hurt_with_shadow"), cellSize));
-            textures.Add(PlayerState.Dying, new PlayerTexture(content.Load<Texture2D>("PlayerSprite/lvl1/Swordsman_lvl1_Death_with_shadow"), cellSize));
-            //textures.Add(null, new PlayerTexture(content.Load<Texture2D>("Images/Swordsman_lvl1_Run_Attack_with_shadow"), cellSize));
-            //textures.Add(null, new PlayerTexture(content.Load<Texture2D>("Images/Swordsman_lvl1_Walk_with_shadow"), cellSize));
-            //textures.Add(null, new PlayerTexture(content.Load<Texture2D>("Images/Swordsman_lvl1_Walk_Attack_with_shadow"), cellSize));
+            for (int level = 1; level <= 3; level++)
+            {
+                string prefix = $"PlayerSprite/lvl{level}/";
+                var newTextureSet = new Dictionary<PlayerState, PlayerTexture>();
+                newTextureSet.Add(PlayerState.Idle, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_Idle_with_shadow"), cellSize));
+                newTextureSet.Add(PlayerState.Running, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_run_with_shadow"), cellSize));
+                newTextureSet.Add(PlayerState.Attacking, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_attack_with_shadow"), cellSize));
+                newTextureSet.Add(PlayerState.Hurt, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_Hurt_with_shadow"), cellSize));
+                newTextureSet.Add(PlayerState.Dying, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_Death_with_shadow"), cellSize));
+                //textures.Add(null, new PlayerTexture(content.Load<Texture2D>(prefix + "Images/Swordsman_lvl1_Run_Attack_with_shadow"), cellSize));
+                //textures.Add(null, new PlayerTexture(content.Load<Texture2D>(prefix + "Images/Swordsman_lvl1_Walk_with_shadow"), cellSize));
+                //textures.Add(null, new PlayerTexture(content.Load<Texture2D>(prefix + "Images/Swordsman_lvl1_Walk_Attack_with_shadow"), cellSize));
+                textures[level - 1] = newTextureSet;
+            }
 
             vel = 3;
             animationStage = 0;
             lastState = PlayerState.Idle;
         }
 
+        private void IncrementAnimation()
+        {
+            if (frameInAnimation++ >= framesPerAnimation)
+            {
+                animationStage = (animationStage + 1) % currentTexture.cols;
+                frameInAnimation = 0;
+            }
+        }
+        private void ResetAnimation()
+        {
+            animationStage = 0;
+            frameInAnimation = 0;
+        }
+
         public void Update(KeyboardState keyboardState)
         {
             // Placeholder
-            if (keyboardState.IsKeyDown(Keys.T) && (lastState != PlayerState.Hurt && lastState != PlayerState.Dying))
+            if (keyboardState.IsKeyDown(Keys.T))
             {
                 TakeDamage(10);
+            }
+            if (keyboardState.IsKeyDown(Keys.L))
+            {
+                Level++;
+                if (Level == 4)
+                    Level = 1;
             }
 
             // Update based off the current state
             switch (lastState)
             {
                 case PlayerState.Idle:
-                    animationStage = (animationStage + 1) % 4;
+                    IncrementAnimation();
 
                     FindDirection(
                         keyboardState.IsKeyDown(Keys.W),
@@ -105,12 +135,13 @@ namespace Jam25
 
                     if (keyboardState.IsKeyDown(Keys.Space))
                     {
+                        ResetAnimation();
                         lastState = PlayerState.Attacking;
                     }
                     break;
 
                 case PlayerState.Running:
-                    animationStage = (animationStage + 1) % 4;
+                    IncrementAnimation();
 
                     FindDirection(
                         keyboardState.IsKeyDown(Keys.W),
@@ -122,32 +153,30 @@ namespace Jam25
 
                     if (keyboardState.IsKeyDown(Keys.Space))
                     {
+                        ResetAnimation();
                         lastState = PlayerState.Attacking;
                     }
                     break;
 
                 case PlayerState.Attacking:
-                    animationStage++;
-                    if (animationStage == textures[lastState].cols)
+                    IncrementAnimation();
+                    if (animationStage == currentTexture.cols - 1)
                     {
-                        animationStage = 0;
                         lastState = PlayerState.Idle;
                     }
                     break;
 
                 case PlayerState.Hurt:
-                    animationStage++;
-                    if (animationStage == textures[lastState].cols)
+                    IncrementAnimation();
+                    if (animationStage == 0)
                     {
-                        animationStage = 0;
                         lastState = PlayerState.Idle;
                     }
                     break;
                 case PlayerState.Dying:
-                    animationStage++;
-                    if (animationStage >= textures[lastState].cols)
+                    if (animationStage != currentTexture.cols - 1)
                     {
-                        animationStage = textures[lastState].cols - 1;
+                        IncrementAnimation();
                     }
                     break;
             }
@@ -155,10 +184,13 @@ namespace Jam25
 
         public void TakeDamage(int damage)
         {
-            health = Math.Max(0, health - damage);
-            animationStage = 0;
+            if ((lastState != PlayerState.Hurt && lastState != PlayerState.Dying))
+            {
+                Health.TakeDamage(damage);
+                animationStage = 0;
 
-            lastState = (health == 0) ? PlayerState.Dying : PlayerState.Hurt;
+                lastState = (Health.Current == 0) ? PlayerState.Dying : PlayerState.Hurt;
+            }
         }
 
         //private void MovePlayer()
@@ -233,7 +265,7 @@ namespace Jam25
             }
 
             // Get the column
-            int col = animationStage % textures[lastState].cols;
+            int col = animationStage % currentTexture.cols;
 
             Rectangle sourceRect = new Rectangle(
                 col * cellSize /*+ (cellSize / 4)*/,
@@ -250,7 +282,7 @@ namespace Jam25
             );
 
             // To make the sprite larger
-            spriteBatch.Draw(textures[lastState].texture, Body.Position, new Rectangle(0, 0, 64, 64), Color.White, 0f, new Vector2(32, 32), Vector2.One, SpriteEffects.None, layerDepth: 1f);
+            spriteBatch.Draw(textures[Level][lastState].texture, Body.Position, new Rectangle(0, 0, 64, 64), Color.White, 0f, new Vector2(32, 32), Vector2.One, SpriteEffects.None, layerDepth: 1f);
         }
     }
 }

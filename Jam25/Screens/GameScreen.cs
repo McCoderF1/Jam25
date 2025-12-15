@@ -1,7 +1,8 @@
 ﻿using HDT.Gaming.Audio;
 using HDT.Gaming.Input;
 using HDT.Gaming.Screens;
-using Jam25.NewFolder;
+using Jam25.Entities;
+using Jam25.Scenes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -18,6 +19,7 @@ namespace Jam25.Screens
         private readonly SpriteBatch spriteBatch;
         private readonly AudioController audioController;
         private readonly Game1 game;
+        private readonly Scene gameScene;
         private Texture2D wallsFloor;
         private GameMap gameMap;
 
@@ -48,7 +50,21 @@ namespace Jam25.Screens
             this.audioController = audioController;
             this.game = game;
 
+
+
+
+            player = new Player(spriteBatch)
+            {
+
+            };
+            player.Initalise(content, graphicsDevice);
+
+            gameMap = new GameMap(mapWidth, mapHeight);
+            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player);
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
+
+
+            gameScene = new(gameMap, player);
         }
 
         public void Draw()
