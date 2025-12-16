@@ -42,9 +42,9 @@ namespace Jam25.Scenes
 
                 float distFromPlayer = Vector2.Distance(enemy.Body.Position, Player.Body.Position);
 
-                if (distFromPlayer < 50 && Player.LastState == Player.PlayerState.Attacking)
+                if (distFromPlayer < 50 && Player.IsAttacking)
                 {
-                    enemy.Health.TakeDamage(20);
+                    enemy.TakeDamage(2);
                 }
                 if (distFromPlayer < 30 && enemy.CurrentState != Enemy.EnemyState.Dying && enemy.CanAttack)
                 {

@@ -24,7 +24,7 @@ namespace Jam25.Entities.Enemies
             Hurt,
             Dying
         }
-        public EnemyState CurrentState;
+        public EnemyState CurrentState { get { return currentState; } set { currentState = value; } }
 
         public AnimatedDirectionalSprite CurrentSprite => Sprites[currentState];
 
