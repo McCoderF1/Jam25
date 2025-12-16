@@ -2,7 +2,7 @@
 
 namespace Jam25.Entities
 {
-    public class Key
+    /*public class Key
     {
         public Sprite Sprite { get; }
 
@@ -10,5 +10,5 @@ namespace Jam25.Entities
         {
             Sprite = sprite;
         }
-    }
+    }*/
 }

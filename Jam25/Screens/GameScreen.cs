@@ -3,6 +3,8 @@ using HDT.Gaming.Input;
 using HDT.Gaming.Physics;
 using HDT.Gaming.Screens;
 using Jam25.Entities;
+using Jam25.Entities.Pickups;
+using Jam25.Entities.Enemies;
 using Jam25.Graphics;
 using Jam25.Scenes;
 using Microsoft.Xna.Framework;
@@ -10,6 +12,9 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Reflection.Metadata;
 
 namespace Jam25.Screens
 {
@@ -24,7 +29,7 @@ namespace Jam25.Screens
         private readonly Scene gameScene;
         private Texture2D wallsFloor;
         private GameMap gameMap;
-        private Key key;
+        private KeyPickup key;
 
         private int mapWidth = 80;
         private int mapHeight = 42;
@@ -33,12 +38,16 @@ namespace Jam25.Screens
         private int maxRoomSize = 10;
         private int minRoomSize = 6;
 
+        private int healthPickupCount = 20;
+
         private int tileSize = 32;
         private Player player;
         private PhysicsWorld physicsWorld;
 
         public Vector2 CameraPosition;
         public Rectangle WorldBounds;
+
+        public List<IPickup> pickups;
 
         #endregion
 
@@ -54,18 +63,24 @@ namespace Jam25.Screens
             this.audioController = audioController;
             this.game = game;
 
+            pickups = new();
+
             player = new Player(spriteBatch);
             player.Initalise(content, graphicsDevice);
 
-            var keyImage = game.Content.Load<Texture2D>("Images/key32");
-            key = new Key(new Sprite(keyImage, new Vector2(keyImage.Width * 0.5f, keyImage.Height)));
 
+            key = new KeyPickup(Vector2.Zero, game.Content);
             gameMap = new GameMap(mapWidth, mapHeight);
+
+            gameScene = new(gameMap, player);
+
             gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player, key);
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
 
 
-            gameScene = new(gameMap, player);
+            EnemyFactory enemyFactory = new (game.Content, audioController);
+
+            gameScene.Enemies.Add(enemyFactory.CreateSlimeEnemy(new(200, 200)));
         }
 
         public void Draw()
@@ -75,7 +90,17 @@ namespace Jam25.Screens
 
             DrawDungeon();
             player.Draw();
-            spriteBatch.Draw(key.Sprite.Texture, key.Sprite.Position, Color.White);
+
+            foreach (IPickup pickup in pickups)
+            {
+                pickup.Draw(spriteBatch, tileSize);
+            }
+            //spriteBatch.Draw(key.Sprite.Texture, key.Sprite.Position, Color.White);
+
+            for (int i = 0; i < gameScene.Enemies.Count; i++)
+            {
+                gameScene.Enemies[i].CurrentSprite.Draw(spriteBatch, gameScene.Enemies[i].Body.Position);
+            }
         }
 
         public void Hide()
@@ -91,39 +116,38 @@ namespace Jam25.Screens
             };
 
             player.Initalise(game.Content, game.GraphicsDevice);
+
+            gameMap = new GameMap(mapWidth, mapHeight);
+
             gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player, key);
+
+
+            // Add the pickups
+            for (int i = 0; i < healthPickupCount; i++)
+            {
+                pickups.Add(new HealthPack(PointWithinWalls(), game.Content));
+            }
+            pickups.Add(key);
 
             WorldBounds = new Rectangle(0, 0, mapWidth * tileSize, mapHeight * tileSize);
         }
 
+        private Vector2 PointWithinWalls()
+        {
+            Random rnd = new();
+            Vector2 pos;
+            do
+            {
+                pos = new Vector2(rnd.Next(mapWidth), rnd.Next(mapHeight));
+            }
+            while (gameMap.tiles[(int)pos.X, (int)pos.Y] == TileType.Wall);
+            return Vector2.Multiply(pos, tileSize);
+        }
+
         public void Update(GameTime gameTime)
         {
-            //if (keyboardState.IsKeyDown(Keys.D) || keyboardState.IsKeyDown(Keys.Right))
-            //{
-            //    player.Sprite.IsFacingRight = true;
-            //    playerMovement += new Vector2(1f, 0);
-            //}
-            //if (keyboardState.IsKeyDown(Keys.A) || keyboardState.IsKeyDown(Keys.Left))
-            //{
-            //    player.Sprite.IsFacingRight = false;
-            //    playerMovement += new Vector2(-1f, 0);
-            //}
-            //if (keyboardState.IsKeyDown(Keys.W) || keyboardState.IsKeyDown(Keys.Up))
-            //    playerMovement += new Vector2(0, -1f);
-            //if (keyboardState.IsKeyDown(Keys.S) || keyboardState.IsKeyDown(Keys.Down))
-            //    playerMovement += new Vector2(0, 1f);
-
-            //if (playerMovement != Vector2.Zero)
-            //{
-            //    player.Body.Velocity = playerMovement * player.MovementSpeed;
-            //}
-            //else
-            //{
-            //    player.Body.Velocity = Vector2.Zero;
-            //}
-
             MovePlayer(gameTime);
-            //physicsWorld.Update(1f);
+            gameScene.Update(gameTime);
 
             Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
 
@@ -135,6 +159,9 @@ namespace Jam25.Screens
             CameraPosition.X = MathHelper.Clamp(targetCameraPosition.X, cameraMinX, cameraMaxX);
             CameraPosition.Y = MathHelper.Clamp(targetCameraPosition.Y, cameraMinY, cameraMaxY);
         }
+
+
+        #region private methods
 
         private void MovePlayer(GameTime gameTime)
         {
@@ -150,7 +177,7 @@ namespace Jam25.Screens
                 // Top left coordinate of where the player is moving to.
                 Vector2 targetPosition = (Vector2)probableTargetPosition;
 
-                float buffer = 5; // to make going through thin corridors easier
+                float buffer = 8; // to make going through thin corridors easier
 
                 // check each corner of the player box
                 bool canMove = !(IsWallTile(targetPosition.X - buffer, targetPosition.Y - buffer)
@@ -161,8 +188,16 @@ namespace Jam25.Screens
                 if (canMove)
                 {
                     player.Body.Position = targetPosition;
-                }
 
+                    foreach (IPickup pickup in pickups)
+                    {
+                        if (Vector2.Distance(pickup.Position, Vector2.Subtract(player.Body.Position, new Vector2(tileSize / 2, tileSize / 2))) < tileSize)
+                        {
+                            pickup.Collect(player);
+                        }
+                    }
+                }
+                
             }
         }
 
@@ -208,8 +243,6 @@ namespace Jam25.Screens
         }
 
     }
-
-    #region private methods
 
 
     #endregion

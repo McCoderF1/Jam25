@@ -1,5 +1,6 @@
 ﻿using HDT.Gaming.Models;
 using HDT.Gaming.Physics;
+using Jam25.Entities.Pickups;
 using Jam25.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -27,13 +28,43 @@ namespace Jam25
         enum Direction { Up, Right, Down, Left }
         private Direction lastDir;
 
-        private float speedMultiplier = 1.0f;
-
-        public enum PlayerState { Idle, Running, Attacking, Hurt, Dying }
+        [Flags]        
+        public enum PlayerState 
+        { 
+            Idle = 0x01, 
+            Running = 0x02, 
+            Attacking = 0x04, 
+            Hurt = 0x08, 
+            Dying = 0x10,
+            Walking = 0x20,
+        }
         private PlayerState lastState;
 
         private Dictionary<PlayerState, PlayerTexture>[] textures;
-        private PlayerTexture currentTexture { get => textures[Level - 1][lastState]; }
+        private PlayerTexture currentTexture
+        {
+            get
+            {
+                var state = lastState;
+
+                // Normalize unsupported combinations to known keys.
+                // If Idle + Attacking, just use Attacking.
+                if ((state & PlayerState.Attacking) != 0 &&
+                    (state & (PlayerState.Running | PlayerState.Walking)) == 0)
+                {
+                    state = PlayerState.Attacking;
+                }
+
+                // If somehow Idle combined with others, prefer Idle
+                if ((state & PlayerState.Idle) != 0 &&
+                    state != PlayerState.Idle)
+                {
+                    state = PlayerState.Idle;
+                }
+
+                return textures[Level - 1][state];
+            }
+        }
 
         private int cellSize;
         private int animationStage;
@@ -44,6 +75,8 @@ namespace Jam25
         private float animationTime;          // Accumulated time for current frame
         private float frameDuration = 0.1f;   // Seconds per frame (10 fps as example)
 
+        private Vector2 movementDirection = Vector2.Zero;
+
         public Sprite Sprite { get; set; }
 
         public Body Body { get; set; }
@@ -53,6 +86,12 @@ namespace Jam25
         public Health Health { get; set; }
 
         public int Level { get; set; }
+
+        private bool isAttacking;
+
+        // Movement mask: all movement-related bits (Idle, Running, Walking)
+        private const PlayerState MovementMask = PlayerState.Idle | PlayerState.Running | PlayerState.Walking;
+        private const PlayerState AttackMask = PlayerState.Attacking;
 
         public Player(SpriteBatch spriteBatch)
         {
@@ -78,9 +117,12 @@ namespace Jam25
                 var newTextureSet = new Dictionary<PlayerState, PlayerTexture>();
                 newTextureSet.Add(PlayerState.Idle, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_Idle_with_shadow"), cellSize));
                 newTextureSet.Add(PlayerState.Running, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_run_with_shadow"), cellSize));
+                newTextureSet.Add(PlayerState.Running | PlayerState.Attacking, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_run_attack_with_shadow"), cellSize));
                 newTextureSet.Add(PlayerState.Attacking, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_attack_with_shadow"), cellSize));
                 newTextureSet.Add(PlayerState.Hurt, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_Hurt_with_shadow"), cellSize));
                 newTextureSet.Add(PlayerState.Dying, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_Death_with_shadow"), cellSize));
+                newTextureSet.Add(PlayerState.Walking, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_walk_with_shadow"), cellSize));
+                newTextureSet.Add(PlayerState.Walking | PlayerState.Attacking, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_walk_attack_with_shadow"), cellSize));
                 textures[level - 1] = newTextureSet;
             }
 
@@ -109,19 +151,10 @@ namespace Jam25
         {
             float deltaSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            // Placeholder
-            if (keyboardState.IsKeyDown(Keys.T))
-            {
-                TakeDamage(10);
-            }
-            if (keyboardState.IsKeyDown(Keys.L))
-            {
-                Level++;
-                if (Level == 4)
-                {
-                    Level = 1;
-                }
-            }
+            bool attackKeyDown = keyboardState.IsKeyDown(Keys.Space);
+            bool runKeyDown = keyboardState.IsKeyDown(Keys.LeftShift);
+
+            // ... debug T/L
 
             switch (lastState)
             {
@@ -132,53 +165,87 @@ namespace Jam25
                         keyboardState.IsKeyDown(Keys.W),
                         keyboardState.IsKeyDown(Keys.A),
                         keyboardState.IsKeyDown(Keys.S),
-                        keyboardState.IsKeyDown(Keys.D));
+                        keyboardState.IsKeyDown(Keys.D),
+                        runKeyDown);
 
-                    if (keyboardState.IsKeyDown(Keys.Space))
+                    if (attackKeyDown && !isAttacking)
                     {
+                        isAttacking = true;
                         ResetAnimation();
                         lastState = PlayerState.Attacking;
+                    }
+                    else if (!attackKeyDown)
+                    {
+                        isAttacking = false;
                     }
                     break;
 
                 case PlayerState.Running:
+                case PlayerState.Attacking | PlayerState.Running:
                     IncrementAnimation(deltaSeconds);
 
                     FindDirection(
                         keyboardState.IsKeyDown(Keys.W),
                         keyboardState.IsKeyDown(Keys.A),
                         keyboardState.IsKeyDown(Keys.S),
-                        keyboardState.IsKeyDown(Keys.D));
+                        keyboardState.IsKeyDown(Keys.D),
+                        runKeyDown);
 
-                    if (keyboardState.IsKeyDown(Keys.Space))
+                    if (attackKeyDown && !isAttacking)
                     {
+                        isAttacking = true;
                         ResetAnimation();
-                        lastState = PlayerState.Attacking;
+                        lastState |= PlayerState.Attacking;   // becomes Running | Attacking
                     }
-                    return MovePlayer(deltaSeconds);
+                    else if (!attackKeyDown && isAttacking && animationStage == currentTexture.cols - 1)
+                    {
+                        isAttacking = false;
+                        ResetAnimation();
+                        lastState &= ~PlayerState.Attacking;  // back to Running
+                    }
 
+                    return MovePlayer(deltaSeconds, 2.0f);
+
+                case PlayerState.Walking:
+                case PlayerState.Attacking | PlayerState.Walking:
+                    IncrementAnimation(deltaSeconds);
+
+                    FindDirection(
+                        keyboardState.IsKeyDown(Keys.W),
+                        keyboardState.IsKeyDown(Keys.A),
+                        keyboardState.IsKeyDown(Keys.S),
+                        keyboardState.IsKeyDown(Keys.D),
+                        runKeyDown);
+
+                    if (attackKeyDown && !isAttacking)
+                    {
+                        isAttacking = true;
+                        ResetAnimation();
+                        lastState |= PlayerState.Attacking;   // Walking | Attacking
+                    }
+                    else if (!attackKeyDown && isAttacking && animationStage == currentTexture.cols - 1)
+                    {
+                        isAttacking = false;
+                        ResetAnimation();
+                        lastState &= ~PlayerState.Attacking;  // back to Walking
+                    }
+
+                    return MovePlayer(deltaSeconds, 1.0f);
+
+                // Note, this is idle attack only
+                case PlayerState.Idle | PlayerState.Attacking:
                 case PlayerState.Attacking:
                     IncrementAnimation(deltaSeconds);
                     if (animationStage == currentTexture.cols - 1)
                     {
+                        // End of idle attack anim
+                        isAttacking = false;
                         lastState = PlayerState.Idle;
+                        ResetAnimation();
                     }
                     break;
 
-                case PlayerState.Hurt:
-                    IncrementAnimation(deltaSeconds);
-                    if (animationStage == 0)
-                    {
-                        lastState = PlayerState.Idle;
-                    }
-                    break;
-
-                case PlayerState.Dying:
-                    if (animationStage != currentTexture.cols - 1)
-                    {
-                        IncrementAnimation(deltaSeconds);
-                    }
-                    break;
+                // Hurt/Dying unchanged
             }
 
             return null;
@@ -196,61 +263,72 @@ namespace Jam25
             }
         }
 
-        private Vector2 MovePlayer(float deltaSeconds)
+        private Vector2 MovePlayer(float deltaSeconds, float speedMultiplier)
         {
-            float dx = 0;
-            float dy = 0;
-
-            float moveStep = speedMultiplier * deltaSeconds * 60f; // 60 is a reference FPS for tuning
-
-            switch (lastDir)
+            if (movementDirection == Vector2.Zero)
             {
-                case Direction.Up:
-                    dy -= moveStep;
-                    break;
-                case Direction.Down:
-                    dy += moveStep;
-                    break;
-                case Direction.Left:
-                    dx -= moveStep;
-                    break;
-                case Direction.Right:
-                    dx += moveStep;
-                    break;
+                return Body.Position;
             }
 
-            return Vector2.Add(Body.Position, new Vector2(dx, dy));
+            // Base per-axis speed (what you currently have on pure horizontal/vertical)
+            float axisSpeed = speedMultiplier * deltaSeconds * 60f;
+
+            // Length of the input vector (1 for straight, sqrt(2) for perfect diagonal, etc.)
+            float length = movementDirection.Length();
+
+            // Apply Pythagoras: total speed = axisSpeed * length
+            Vector2 dir = Vector2.Normalize(movementDirection);
+            Vector2 offset = dir * axisSpeed;
+
+            return Body.Position + offset;
         }
 
-        private void FindDirection(bool w, bool a, bool s, bool d)
+        private void FindDirection(bool w, bool a, bool s, bool d, bool run)
         {
-            int xVel = (Convert.ToInt32(d) - Convert.ToInt32(a)) * 10;
-            int yVel = (Convert.ToInt32(s) - Convert.ToInt32(w)) * 10;
+            // Build movement vector from input
+            movementDirection = Vector2.Zero;
 
-            if (yVel < 0)
+            if (w)
             {
-                lastDir = Direction.Up;
-                lastState = PlayerState.Running;
+                movementDirection.Y -= 1f;
             }
-            else if (yVel > 0)
+
+            if (s)
             {
-                lastDir = Direction.Down;
-                lastState = PlayerState.Running;
+                movementDirection.Y += 1f;
             }
-            else if (xVel < 0)
+
+            if (a)
             {
-                lastDir = Direction.Left;
-                lastState = PlayerState.Running;
+                movementDirection.X -= 1f;
             }
-            else if (xVel > 0)
+
+            if (d)
             {
-                lastDir = Direction.Right;
-                lastState = PlayerState.Running;
+                movementDirection.X += 1f;
+            }
+
+            // Preserve non-movement flags (e.g. Attacking)
+            var nonMovementFlags = lastState & ~MovementMask;
+
+            if (movementDirection == Vector2.Zero)
+            {
+                lastState = PlayerState.Idle | nonMovementFlags;
+                return;
+            }
+
+            // Determine facing direction based on movement vector (for animations)
+            if (Math.Abs(movementDirection.X) > Math.Abs(movementDirection.Y))
+            {
+                lastDir = movementDirection.X < 0 ? Direction.Left : Direction.Right;
             }
             else
             {
-                lastState = PlayerState.Idle;
+                lastDir = movementDirection.Y < 0 ? Direction.Up : Direction.Down;
             }
+
+            var movementState = run ? PlayerState.Running : PlayerState.Walking;
+            lastState = movementState | nonMovementFlags;
         }
 
         public void Draw()

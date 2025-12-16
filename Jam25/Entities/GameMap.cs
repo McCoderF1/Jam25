@@ -1,4 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Jam25.Entities.Pickups;
+using Jam25.Scenes;
+using Jam25.Screens;
+using Microsoft.Xna.Framework;
 using System;
 
 namespace Jam25.Entities
@@ -16,7 +19,7 @@ namespace Jam25.Entities
         private readonly int width;
         private readonly int height;
 
-        public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight, Player player, Key key)
+        public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight, Player player, KeyPickup key)
         {
             Rectangle[] rooms = new Rectangle[maxRooms];
             int numRooms = 0;
@@ -50,7 +53,7 @@ namespace Jam25.Entities
                         // Paint room to map
                         CreateRoom(newRoom);
 
-                        // Center coordinates of new room
+                        // Centre coordinates of new room
 
                         var newX = newRoom.Center.X;
                         var newY = newRoom.Center.Y;
@@ -69,12 +72,13 @@ namespace Jam25.Entities
                             var prevY = rooms[numRooms - 1].Center.Y;
 
 
+                            
                             if (i == keyRoom)
                             {
                                 // This is the room to place the key
-                                key.Sprite.Position = new Vector2(newX * 32, newY * 32);
-
+                                key.Position = new Vector2(newX * 32, newY * 32);
                             }
+
                             // Flip a coin
                             if (rand.Next(0, 1) == 0)
                             {
