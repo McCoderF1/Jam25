@@ -47,10 +47,10 @@ namespace Jam25.Scenes
                     enemy.TakeDamage(2);
 
                 }
-                if (distFromPlayer < 30 && enemy.CurrentState != Enemy.EnemyState.Dying && enemy.CanAttack)
+                if (distFromPlayer < 30 && enemy.CanAttack)
                 {
                     Player.TakeDamage(20);
-                    _ = enemy.StartAttackCooldown();
+                    enemy.CurrentState = Enemy.EnemyState.Attacking;
                 }
 
                 if (enemy.CurrentState == Enemy.EnemyState.Dead)

@@ -42,12 +42,11 @@ namespace Jam25.Entities.Enemies
         public Health Health { get; init; }
 
 
-        public bool CanAttack { get; private set; }
+        public bool CanAttack => (CurrentState == EnemyState.Idle || CurrentState == EnemyState.Running);
 
         public Enemy()
         {
             Body.Owner = this;
-            CanAttack = true;
             //StartAttackCooldown();
         }
 
@@ -58,17 +57,10 @@ namespace Jam25.Entities.Enemies
             {
                 CurrentState = EnemyState.Dying;
             }
-        }
-
-        public async Task StartAttackCooldown()
-        {
-            if (!CanAttack)
+            else
             {
-                return;
+                CurrentState = EnemyState.Hurt;
             }
-            CanAttack = false;
-            await Task.Delay(5000);
-            CanAttack = true;
         }
 
         /// <summary>
@@ -79,11 +71,23 @@ namespace Jam25.Entities.Enemies
         /// <param name="gameTime">The current game time, used to determine state transitions and animation progress.</param>
         public void Update(GameTime gameTime)
         {
-            // If we are dying and the dying animation has completed, set state to Dead
-            if (CurrentState == EnemyState.Dying && CurrentSprite.LoopCompleted)
+            if (!CurrentSprite.LoopCompleted)
             {
-                CurrentState = EnemyState.Dead;
+                return;
             }
+
+            switch (CurrentState)
+            {
+                case EnemyState.Hurt:
+                case EnemyState.Attacking:
+                    CurrentState = EnemyState.Idle;
+                    break;
+                case EnemyState.Dying:
+                    CurrentState = EnemyState.Dead;
+                    break;
+            }
+
+
         }
     }
 }
