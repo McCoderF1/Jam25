@@ -1,5 +1,6 @@
 ﻿using HDT.Gaming.Audio;
 using HDT.Gaming.Input;
+using HDT.Gaming.Physics;
 using HDT.Gaming.Screens;
 using Jam25.Entities;
 using Jam25.Scenes;
@@ -7,6 +8,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
+using System.ComponentModel;
 
 namespace Jam25.Screens
 {
@@ -31,11 +34,13 @@ namespace Jam25.Screens
         private int minRoomSize = 6;
 
         private int tileSize = 32;
-
         private Player player;
+        private PhysicsWorld physicsWorld;
+
+        public Vector2 CameraPosition;
+        public Rectangle WorldBounds;
 
         #endregion
-
 
         public GameScreen(
             GraphicsDevice gfxDevice,
@@ -49,21 +54,29 @@ namespace Jam25.Screens
             this.audioController = audioController;
             this.game = game;
 
-            
+
+
+
+            player = new Player(spriteBatch)
+            {
+                
+            };
+            player.Initalise(content, graphicsDevice);
 
             gameMap = new GameMap(mapWidth, mapHeight);
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight);
+            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player);
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
 
-            player = new Player();    // TODO: Pass attributes through this rather than being defined in constructor.
-            player.Initalise(content, graphicsDevice);
 
             gameScene = new(gameMap, player);
         }
 
         public void Draw()
         {
-            //DrawDungeon();
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, Matrix.CreateTranslation(new Vector3(-CameraPosition, 0f)));
+
+            DrawDungeon();
             player.Draw();
         }
 
@@ -73,12 +86,96 @@ namespace Jam25.Screens
 
         public void Show()
         {
+            Texture2D playerTexture = game.Content.Load<Texture2D>("PlayerSprite/lvl1/Swordsman_lvl1_Idle_with_shadow");
+            player = new Player(spriteBatch)
+            {
+                Sprite = new Graphics.Sprite(playerTexture, new Vector2(playerTexture.Width * 0.5f, playerTexture.Height))
+            };
+
+            player.Initalise(game.Content, game.GraphicsDevice);
+
+            gameMap = new GameMap(mapWidth, mapHeight);
+            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player);
+
+            WorldBounds = new Rectangle(0, 0, mapWidth * tileSize, mapHeight * tileSize);
         }
 
         public void Update(GameTime gameTime)
         {
+            //if (keyboardState.IsKeyDown(Keys.D) || keyboardState.IsKeyDown(Keys.Right))
+            //{
+            //    player.Sprite.IsFacingRight = true;
+            //    playerMovement += new Vector2(1f, 0);
+            //}
+            //if (keyboardState.IsKeyDown(Keys.A) || keyboardState.IsKeyDown(Keys.Left))
+            //{
+            //    player.Sprite.IsFacingRight = false;
+            //    playerMovement += new Vector2(-1f, 0);
+            //}
+            //if (keyboardState.IsKeyDown(Keys.W) || keyboardState.IsKeyDown(Keys.Up))
+            //    playerMovement += new Vector2(0, -1f);
+            //if (keyboardState.IsKeyDown(Keys.S) || keyboardState.IsKeyDown(Keys.Down))
+            //    playerMovement += new Vector2(0, 1f);
+
+            //if (playerMovement != Vector2.Zero)
+            //{
+            //    player.Body.Velocity = playerMovement * player.MovementSpeed;
+            //}
+            //else
+            //{
+            //    player.Body.Velocity = Vector2.Zero;
+            //}
+
+            MovePlayer(gameTime);
+            //physicsWorld.Update(1f);
+
+            Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
+            
+            float cameraMinX = WorldBounds.X;
+            float cameraMaxX = WorldBounds.Right - game.GraphicsDevice.Viewport.Width;
+            float cameraMinY = WorldBounds.Y;
+            float cameraMaxY = WorldBounds.Bottom - game.GraphicsDevice.Viewport.Height;
+
+            CameraPosition.X = MathHelper.Clamp(targetCameraPosition.X, cameraMinX, cameraMaxX);
+            CameraPosition.Y = MathHelper.Clamp(targetCameraPosition.Y, cameraMinY, cameraMaxY);
+        }
+
+        private void MovePlayer(GameTime gameTime)
+        {
+            // move based on keyboard input
             KeyboardInput.GetInput();
-            player.Update(Keyboard.GetState());
+            Vector2 playerMovement = Vector2.Zero;
+            KeyboardState keyboardState = Keyboard.GetState();
+            Vector2? probableTargetPosition = player.Update(gameTime, keyboardState);
+
+            // the player is moving
+            if (probableTargetPosition is not null)
+            {
+                // Top left coordinate of where the player is moving to.
+                Vector2 targetPosition = (Vector2)probableTargetPosition;
+
+                float buffer = 5; // to make going through thin corridors easier
+
+                // check each corner of the player box
+                bool canMove = !(IsWallTile(targetPosition.X - buffer, targetPosition.Y - buffer)
+                    || IsWallTile(targetPosition.X - tileSize + buffer, targetPosition.Y - buffer)
+                    || IsWallTile(targetPosition.X - tileSize + buffer, targetPosition.Y - tileSize + buffer)
+                    || IsWallTile(targetPosition.X - buffer, targetPosition.Y - tileSize + buffer));
+                
+                if (canMove)
+                {
+                    player.Body.Position = targetPosition;
+                }
+                
+            }
+        }
+
+        private bool IsWallTile(float x, float y)
+        {
+            int xProj = Convert.ToInt32(x / tileSize);
+            int yProj = Convert.ToInt32(y / tileSize);
+
+            return gameMap.tiles[xProj, yProj] == TileType.Wall;
         }
 
         private void DrawDungeon()
@@ -107,7 +204,8 @@ namespace Jam25.Screens
                             texture,
                             new Rectangle(x * tileSize, y * tileSize, tileSize, tileSize),
                             sourceRect,
-                            Color.White);
+                            Color.White,
+                            0f, Vector2.Zero, SpriteEffects.None, 0f);
                     }
                 }
             }

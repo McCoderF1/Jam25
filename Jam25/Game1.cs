@@ -21,6 +21,10 @@ namespace Jam25
         private ScreenManager screenManager;
         private GameContent content;
 
+        public Vector2 CameraPosition;
+        public Vector2 PlayerPosition; // Update this in your game loop
+        public Rectangle WorldBounds = new Rectangle(0, 0, 2000, 1500); // Example map size in pixels
+
 
         public Game1()
         {
