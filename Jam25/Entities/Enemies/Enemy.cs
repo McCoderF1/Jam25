@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HDT.Gaming.Models;
 using HDT.Gaming.Physics;
 using Jam25.Entities.Enemies.Controllers;
 using Jam25.Graphics;
-using Jam25.Models;
 
 namespace Jam25.Entities.Enemies
 {
