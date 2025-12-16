@@ -122,7 +122,7 @@ namespace Jam25.Screens
             //    player.Body.Velocity = Vector2.Zero;
             //}
 
-            MovePlayer();
+            MovePlayer(gameTime);
             //physicsWorld.Update(1f);
 
             Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
@@ -136,13 +136,13 @@ namespace Jam25.Screens
             CameraPosition.Y = MathHelper.Clamp(targetCameraPosition.Y, cameraMinY, cameraMaxY);
         }
 
-        private void MovePlayer()
+        private void MovePlayer(GameTime gameTime)
         {
             // move based on keyboard input
             KeyboardInput.GetInput();
             Vector2 playerMovement = Vector2.Zero;
             KeyboardState keyboardState = Keyboard.GetState();
-            Vector2? probableTargetPosition = player.Update(keyboardState);
+            Vector2? probableTargetPosition = player.Update(gameTime, keyboardState);
 
             // the player is moving
             if (probableTargetPosition is not null)
