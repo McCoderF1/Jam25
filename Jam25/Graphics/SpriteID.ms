@@ -10,4 +10,6 @@ u8 SpriteID
     Coal_Medium: 8
     Coal_Large: 16
     Coal_Huge: 32
+	PlayerUIIcon: 4
+	FireBig: 5
 }
