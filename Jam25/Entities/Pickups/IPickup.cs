@@ -1,5 +1,6 @@
 ﻿using Jam25.Graphics;
 using Microsoft.Xna.Framework.Graphics;
+using System.Numerics;
 
 namespace Jam25.Entities.Pickups
 {

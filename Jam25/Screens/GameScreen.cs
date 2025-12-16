@@ -73,7 +73,6 @@ namespace Jam25.Screens
             {
                 pickup.Draw(spriteBatch, tileSize);
             }
-            //spriteBatch.Draw(key.Sprite.Texture, key.Sprite.Position, Color.White);
 
             for (int i = 0; i < gameScene.Enemies.Count; i++)
             {
@@ -103,6 +102,7 @@ namespace Jam25.Screens
             {
                 pickups.Add(new HealthPack(PointWithinWalls(), game.Content));
             }
+            key.Sprite.Position = PointWithinWalls();    // I think gamemap should over write this, and place it in a far away room.
             pickups.Add(key);
 
 
