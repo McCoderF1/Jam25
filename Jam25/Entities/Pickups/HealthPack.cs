@@ -43,7 +43,6 @@ namespace Jam25.Entities.Pickups
         {
             if (Consumed) return;
 
-
             frameInAnimation++;
             if (frameInAnimation >= framesPerAnimation)
             {
@@ -53,14 +52,13 @@ namespace Jam25.Entities.Pickups
 
             Rectangle sourceRect = new Rectangle(tileSize * (animationStep % 4), 0, tileSize, tileSize);
 
-
             Rectangle rect = new Rectangle(
                 (int)Position.X,
                 (int)Position.Y,
                 tileSize,
                 tileSize
             );
-            //Texture2D texture, Vector2 position, Rectangle? sourceRectangle, Color color
+
             spriteBatch.Draw(Texture, rect, sourceRect, Color.AliceBlue);
         }
     }

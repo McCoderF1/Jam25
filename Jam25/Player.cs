@@ -1,5 +1,6 @@
 ﻿using HDT.Gaming.Models;
 using HDT.Gaming.Physics;
+using Jam25.Entities.Pickups;
 using Jam25.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -27,7 +28,7 @@ namespace Jam25
         enum Direction { Up, Right, Down, Left }
         private Direction lastDir;
 
-        private float speedMultiplier = 1.0f;
+        private float speedMultiplier = 2.5f;
 
         public enum PlayerState { Idle, Running, Attacking, Hurt, Dying }
         private PlayerState lastState;

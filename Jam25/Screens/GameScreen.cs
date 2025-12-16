@@ -28,7 +28,7 @@ namespace Jam25.Screens
         private readonly Scene gameScene;
         private Texture2D wallsFloor;
         private GameMap gameMap;
-        private Key key;
+        private KeyPickup key;
 
         private int mapWidth = 80;
         private int mapHeight = 42;
@@ -37,7 +37,7 @@ namespace Jam25.Screens
         private int maxRoomSize = 10;
         private int minRoomSize = 6;
 
-        private int healthPickupCount = 200;
+        private int healthPickupCount = 20;
 
         private int tileSize = 32;
         private Player player;
@@ -63,13 +63,12 @@ namespace Jam25.Screens
             this.game = game;
 
             pickups = new();
+
             player = new Player(spriteBatch);
             player.Initalise(content, graphicsDevice);
 
-            var keyImage = game.Content.Load<Texture2D>("Images/key32");
-            key = new Key(new Sprite(keyImage, new Vector2(keyImage.Width * 0.5f, keyImage.Height)));
 
-
+            key = new KeyPickup(Vector2.Zero, game.Content);
             gameMap = new GameMap(mapWidth, mapHeight);
             gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player, key);
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
@@ -89,7 +88,6 @@ namespace Jam25.Screens
             {
                 pickup.Draw(spriteBatch, tileSize);
             }
-            spriteBatch.Draw(key.Sprite.Texture, key.Sprite.Position, Color.White);
         }
 
         public void Hide()
@@ -107,24 +105,30 @@ namespace Jam25.Screens
             player.Initalise(game.Content, game.GraphicsDevice);
 
             gameMap = new GameMap(mapWidth, mapHeight);
+
             gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player, key);
 
 
             // Add the pickups
-            Random rnd = new();
             for (int i = 0; i < healthPickupCount; i++)
             {
-                Vector2 pos;
-                do
-                {
-                    pos = new Vector2(rnd.Next(mapWidth), rnd.Next(mapHeight));
-                }
-                while (gameMap.tiles[(int)pos.X, (int)pos.Y] == TileType.Wall);
-
-                pickups.Add(new HealthPack(Vector2.Multiply(pos, tileSize), game.Content));
+                pickups.Add(new HealthPack(PointWithinWalls(), game.Content));
             }
+            pickups.Add(key);
 
             WorldBounds = new Rectangle(0, 0, mapWidth * tileSize, mapHeight * tileSize);
+        }
+
+        private Vector2 PointWithinWalls()
+        {
+            Random rnd = new();
+            Vector2 pos;
+            do
+            {
+                pos = new Vector2(rnd.Next(mapWidth), rnd.Next(mapHeight));
+            }
+            while (gameMap.tiles[(int)pos.X, (int)pos.Y] == TileType.Wall);
+            return Vector2.Multiply(pos, tileSize);
         }
 
         public void Update(GameTime gameTime)
