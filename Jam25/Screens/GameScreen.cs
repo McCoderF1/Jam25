@@ -3,9 +3,8 @@ using HDT.Gaming.Input;
 using HDT.Gaming.Physics;
 using HDT.Gaming.Screens;
 using Jam25.Entities;
-using Jam25.Entities.Pickups;
 using Jam25.Entities.Enemies;
-using Jam25.Graphics;
+using Jam25.Entities.Pickups;
 using Jam25.Scenes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -13,8 +12,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Reflection.Metadata;
 
 namespace Jam25.Screens
 {
@@ -78,7 +75,7 @@ namespace Jam25.Screens
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
 
 
-            EnemyFactory enemyFactory = new (game.Content, audioController);
+            EnemyFactory enemyFactory = new(game.Content, audioController);
 
             gameScene.Enemies.Add(enemyFactory.CreateSlimeEnemy(new(200, 200)));
         }
@@ -109,28 +106,39 @@ namespace Jam25.Screens
 
         public void Show()
         {
-            Texture2D playerTexture = game.Content.Load<Texture2D>("PlayerSprite/lvl1/Swordsman_lvl1_Idle_with_shadow");
-            player = new Player(spriteBatch)
-            {
-                Sprite = new Graphics.Sprite(playerTexture, new Vector2(playerTexture.Width * 0.5f, playerTexture.Height))
-            };
-
-            player.Initalise(game.Content, game.GraphicsDevice);
-
             gameMap = new GameMap(mapWidth, mapHeight);
-
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player, key);
-
+            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
 
             // Add the pickups
             for (int i = 0; i < healthPickupCount; i++)
             {
                 pickups.Add(new HealthPack(PointWithinWalls(), game.Content));
             }
+
             pickups.Add(key);
 
             WorldBounds = new Rectangle(0, 0, mapWidth * tileSize, mapHeight * tileSize);
         }
+
+        private Vector2 PointWithinWalls()
+
+        {
+
+            Random rnd = new();
+
+            Vector2 pos;
+
+            do
+            {
+
+                pos = new Vector2(rnd.Next(mapWidth), rnd.Next(mapHeight));
+            }
+            while (gameMap.tiles[(int)pos.X, (int)pos.Y].Type == TileType.Wall);
+
+            return Vector2.Multiply(pos, tileSize);
+
+        }
+
 
         public void Update(GameTime gameTime)
         {
@@ -179,13 +187,13 @@ namespace Jam25.Screens
 
                     foreach (IPickup pickup in pickups)
                     {
-                        if (Vector2.Distance(pickup.Position, Vector2.Subtract(player.Body.Position, new Vector2(tileSize / 2, tileSize / 2))) < tileSize)
+                        if (Vector2.Distance(pickup.Sprite.Position, Vector2.Subtract(player.Body.Position, new Vector2(tileSize / 2, tileSize / 2))) < tileSize)
                         {
                             pickup.Collect(player);
                         }
                     }
                 }
-                
+
             }
         }
 
