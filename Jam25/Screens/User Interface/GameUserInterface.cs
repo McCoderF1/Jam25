@@ -1,6 +1,7 @@
 ﻿using HDT.Gaming.Audio;
 using HDT.Gaming.Screens;
 using Jam25.Graphics;
+using Jam25.Stores;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -29,9 +30,6 @@ namespace Jam25.Screens.UserInterface
 
         private AnimatedSprite playerIcon;
         private AnimatedTexture animatedPlayerIcon;
-
-        private AnimatedSprite fireLarge;
-        private AnimatedTexture animatedFireLarge;
         private Vector2 currentCameraPosition = Vector2.Zero;
 
         #endregion
@@ -51,18 +49,11 @@ namespace Jam25.Screens.UserInterface
             UIBase = content.Load<Texture2D>("Images/UI/UIBase");
             font = content.Load<SpriteFont>("Fonts/Menu");
             game.LoadSprite(SpriteID.PlayerUIIcon, "Images/UI/PlayerUIIcon", 12, 5, new Vector2(64f, 64f));
-            game.LoadSprite(SpriteID.FireBig, "Images/UI/FireBig", 6, 3, new Vector2(150f, 150f));
 
             if (game.TryGetSprite(SpriteID.PlayerUIIcon, out AnimatedTexture animatedIcon))
             {
                 this.animatedPlayerIcon = animatedIcon;
                 playerIcon = new AnimatedSprite() { SpriteId = SpriteID.PlayerUIIcon, ScaleX = 4, ScaleY = 4 };
-            }
-
-            if (game.TryGetSprite(SpriteID.FireBig, out AnimatedTexture animatedFireLarge))
-            {
-                this.animatedFireLarge = animatedFireLarge;
-                fireLarge = new AnimatedSprite() { SpriteId = SpriteID.FireBig, ScaleX = 1, ScaleY = 1 };
             }
 
             whitePixel = new Texture2D(graphics, 1, 1);
@@ -89,11 +80,9 @@ namespace Jam25.Screens.UserInterface
                 new Rectangle(XPos, YPos, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
                 Color.White);
 
-            animatedFireLarge.DrawFrame(spriteBatch, fireLarge.Frame, new Vector2(XPos + 1250, YPos + 150), fireLarge);
-
             DrawPlayerStatusBars();
             DrawTorchBar();
-            DrawTimer();
+            DrawInformation(XPos, YPos);
         }
 
         ///<inheritdoc/>
@@ -116,7 +105,6 @@ namespace Jam25.Screens.UserInterface
 
         public void Update(GameTime gameTime)
         {
-            UpdateSprite(fireLarge, (float)gameTime.ElapsedGameTime.TotalSeconds);
             UpdateSprite(playerIcon, (float)gameTime.ElapsedGameTime.TotalSeconds);
         }
 
@@ -196,9 +184,9 @@ namespace Jam25.Screens.UserInterface
             }
         }
 
-        private void DrawTimer()
+        private void DrawInformation(int xPos, int yPos)
         {
-
+            spriteBatch.DrawString(font, "Floor 1", new Microsoft.Xna.Framework.Vector2(xPos + 1127, yPos + 60), Color.White);
         }
 
         private void UpdateSprite(AnimatedSprite sprite, float elapsed)

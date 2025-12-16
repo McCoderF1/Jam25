@@ -149,18 +149,6 @@
 /processorParam:TextureFormat=Color
 /build:Images/HealthPickup.png
 
-#begin Images/HealthPickup.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Images/HealthPickup.png
-
 #begin Images/key32.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -245,7 +233,7 @@
 /processorParam:TextureFormat=Color
 /build:Images/StatsPage/PlayerTab.png
 
-#begin Images/UI/FireBig.png
+#begin Images/supplies_objects.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -255,7 +243,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Images/UI/FireBig.png
+/build:Images/supplies_objects.png
 
 #begin Images/UI/PlayerUIIcon.png
 /importer:TextureImporter
@@ -580,19 +568,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:PlayerSprite/lvl3/Swordsman_lvl3_Walk_with_shadow.png
-
-#begin Images/supplies_objects.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Images/supplies_objects.png
-
 
 #begin Sound/Music/The Flickering Flame.mp3
 /importer:Mp3Importer
