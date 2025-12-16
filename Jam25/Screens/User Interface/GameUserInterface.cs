@@ -32,6 +32,7 @@ namespace Jam25.Screens.UserInterface
 
         private AnimatedSprite fireLarge;
         private AnimatedTexture animatedFireLarge;
+        private Vector2 currentCameraPosition = Vector2.Zero;
 
         #endregion
 
@@ -45,7 +46,7 @@ namespace Jam25.Screens.UserInterface
             this.graphicsDevice = graphics;
             this.content = content;
             this.audioController = audioController;
-            this.player = player; 
+            this.player = player;
 
             UIBase = content.Load<Texture2D>("Images/UI/UIBase");
             font = content.Load<SpriteFont>("Fonts/Menu");
