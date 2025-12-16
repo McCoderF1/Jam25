@@ -171,7 +171,7 @@ namespace Jam25
                     {
                         isAttacking = true;
                         ResetAnimation();
-                        lastState = PlayerState.Attacking;
+                        LastState = PlayerState.Attacking;
 
                         Stamina.TakeStamina(3);
                     }
@@ -198,7 +198,7 @@ namespace Jam25
                     {
                         isAttacking = true;
                         ResetAnimation();
-                        lastState |= PlayerState.Attacking;   // becomes Running | Attacking
+                        LastState |= PlayerState.Attacking;   // becomes Running | Attacking
                         Stamina.TakeStamina(7);
                     }
                     else if (!attackKeyDown && isAttacking && animationStage == currentTexture.cols - 1)
@@ -227,7 +227,7 @@ namespace Jam25
                     {
                         isAttacking = true;
                         ResetAnimation();
-                        lastState |= PlayerState.Attacking;   // Walking | Attacking
+                        LastState |= PlayerState.Attacking;   // Walking | Attacking
                         Stamina.TakeStamina(5);
                     }
                     else if (!attackKeyDown && isAttacking && animationStage == currentTexture.cols - 1)
@@ -406,7 +406,7 @@ namespace Jam25
             }
 
             var movementState = IsRunning(run) ? PlayerState.Running : PlayerState.Walking;
-            lastState = movementState | nonMovementFlags;
+            LastState = movementState | nonMovementFlags;
         }
 
         private bool IsRunning(bool runRequest)
