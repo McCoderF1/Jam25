@@ -95,7 +95,7 @@ namespace Jam25.Screens
         public void Draw()
         {
             spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, Matrix.CreateTranslation(new Vector3(-CameraPosition, 0f)));
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp, null, null, null, Matrix.CreateTranslation(new Vector3(-CameraPosition, 0f)));
 
             DrawDungeon();
             player.Draw();
