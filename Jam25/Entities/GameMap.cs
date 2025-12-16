@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Jam25.Scenes;
+using Jam25.Screens;
+using Microsoft.Xna.Framework;
 using System;
 
 namespace Jam25.Entities
@@ -16,7 +18,7 @@ namespace Jam25.Entities
         private readonly int width;
         private readonly int height;
 
-        public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight, Player player, Key key)
+        public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight, Scene scene, Key key)
         {
             Rectangle[] rooms = new Rectangle[maxRooms];
             int numRooms = 0;
@@ -50,7 +52,7 @@ namespace Jam25.Entities
                         // Paint room to map
                         CreateRoom(newRoom);
 
-                        // Center coordinates of new room
+                        // Centre coordinates of new room
 
                         var newX = newRoom.Center.X;
                         var newY = newRoom.Center.Y;
@@ -58,7 +60,7 @@ namespace Jam25.Entities
                         if (numRooms == 0)
                         {
                             // This is the first room where the player starts
-                            player.Body.Position = new Vector2(newX * 32, newY * 32);
+                            scene.Player.Body.Position = new Vector2(newX * 32, newY * 32);
                         }
                         else
                         {
