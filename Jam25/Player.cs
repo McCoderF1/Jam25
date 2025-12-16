@@ -1,5 +1,6 @@
 ﻿using HDT.Gaming.Models;
 using HDT.Gaming.Physics;
+using Jam25.Entities.Pickups;
 using Jam25.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;

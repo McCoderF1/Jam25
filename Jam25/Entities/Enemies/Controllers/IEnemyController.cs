@@ -13,7 +13,12 @@ namespace Jam25.Entities.Enemies.Controllers
     /// </summary>
     public interface IEnemyController
     {
-
-        void Update(Scene scene, Enemy enemy, float deltaTime);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="scene"></param>
+        /// <param name="enemy"></param>
+        /// <param name="deltaTime"></param>
+        void Update(Scene scene, Enemy enemy, TimeSpan deltaTime);
     }
 }
