@@ -24,9 +24,16 @@ namespace Jam25.Graphics
         private readonly int framesPerDirection;
         private TimeSpan accumulatedTime = TimeSpan.Zero;
         private int currentFrame = 0;
+        private bool hasCompleted = false;
+        private bool hasStarted = false;
         private Direction currentDirection;
 
         public Texture2D Texture { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the animation loop has completed execution at least once.
+        /// </summary>
+        public bool LoopCompleted => hasCompleted;
 
         public AnimatedDirectionalSprite(Texture2D texture, int frameWidth, Direction[] directionsOrder, TimeSpan frameTime)
         {
@@ -58,6 +65,8 @@ namespace Jam25.Graphics
                 currentDirection = direction;
                 currentFrame = 0;
                 accumulatedTime = TimeSpan.Zero;
+                hasCompleted = false;
+                hasStarted = false;
             }
 
             accumulatedTime += gameTime.ElapsedGameTime;
@@ -67,6 +76,12 @@ namespace Jam25.Graphics
                 accumulatedTime -= frameTime;
                 currentFrame = (currentFrame + 1) % framesPerDirection;
             }
+
+            if(!hasStarted && currentFrame != 0)
+                hasStarted = true;
+
+            if(!hasCompleted && hasStarted && currentFrame == 0)
+                hasCompleted = true;
         }
 
         public void Draw(SpriteBatch spriteBatch, Vector2 position)

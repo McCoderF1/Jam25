@@ -13,6 +13,8 @@ namespace Jam25
         public readonly Dictionary<SpriteID, AnimatedTexture> sprites = new();
         private readonly Dictionary<FontID, SpriteFont> fonts = new();
 
+        public Texture2D ObjectSpriteSheet { get; private set; }
+
         public GameContent(ContentManager contentManager)
         {
             this.contentManager = contentManager;
@@ -38,6 +40,11 @@ namespace Jam25
         {
             SpriteFont font = contentManager.Load<SpriteFont>(path);
             fonts.Add(id, font);
+        }
+
+        public void LoadObjectSpritesheet(string path)
+        {
+            ObjectSpriteSheet = contentManager.Load<Texture2D>(path);
         }
 
         public bool TryGetSprite(SpriteID id, out AnimatedTexture sprite)
