@@ -1,6 +1,5 @@
 ﻿using HDT.Gaming.Models;
 using HDT.Gaming.Physics;
-using Jam25.Entities.Pickups;
 using Jam25.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -13,7 +12,9 @@ namespace Jam25
 {
     public class Player
     {
-        public struct PlayerTexture
+        #region Private structs/enums
+
+        private struct PlayerTexture
         {
             public Texture2D texture;
             public int cols;
@@ -25,19 +26,32 @@ namespace Jam25
             }
         }
 
-        enum Direction { Up, Right, Down, Left }
-        private Direction lastDir;
-
-        [Flags]        
-        public enum PlayerState 
-        { 
-            Idle = 0x01, 
-            Running = 0x02, 
-            Attacking = 0x04, 
-            Hurt = 0x08, 
+        [Flags]
+        private enum PlayerState
+        {
+            Idle = 0x01,
+            Running = 0x02,
+            Attacking = 0x04,
+            Hurt = 0x08,
             Dying = 0x10,
             Walking = 0x20,
         }
+
+        #endregion 
+
+        #region Private consts
+
+        // Movement mask: all movement-related bits (Idle, Running, Walking)
+        private const PlayerState MovementMask = PlayerState.Idle | PlayerState.Running | PlayerState.Walking;
+        private const PlayerState AttackMask = PlayerState.Attacking;
+
+        #endregion
+
+        #region Private members
+
+        private enum Direction { Up, Right, Down, Left }
+        private Direction lastDir;
+
         private PlayerState lastState;
 
         private Dictionary<PlayerState, PlayerTexture>[] textures;
@@ -77,6 +91,10 @@ namespace Jam25
 
         private Vector2 movementDirection = Vector2.Zero;
 
+        private bool isAttacking;
+
+        #endregion 
+
         public Sprite Sprite { get; set; }
 
         public Body Body { get; set; }
@@ -86,12 +104,6 @@ namespace Jam25
         public Health Health { get; set; }
 
         public int Level { get; set; }
-
-        private bool isAttacking;
-
-        // Movement mask: all movement-related bits (Idle, Running, Walking)
-        private const PlayerState MovementMask = PlayerState.Idle | PlayerState.Running | PlayerState.Walking;
-        private const PlayerState AttackMask = PlayerState.Attacking;
 
         public Player(SpriteBatch spriteBatch)
         {
@@ -129,22 +141,6 @@ namespace Jam25
             animationStage = 0;
             animationTime = 0f;
             lastState = PlayerState.Idle;
-        }
-
-        private void IncrementAnimation(float deltaSeconds)
-        {
-            animationTime += deltaSeconds;
-
-            while (animationTime >= frameDuration)
-            {
-                animationTime -= frameDuration;
-                animationStage = (animationStage + 1) % currentTexture.cols;
-            }
-        }
-        private void ResetAnimation()
-        {
-            animationStage = 0;
-            animationTime = 0f;
         }
 
         public Vector2? Update(GameTime gameTime, KeyboardState keyboardState)
@@ -245,7 +241,7 @@ namespace Jam25
                     }
                     break;
 
-                // Hurt/Dying unchanged
+                    // Hurt/Dying unchanged
             }
 
             return null;
@@ -261,6 +257,63 @@ namespace Jam25
 
                 lastState = (Health.Current == 0) ? PlayerState.Dying : PlayerState.Hurt;
             }
+        }
+
+        public void Draw()
+        {
+            int row = 0;
+            switch (lastDir)
+            {
+                case Direction.Up:
+                    row = 3;
+                    break;
+                case Direction.Down:
+                    row = 0;
+                    break;
+                case Direction.Left:
+                    row = 1;
+                    break;
+                case Direction.Right:
+                    row = 2;
+                    break;
+            }
+
+            int col = animationStage;
+
+            Rectangle sourceRect = new Rectangle(
+                col * cellSize,
+                row * cellSize,
+                cellSize,
+                cellSize);
+
+            spriteBatch.Draw(
+                currentTexture.texture,
+                Body.Position,
+                sourceRect,
+                Color.White,
+                0f,
+                new Vector2(32, 32),
+                Vector2.One,
+                SpriteEffects.None,
+                layerDepth: 1f);
+        }
+
+        #region Private methods
+
+        private void IncrementAnimation(float deltaSeconds)
+        {
+            animationTime += deltaSeconds;
+
+            while (animationTime >= frameDuration)
+            {
+                animationTime -= frameDuration;
+                animationStage = (animationStage + 1) % currentTexture.cols;
+            }
+        }
+        private void ResetAnimation()
+        {
+            animationStage = 0;
+            animationTime = 0f;
         }
 
         private Vector2 MovePlayer(float deltaSeconds, float speedMultiplier)
@@ -331,43 +384,6 @@ namespace Jam25
             lastState = movementState | nonMovementFlags;
         }
 
-        public void Draw()
-        {
-            int row = 0;
-            switch (lastDir)
-            {
-                case Direction.Up:
-                    row = 3;
-                    break;
-                case Direction.Down:
-                    row = 0;
-                    break;
-                case Direction.Left:
-                    row = 1;
-                    break;
-                case Direction.Right:
-                    row = 2;
-                    break;
-            }
-
-            int col = animationStage;
-
-            Rectangle sourceRect = new Rectangle(
-                col * cellSize,
-                row * cellSize,
-                cellSize,
-                cellSize);
-
-            spriteBatch.Draw(
-                currentTexture.texture,
-                Body.Position,
-                sourceRect,
-                Color.White,
-                0f,
-                new Vector2(32, 32),
-                Vector2.One,
-                SpriteEffects.None,
-                layerDepth: 1f);
-        }
+        #endregion 
     }
 }
