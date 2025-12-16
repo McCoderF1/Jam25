@@ -49,7 +49,7 @@ namespace Jam25.Screens
         public Rectangle WorldBounds;
 
         public List<IPickup> pickups;
-        private IScreen gameUI;
+        private IScreenUI gameUI;
 
         #endregion
 
@@ -163,10 +163,10 @@ namespace Jam25.Screens
             CameraPosition.X = MathHelper.Clamp(targetCameraPosition.X, cameraMinX, cameraMaxX);
             CameraPosition.Y = MathHelper.Clamp(targetCameraPosition.Y, cameraMinY, cameraMaxY);
 
-            gameUI.Update(gameTime);
+            gameUI.UpdateWithVector(gameTime, CameraPosition);
         }
 
-        public void InstallUI(IScreen userInterface)
+        public void InstallUI(IScreenUI userInterface)
         {
             gameUI = userInterface;
         }

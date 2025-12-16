@@ -15,7 +15,7 @@ namespace Jam25.Screens.UserInterface
     /// <summary>
     /// User interface overall during the main game loop
     /// </summary>
-    public class GameUserInterface : IScreen
+    public class GameUserInterface : IScreenUI
     {
         #region private members
 
@@ -28,6 +28,8 @@ namespace Jam25.Screens.UserInterface
 
         private readonly Texture2D UIBase;
         private readonly SpriteFont font;
+
+        private Vector2 currentCameraPosition = Vector2.Zero;
 
         #endregion
 
@@ -51,7 +53,7 @@ namespace Jam25.Screens.UserInterface
         public void Draw()
         {
             spriteBatch.Draw(UIBase,
-                new Rectangle(0, 0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
+                new Rectangle((int)currentCameraPosition.X, (int)currentCameraPosition.Y, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
                 Color.White);
 
             DrawPlayerStatusBars();
@@ -71,6 +73,12 @@ namespace Jam25.Screens.UserInterface
         }
 
         ///<inheritdoc/>
+        public void UpdateWithVector(GameTime gameTime, Vector2 cameraPosition)
+        {
+            currentCameraPosition = cameraPosition;
+            Update(gameTime);
+        }
+
         public void Update(GameTime gameTime)
         {
 
