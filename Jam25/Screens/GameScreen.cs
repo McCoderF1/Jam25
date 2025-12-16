@@ -74,7 +74,7 @@ namespace Jam25.Screens
 
             gameScene = new(gameMap, player);
 
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
+            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player, key);
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
 
 
@@ -95,7 +95,7 @@ namespace Jam25.Screens
             {
                 pickup.Draw(spriteBatch, tileSize);
             }
-            spriteBatch.Draw(key.Sprite.Texture, key.Sprite.Position, Color.White);
+            //spriteBatch.Draw(key.Sprite.Texture, key.Sprite.Position, Color.White);
 
             for (int i = 0; i < gameScene.Enemies.Count; i++)
             {
