@@ -71,7 +71,7 @@ namespace Jam25.Screens
 
             gameScene = new(gameMap, player);
 
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player, key);
+            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
 
 
@@ -121,7 +121,6 @@ namespace Jam25.Screens
         }
 
         private Vector2 PointWithinWalls()
-
         {
 
             Random rnd = new();
@@ -130,10 +129,9 @@ namespace Jam25.Screens
 
             do
             {
-
                 pos = new Vector2(rnd.Next(mapWidth), rnd.Next(mapHeight));
             }
-            while (gameMap.tiles[(int)pos.X, (int)pos.Y].Type == TileType.Wall);
+            while (gameMap.tiles[(int)pos.X, (int)pos.Y].Type != TileType.Floor);
 
             return Vector2.Multiply(pos, tileSize);
 
