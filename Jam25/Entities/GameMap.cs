@@ -16,12 +16,15 @@ namespace Jam25.Entities
         private readonly int width;
         private readonly int height;
 
-        public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight, Player player)
+        public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight, Player player, Key key)
         {
             Rectangle[] rooms = new Rectangle[maxRooms];
             int numRooms = 0;
 
             Random rand = new Random();
+
+            // Determine random room to generate key (latter half)
+            int keyRoom = rand.Next(maxRooms / 2, maxRooms);
 
             for (int i = 0; i < maxRooms; i++)
             {
@@ -65,6 +68,13 @@ namespace Jam25.Entities
                             var prevX = rooms[numRooms - 1].Center.X;
                             var prevY = rooms[numRooms - 1].Center.Y;
 
+
+                            if (i == keyRoom)
+                            {
+                                // This is the room to place the key
+                                key.Sprite.Position = new Vector2(newX * 32, newY * 32);
+
+                            }
                             // Flip a coin
                             if (rand.Next(0, 1) == 0)
                             {

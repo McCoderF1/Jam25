@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using HDT.Gaming.Physics;
+﻿using HDT.Gaming.Physics;
 using Jam25.Entities;
 using Jam25.Entities.Enemies;
+using System.Collections.Generic;
 
 namespace Jam25.Scenes
 {

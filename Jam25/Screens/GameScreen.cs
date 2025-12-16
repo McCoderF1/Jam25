@@ -3,19 +3,18 @@ using HDT.Gaming.Input;
 using HDT.Gaming.Physics;
 using HDT.Gaming.Screens;
 using Jam25.Entities;
+using Jam25.Graphics;
 using Jam25.Scenes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
-using System.ComponentModel;
 
 namespace Jam25.Screens
 {
     public class GameScreen : IScreen
     {
-
         #region private members
 
         private readonly GraphicsDevice graphicsDevice;
@@ -25,6 +24,7 @@ namespace Jam25.Screens
         private readonly Scene gameScene;
         private Texture2D wallsFloor;
         private GameMap gameMap;
+        private Key key;
 
         private int mapWidth = 80;
         private int mapHeight = 42;
@@ -54,17 +54,14 @@ namespace Jam25.Screens
             this.audioController = audioController;
             this.game = game;
 
-
-
-
-            player = new Player(spriteBatch)
-            {
-                
-            };
+            player = new Player(spriteBatch);
             player.Initalise(content, graphicsDevice);
 
+            var keyImage = game.Content.Load<Texture2D>("Images/key32");
+            key = new Key(new Sprite(keyImage, new Vector2(keyImage.Width * 0.5f, keyImage.Height)));
+
             gameMap = new GameMap(mapWidth, mapHeight);
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player);
+            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player, key);
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
 
 
@@ -78,6 +75,7 @@ namespace Jam25.Screens
 
             DrawDungeon();
             player.Draw();
+            spriteBatch.Draw(key.Sprite.Texture, key.Sprite.Position, Color.White);
         }
 
         public void Hide()
@@ -93,9 +91,7 @@ namespace Jam25.Screens
             };
 
             player.Initalise(game.Content, game.GraphicsDevice);
-
-            gameMap = new GameMap(mapWidth, mapHeight);
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player);
+            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player, key);
 
             WorldBounds = new Rectangle(0, 0, mapWidth * tileSize, mapHeight * tileSize);
         }
@@ -130,7 +126,7 @@ namespace Jam25.Screens
             //physicsWorld.Update(1f);
 
             Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
-            
+
             float cameraMinX = WorldBounds.X;
             float cameraMaxX = WorldBounds.Right - game.GraphicsDevice.Viewport.Width;
             float cameraMinY = WorldBounds.Y;
@@ -161,12 +157,12 @@ namespace Jam25.Screens
                     || IsWallTile(targetPosition.X - tileSize + buffer, targetPosition.Y - buffer)
                     || IsWallTile(targetPosition.X - tileSize + buffer, targetPosition.Y - tileSize + buffer)
                     || IsWallTile(targetPosition.X - buffer, targetPosition.Y - tileSize + buffer));
-                
+
                 if (canMove)
                 {
                     player.Body.Position = targetPosition;
                 }
-                
+
             }
         }
 
