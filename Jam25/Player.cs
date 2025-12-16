@@ -1,6 +1,6 @@
-﻿using HDT.Gaming.Physics;
+﻿using HDT.Gaming.Models;
+using HDT.Gaming.Physics;
 using Jam25.Graphics;
-using Jam25.Models;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
