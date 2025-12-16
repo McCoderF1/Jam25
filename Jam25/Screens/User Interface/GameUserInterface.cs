@@ -4,11 +4,6 @@ using Jam25.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Jam25.Screens.UserInterface
 {
@@ -21,11 +16,10 @@ namespace Jam25.Screens.UserInterface
 
         private readonly SpriteBatch spriteBatch;
         private readonly GameContent game;
-        private readonly GraphicsDeviceManager graphics;
         private readonly GraphicsDevice graphicsDevice;
         private readonly ContentManager content;
         private readonly AudioController audioController;
-
+        private readonly Player player;
         private readonly Texture2D UIBase;
         private readonly SpriteFont font;
 
@@ -36,14 +30,14 @@ namespace Jam25.Screens.UserInterface
         /// <summary>
         /// Game User Interface constructor
         /// </summary>
-        public GameUserInterface(SpriteBatch spriteBatch, GraphicsDeviceManager graphics, GameContent game, ContentManager content, AudioController audioController)
+        public GameUserInterface(SpriteBatch spriteBatch, GraphicsDevice graphics, GameContent game, ContentManager content, AudioController audioController, Player player)
         {
             this.spriteBatch = spriteBatch;
             this.game = game;
-            this.graphics = graphics;
-            this.graphicsDevice = graphics.GraphicsDevice;
+            this.graphicsDevice = graphics;
             this.content = content;
             this.audioController = audioController;
+            this.player = player; 
 
             UIBase = content.Load<Texture2D>("Images/UI/UIBase");
             font = content.Load<SpriteFont>("Fonts/Menu");
@@ -88,7 +82,7 @@ namespace Jam25.Screens.UserInterface
 
         private void DrawPlayerStatusBars()
         {
-
+            
         }
 
         private void DrawTimer()

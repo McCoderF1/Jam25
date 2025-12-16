@@ -56,6 +56,7 @@ namespace Jam25.Screens
         public GameScreen(
             GraphicsDevice gfxDevice,
             SpriteBatch spriteBatch,
+            GameContent gameContent,
             ContentManager content,
             AudioController audioController,
             Game1 game)
@@ -83,6 +84,8 @@ namespace Jam25.Screens
             EnemyFactory enemyFactory = new(game.Content, audioController);
 
             gameScene.Enemies.Add(enemyFactory.CreateSlimeEnemy(new(200, 200)));
+
+            gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player);
         }
 
         public void Draw()
@@ -164,11 +167,6 @@ namespace Jam25.Screens
             CameraPosition.Y = MathHelper.Clamp(targetCameraPosition.Y, cameraMinY, cameraMaxY);
 
             gameUI.UpdateWithVector(gameTime, CameraPosition);
-        }
-
-        public void InstallUI(IScreenUI userInterface)
-        {
-            gameUI = userInterface;
         }
 
         #region private methods

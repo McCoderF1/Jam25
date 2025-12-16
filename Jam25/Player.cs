@@ -103,6 +103,8 @@ namespace Jam25
 
         public Health Health { get; set; }
 
+        public Stamina Stamina { get; set; }
+
         public int Level { get; set; }
 
         public Player(SpriteBatch spriteBatch)
@@ -110,6 +112,7 @@ namespace Jam25
             lastDir = Direction.Down;
             cellSize = 64;
             Health = new(100);
+            Stamina = new Stamina(100);
             Level = 1;  // NOTE: level is from 1-3, while level index in texture array is 0-2.
             textureScale = 5;
             textures = new Dictionary<PlayerState, PlayerTexture>[3];
