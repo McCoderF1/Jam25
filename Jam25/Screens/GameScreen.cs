@@ -3,13 +3,16 @@ using HDT.Gaming.Input;
 using HDT.Gaming.Physics;
 using HDT.Gaming.Screens;
 using Jam25.Entities;
+using Jam25.Entities.Pickups;
 using Jam25.Scenes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Reflection.Metadata;
 
 namespace Jam25.Screens
 {
@@ -33,12 +36,16 @@ namespace Jam25.Screens
         private int maxRoomSize = 10;
         private int minRoomSize = 6;
 
+        private int healthPickupCount = 200;
+
         private int tileSize = 32;
         private Player player;
         private PhysicsWorld physicsWorld;
 
         public Vector2 CameraPosition;
         public Rectangle WorldBounds;
+
+        public List<IPickup> pickups;
 
         #endregion
 
@@ -54,19 +61,15 @@ namespace Jam25.Screens
             this.audioController = audioController;
             this.game = game;
 
+            pickups = new();
 
-
-
-            player = new Player(spriteBatch)
-            {
-                
-            };
+            player = new Player(spriteBatch);
             player.Initalise(content, graphicsDevice);
+
 
             gameMap = new GameMap(mapWidth, mapHeight);
             gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player);
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
-
 
             gameScene = new(gameMap, player);
         }
@@ -78,6 +81,11 @@ namespace Jam25.Screens
 
             DrawDungeon();
             player.Draw();
+
+            foreach (IPickup pickup in pickups)
+            {
+                pickup.Draw(spriteBatch, tileSize);
+            }
         }
 
         public void Hide()
@@ -94,40 +102,31 @@ namespace Jam25.Screens
 
             player.Initalise(game.Content, game.GraphicsDevice);
 
+            // why do we reinitalise an already initalised gamemap????????
             gameMap = new GameMap(mapWidth, mapHeight);
             gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player);
+
+
+            // Add the pickups
+            Random rnd = new();
+            for (int i = 0; i < healthPickupCount; i++)
+            {
+                Vector2 pos;
+                do
+                {
+                    pos = new Vector2(rnd.Next(mapWidth), rnd.Next(mapHeight));
+                }
+                while (gameMap.tiles[(int)pos.X, (int)pos.Y] == TileType.Wall);
+
+                pickups.Add(new HealthPack(Vector2.Multiply(pos, tileSize), game.Content));
+            }
 
             WorldBounds = new Rectangle(0, 0, mapWidth * tileSize, mapHeight * tileSize);
         }
 
         public void Update(GameTime gameTime)
         {
-            //if (keyboardState.IsKeyDown(Keys.D) || keyboardState.IsKeyDown(Keys.Right))
-            //{
-            //    player.Sprite.IsFacingRight = true;
-            //    playerMovement += new Vector2(1f, 0);
-            //}
-            //if (keyboardState.IsKeyDown(Keys.A) || keyboardState.IsKeyDown(Keys.Left))
-            //{
-            //    player.Sprite.IsFacingRight = false;
-            //    playerMovement += new Vector2(-1f, 0);
-            //}
-            //if (keyboardState.IsKeyDown(Keys.W) || keyboardState.IsKeyDown(Keys.Up))
-            //    playerMovement += new Vector2(0, -1f);
-            //if (keyboardState.IsKeyDown(Keys.S) || keyboardState.IsKeyDown(Keys.Down))
-            //    playerMovement += new Vector2(0, 1f);
-
-            //if (playerMovement != Vector2.Zero)
-            //{
-            //    player.Body.Velocity = playerMovement * player.MovementSpeed;
-            //}
-            //else
-            //{
-            //    player.Body.Velocity = Vector2.Zero;
-            //}
-
             MovePlayer();
-            //physicsWorld.Update(1f);
 
             Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
             
@@ -154,19 +153,26 @@ namespace Jam25.Screens
                 // Top left coordinate of where the player is moving to.
                 Vector2 targetPosition = (Vector2)probableTargetPosition;
 
-                float buffer = 5; // to make going through thin corridors easier
+                float buffer = 8; // to make going through thin corridors easier
 
                 // check each corner of the player box
                 bool canMove = !(IsWallTile(targetPosition.X - buffer, targetPosition.Y - buffer)
                     || IsWallTile(targetPosition.X - tileSize + buffer, targetPosition.Y - buffer)
                     || IsWallTile(targetPosition.X - tileSize + buffer, targetPosition.Y - tileSize + buffer)
                     || IsWallTile(targetPosition.X - buffer, targetPosition.Y - tileSize + buffer));
-                
+
                 if (canMove)
                 {
                     player.Body.Position = targetPosition;
+
+                    foreach (IPickup pickup in pickups)
+                    {
+                        if (Vector2.Distance(pickup.Position, player.Body.Position) < 30)
+                        {
+                            pickup.Collect(player);
+                        }
+                    }
                 }
-                
             }
         }
 
