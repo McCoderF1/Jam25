@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection.Metadata;
+using Jam25.Screens.UserInterface;
 
 namespace Jam25.Screens
 {
@@ -27,6 +28,7 @@ namespace Jam25.Screens
         private readonly AudioController audioController;
         private readonly Game1 game;
         private readonly Scene gameScene;
+
         private Texture2D wallsFloor;
         private GameMap gameMap;
         private KeyPickup key;
@@ -48,6 +50,7 @@ namespace Jam25.Screens
         public Rectangle WorldBounds;
 
         public List<IPickup> pickups;
+        private IScreen gameUI;
 
         #endregion
 
@@ -101,10 +104,13 @@ namespace Jam25.Screens
             {
                 gameScene.Enemies[i].CurrentSprite.Draw(spriteBatch, gameScene.Enemies[i].Body.Position);
             }
+
+            gameUI.Draw();
         }
 
         public void Hide()
         {
+            gameUI.Hide();
         }
 
         public void Show()
@@ -130,6 +136,8 @@ namespace Jam25.Screens
             pickups.Add(key);
 
             WorldBounds = new Rectangle(0, 0, mapWidth * tileSize, mapHeight * tileSize);
+
+            gameUI.Show();
         }
 
         private Vector2 PointWithinWalls()
@@ -158,8 +166,14 @@ namespace Jam25.Screens
 
             CameraPosition.X = MathHelper.Clamp(targetCameraPosition.X, cameraMinX, cameraMaxX);
             CameraPosition.Y = MathHelper.Clamp(targetCameraPosition.Y, cameraMinY, cameraMaxY);
+
+            gameUI.Update(gameTime);
         }
 
+        public void InstallUI(IScreen userInterface)
+        {
+            gameUI = userInterface;
+        }
 
         #region private methods
 
