@@ -1,6 +1,5 @@
 ﻿using HDT.Gaming.Models;
 using HDT.Gaming.Physics;
-using Jam25.Entities.Pickups;
 using Jam25.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -13,7 +12,9 @@ namespace Jam25
 {
     public class Player
     {
-        public struct PlayerTexture
+        #region Private structs/enums
+
+        private struct PlayerTexture
         {
             public Texture2D texture;
             public int cols;
@@ -25,27 +26,27 @@ namespace Jam25
             }
         }
 
-        enum Direction { Up, Right, Down, Left }
-        private Direction lastDir;
+        #endregion 
 
-        [Flags]        
-        public enum PlayerState 
-        { 
-            Idle = 0x01, 
-            Running = 0x02, 
-            Attacking = 0x04, 
-            Hurt = 0x08, 
-            Dying = 0x10,
-            Walking = 0x20,
-        }
-        private PlayerState lastState;
+        #region Private consts
+
+        // Movement mask: all movement-related bits (Idle, Running, Walking)
+        private const PlayerState MovementMask = PlayerState.Idle | PlayerState.Running | PlayerState.Walking;
+        private const PlayerState AttackMask = PlayerState.Attacking;
+
+        #endregion
+
+        #region Private members
+
+        private enum Direction { Up, Right, Down, Left }
+        private Direction lastDir;
 
         private Dictionary<PlayerState, PlayerTexture>[] textures;
         private PlayerTexture currentTexture
         {
             get
             {
-                var state = lastState;
+                var state = LastState;
 
                 // Normalize unsupported combinations to known keys.
                 // If Idle + Attacking, just use Attacking.
@@ -66,6 +67,10 @@ namespace Jam25
             }
         }
 
+        // These need to be split into public/private
+        private Vector2 spritePosition;
+        public Vector2 Position => spritePosition;
+        private int vel;
         private int cellSize;
         private int animationStage;
         private int textureScale;
@@ -77,6 +82,23 @@ namespace Jam25
 
         private Vector2 movementDirection = Vector2.Zero;
 
+        private bool isAttacking;
+
+        #endregion
+
+        [Flags]
+        public enum PlayerState
+        {
+            Idle = 0x01,
+            Running = 0x02,
+            Attacking = 0x04,
+            Hurt = 0x08,
+            Dying = 0x10,
+            Walking = 0x20,
+        }
+
+        public PlayerState LastState;
+
         public Sprite Sprite { get; set; }
 
         public Body Body { get; set; }
@@ -85,21 +107,20 @@ namespace Jam25
 
         public Health Health { get; set; }
 
+        public Stamina Stamina { get; set; }
+
         public int Level { get; set; }
 
-        private bool isAttacking;
-
-        // Movement mask: all movement-related bits (Idle, Running, Walking)
-        private const PlayerState MovementMask = PlayerState.Idle | PlayerState.Running | PlayerState.Walking;
-        private const PlayerState AttackMask = PlayerState.Attacking;
+        public bool IsAttacking => ((LastState & Player.PlayerState.Attacking) != 0);
 
         public Player(SpriteBatch spriteBatch)
         {
             lastDir = Direction.Down;
             cellSize = 64;
             Health = new(100);
+            Stamina = new Stamina(100);
             Level = 1;  // NOTE: level is from 1-3, while level index in texture array is 0-2.
-            textureScale = 5;
+            textureScale = 1;
             textures = new Dictionary<PlayerState, PlayerTexture>[3];
 
             Body = new Body()
@@ -128,23 +149,7 @@ namespace Jam25
 
             animationStage = 0;
             animationTime = 0f;
-            lastState = PlayerState.Idle;
-        }
-
-        private void IncrementAnimation(float deltaSeconds)
-        {
-            animationTime += deltaSeconds;
-
-            while (animationTime >= frameDuration)
-            {
-                animationTime -= frameDuration;
-                animationStage = (animationStage + 1) % currentTexture.cols;
-            }
-        }
-        private void ResetAnimation()
-        {
-            animationStage = 0;
-            animationTime = 0f;
+            LastState = PlayerState.Idle;
         }
 
         public Vector2? Update(GameTime gameTime, KeyboardState keyboardState)
@@ -156,7 +161,7 @@ namespace Jam25
 
             // ... debug T/L
 
-            switch (lastState)
+            switch (LastState)
             {
                 case PlayerState.Idle:
                     IncrementAnimation(deltaSeconds);
@@ -172,11 +177,15 @@ namespace Jam25
                     {
                         isAttacking = true;
                         ResetAnimation();
-                        lastState = PlayerState.Attacking;
+                        LastState = PlayerState.Attacking;
+
+                        Stamina.TakeStamina(3);
                     }
                     else if (!attackKeyDown)
                     {
                         isAttacking = false;
+
+                        Stamina.Restore(5);
                     }
                     break;
 
@@ -195,14 +204,17 @@ namespace Jam25
                     {
                         isAttacking = true;
                         ResetAnimation();
-                        lastState |= PlayerState.Attacking;   // becomes Running | Attacking
+                        LastState |= PlayerState.Attacking;   // becomes Running | Attacking
+                        Stamina.TakeStamina(7);
                     }
                     else if (!attackKeyDown && isAttacking && animationStage == currentTexture.cols - 1)
                     {
                         isAttacking = false;
                         ResetAnimation();
-                        lastState &= ~PlayerState.Attacking;  // back to Running
+                        LastState &= ~PlayerState.Attacking;  // back to Running
                     }
+
+                    Stamina.TakeStamina(0.5f); // running stamina drain
 
                     return MovePlayer(deltaSeconds, 2.0f);
 
@@ -221,13 +233,19 @@ namespace Jam25
                     {
                         isAttacking = true;
                         ResetAnimation();
-                        lastState |= PlayerState.Attacking;   // Walking | Attacking
+                        LastState |= PlayerState.Attacking;   // Walking | Attacking
+                        Stamina.TakeStamina(5);
                     }
                     else if (!attackKeyDown && isAttacking && animationStage == currentTexture.cols - 1)
                     {
                         isAttacking = false;
                         ResetAnimation();
-                        lastState &= ~PlayerState.Attacking;  // back to Walking
+                        LastState &= ~PlayerState.Attacking;  // back to Walking
+                    }
+
+                    if(!isAttacking)
+                    {
+                        Stamina.Restore(1);
                     }
 
                     return MovePlayer(deltaSeconds, 1.0f);
@@ -240,12 +258,26 @@ namespace Jam25
                     {
                         // End of idle attack anim
                         isAttacking = false;
-                        lastState = PlayerState.Idle;
+                        LastState = PlayerState.Idle;
                         ResetAnimation();
                     }
                     break;
 
                 // Hurt/Dying unchanged
+
+                case PlayerState.Hurt:
+                    IncrementAnimation(deltaSeconds);
+                    if (animationStage == currentTexture.cols - 1)
+                    {
+                        LastState = PlayerState.Idle;
+                    }
+                    break;
+                case PlayerState.Dying:
+                    if (animationStage != currentTexture.cols - 1)
+                    {
+                        IncrementAnimation(deltaSeconds);
+                    }
+                    break;
             }
 
             return null;
@@ -253,14 +285,71 @@ namespace Jam25
 
         public void TakeDamage(int damage)
         {
-            if (lastState != PlayerState.Hurt && lastState != PlayerState.Dying)
+            if (LastState != PlayerState.Hurt && LastState != PlayerState.Dying)
             {
                 Health.TakeDamage(damage);
                 animationStage = 0;
                 animationTime = 0f;
 
-                lastState = (Health.Current == 0) ? PlayerState.Dying : PlayerState.Hurt;
+                LastState = (Health.Current == 0) ? PlayerState.Dying : PlayerState.Hurt;
             }
+        }
+
+        public void Draw()
+        {
+            int row = 0;
+            switch (lastDir)
+            {
+                case Direction.Up:
+                    row = 3;
+                    break;
+                case Direction.Down:
+                    row = 0;
+                    break;
+                case Direction.Left:
+                    row = 1;
+                    break;
+                case Direction.Right:
+                    row = 2;
+                    break;
+            }
+
+            int col = animationStage;
+
+            Rectangle sourceRect = new Rectangle(
+                col * cellSize,
+                row * cellSize,
+                cellSize,
+                cellSize);
+
+            spriteBatch.Draw(
+                currentTexture.texture,
+                Body.Position,
+                sourceRect,
+                Color.White,
+                0f,
+                new Vector2(32, 32),
+                Vector2.One,
+                SpriteEffects.None,
+                layerDepth: 1f);
+        }
+
+        #region Private methods
+
+        private void IncrementAnimation(float deltaSeconds)
+        {
+            animationTime += deltaSeconds;
+
+            while (animationTime >= frameDuration)
+            {
+                animationTime -= frameDuration;
+                animationStage = (animationStage + 1) % currentTexture.cols;
+            }
+        }
+        private void ResetAnimation()
+        {
+            animationStage = 0;
+            animationTime = 0f;
         }
 
         private Vector2 MovePlayer(float deltaSeconds, float speedMultiplier)
@@ -309,11 +398,11 @@ namespace Jam25
             }
 
             // Preserve non-movement flags (e.g. Attacking)
-            var nonMovementFlags = lastState & ~MovementMask;
+            var nonMovementFlags = LastState & ~MovementMask;
 
             if (movementDirection == Vector2.Zero)
             {
-                lastState = PlayerState.Idle | nonMovementFlags;
+                LastState = PlayerState.Idle | nonMovementFlags;
                 return;
             }
 
@@ -327,47 +416,40 @@ namespace Jam25
                 lastDir = movementDirection.Y < 0 ? Direction.Up : Direction.Down;
             }
 
-            var movementState = run ? PlayerState.Running : PlayerState.Walking;
-            lastState = movementState | nonMovementFlags;
+            var movementState = IsRunning(run) ? PlayerState.Running : PlayerState.Walking;
+            LastState = movementState | nonMovementFlags;
         }
 
-        public void Draw()
+        public void SetPosition(Vector2 position)
         {
-            int row = 0;
+            spritePosition = position;
+        }
+
+        public Vector2 GetFrameMovement()
+        {
+            Vector2 movement = Vector2.Zero;
+
             switch (lastDir)
             {
                 case Direction.Up:
-                    row = 3;
+                    movement.Y -= vel;
                     break;
                 case Direction.Down:
-                    row = 0;
+                    movement.Y += vel;
                     break;
                 case Direction.Left:
-                    row = 1;
+                    movement.X -= vel;
                     break;
                 case Direction.Right:
-                    row = 2;
+                    movement.X += vel;
                     break;
             }
 
-            int col = animationStage;
-
-            Rectangle sourceRect = new Rectangle(
-                col * cellSize,
-                row * cellSize,
-                cellSize,
-                cellSize);
-
-            spriteBatch.Draw(
-                currentTexture.texture,
-                Body.Position,
-                sourceRect,
-                Color.White,
-                0f,
-                new Vector2(32, 32),
-                Vector2.One,
-                SpriteEffects.None,
-                layerDepth: 1f);
+            return movement;
         }
+        private bool IsRunning(bool runRequest)
+            { return runRequest && Stamina.Current > 0; }
+
+        #endregion 
     }
 }

@@ -19,6 +19,6 @@ namespace Jam25.Entities.Enemies.Controllers
         /// <param name="scene"></param>
         /// <param name="enemy"></param>
         /// <param name="deltaTime"></param>
-        void Update(Scene scene, Enemy enemy, TimeSpan deltaTime);
+        void Update(GameScene scene, Enemy enemy, TimeSpan deltaTime);
     }
 }

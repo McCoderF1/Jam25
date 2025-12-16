@@ -1,12 +1,13 @@
-﻿using HDT.Gaming.Audio;
+﻿using System;
+using HDT.Gaming.Audio;
 using Jam25.Graphics;
 using Jam25.Screens;
+using Jam25.Screens.UserInterface;
 using Jam25.Stores;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
-using System;
 
 namespace Jam25
 {
@@ -21,10 +22,8 @@ namespace Jam25
         private ScreenManager screenManager;
         private GameContent content;
 
-        public Vector2 CameraPosition;
-        public Vector2 PlayerPosition; // Update this in your game loop
-        public Rectangle WorldBounds = new Rectangle(0, 0, 2000, 1500); // Example map size in pixels
-
+        internal Torch Torch { get; set; }
+        internal Texture2D UiWhitePixel { get; private set; }
 
         public Game1()
         {
@@ -45,17 +44,28 @@ namespace Jam25
         {
             base.Initialize();
             Window.Title = TITLE;
+
+            Torch = new Torch(
+                maxEnergy: 100f,
+                drainPerSecond: 1f,
+                maxRadius: 250f,
+                minRadius: 60f);
         }
 
         protected override void LoadContent()
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            content.LoadSprite(SpriteID.PlayerLvl1, "Images/StatsPage/PlayerLvl1Idle", 12, 5, new Vector2(64f,64f));
+            content.LoadSprite(SpriteID.PlayerLvl1, "Images/StatsPage/PlayerLvl1Idle", 12, 5, new Vector2(64f, 64f));
 
             content.LoadFont(FontID.Title, "Fonts/Title");
             content.LoadFont(FontID.Heading, "Fonts/GameState");
             content.LoadFont(FontID.Body, "Fonts/Score");
+            content.LoadObjectSpritesheet("Images/supplies_objects");
+
+
+            UiWhitePixel = new Texture2D(GraphicsDevice, 1, 1);
+            UiWhitePixel.SetData(new[] { Color.White });
 
             audioController = new AudioController();
             audioController.InstallMusic("The Flickering Flame", Content.Load<Song>("Sound/Music/The Flickering Flame"));
@@ -65,11 +75,10 @@ namespace Jam25
 
             var startScreen = new StartScreen(graphics.GraphicsDevice, spriteBatch, Content, audioController, this);
             var settingScreen = new SettingsScreen(spriteBatch, graphics, content, Content, audioController);
-            var gameScreen = new GameScreen(graphics.GraphicsDevice, spriteBatch, Content, audioController, this);
+            var gameScreen = new GameScreen(graphics.GraphicsDevice, spriteBatch, content, Content, audioController, this);
             var playerScreen = new PlayerScreen(spriteBatch, graphics, content, Content, audioController);
 
             LoadStores();
-
             screenManager = new ScreenManager(startScreen, settingScreen, gameScreen, playerScreen);
         }
 
@@ -77,6 +86,8 @@ namespace Jam25
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
+
+            Torch.Update(gameTime);
 
             screenManager.Update(gameTime);
             base.Update(gameTime);
@@ -99,10 +110,38 @@ namespace Jam25
             PlayerTracker.RestorePlayerProgress();
         }
 
+        internal void DrawTorchBar()
+        {
+            if (UiWhitePixel == null || Torch == null)
+            {
+                return;
+            }
+
+            const int barWidth = 300;
+            const int barHeight = 20;
+            const int margin = 20;
+
+            var x = margin;
+            var y = margin;
+
+            var backgroundRect = new Rectangle(x, y, barWidth, barHeight);
+            spriteBatch.Draw(UiWhitePixel, backgroundRect, Color.Black * 0.7f);
+
+            var normalized = Torch.NormalizedEnergy;
+            var fillWidth = (int)(barWidth * normalized);
+            if (fillWidth <= 0)
+            {
+                return;
+            }
+
+            var fillRect = new Rectangle(x + 2, y + 2, fillWidth - 4, barHeight - 4);
+            var fillColor = Color.Lerp(Color.Red, Color.Orange, normalized);
+            spriteBatch.Draw(UiWhitePixel, fillRect, fillColor);
+        }
+
         public void Exit()
         {
             base.Exit();
         }
-
     }
 }
