@@ -23,7 +23,7 @@ namespace Jam25.Screens
         private readonly SpriteBatch spriteBatch;
         private readonly AudioController audioController;
         private readonly Game1 game;
-        private readonly Scene gameScene;
+        private Scene gameScene;
         private Texture2D wallsFloor;
         private GameMap gameMap;
         private KeyPickup key;
@@ -59,25 +59,6 @@ namespace Jam25.Screens
             this.spriteBatch = spriteBatch;
             this.audioController = audioController;
             this.game = game;
-
-            pickups = new();
-
-            player = new Player(spriteBatch);
-            player.Initalise(content, graphicsDevice);
-
-
-            key = new KeyPickup(Vector2.Zero, game.Content);
-            gameMap = new GameMap(mapWidth, mapHeight);
-
-            gameScene = new(gameMap, player);
-
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
-            wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
-
-
-            EnemyFactory enemyFactory = new(game.Content, audioController);
-
-            gameScene.Enemies.Add(enemyFactory.CreateSlimeEnemy(new(200, 200)));
         }
 
         public void Draw()
@@ -106,16 +87,27 @@ namespace Jam25.Screens
 
         public void Show()
         {
+            player = new Player(spriteBatch);
+            player.Initalise(game.Content, game.GraphicsDevice);
+
+            key = new KeyPickup(Vector2.Zero, game.Content);
+
+            gameScene = new(gameMap, player);
             gameMap = new GameMap(mapWidth, mapHeight);
             gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
+            wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
 
             // Add the pickups
+            pickups = new();
             for (int i = 0; i < healthPickupCount; i++)
             {
                 pickups.Add(new HealthPack(PointWithinWalls(), game.Content));
             }
-
             pickups.Add(key);
+
+
+            EnemyFactory enemyFactory = new(game.Content, audioController);
+            gameScene.Enemies.Add(enemyFactory.CreateSlimeEnemy(new(200, 200)));
 
             WorldBounds = new Rectangle(0, 0, mapWidth * tileSize, mapHeight * tileSize);
         }
@@ -141,7 +133,7 @@ namespace Jam25.Screens
         public void Update(GameTime gameTime)
         {
             MovePlayer(gameTime);
-            gameScene.Update(gameTime);
+            //gameScene.Update(gameTime);
 
             Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
 
