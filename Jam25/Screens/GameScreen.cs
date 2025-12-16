@@ -29,7 +29,7 @@ namespace Jam25.Screens
         private int mapWidth = 80;
         private int mapHeight = 42;
 
-        private int maxRooms = 30;
+        private int maxRooms = 10;
         private int maxRoomSize = 10;
         private int minRoomSize = 6;
 
@@ -98,32 +98,7 @@ namespace Jam25.Screens
 
         public void Update(GameTime gameTime)
         {
-            //if (keyboardState.IsKeyDown(Keys.D) || keyboardState.IsKeyDown(Keys.Right))
-            //{
-            //    player.Sprite.IsFacingRight = true;
-            //    playerMovement += new Vector2(1f, 0);
-            //}
-            //if (keyboardState.IsKeyDown(Keys.A) || keyboardState.IsKeyDown(Keys.Left))
-            //{
-            //    player.Sprite.IsFacingRight = false;
-            //    playerMovement += new Vector2(-1f, 0);
-            //}
-            //if (keyboardState.IsKeyDown(Keys.W) || keyboardState.IsKeyDown(Keys.Up))
-            //    playerMovement += new Vector2(0, -1f);
-            //if (keyboardState.IsKeyDown(Keys.S) || keyboardState.IsKeyDown(Keys.Down))
-            //    playerMovement += new Vector2(0, 1f);
-
-            //if (playerMovement != Vector2.Zero)
-            //{
-            //    player.Body.Velocity = playerMovement * player.MovementSpeed;
-            //}
-            //else
-            //{
-            //    player.Body.Velocity = Vector2.Zero;
-            //}
-
             MovePlayer(gameTime);
-            //physicsWorld.Update(1f);
 
             Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
 
@@ -171,7 +146,7 @@ namespace Jam25.Screens
             int xProj = Convert.ToInt32(x / tileSize);
             int yProj = Convert.ToInt32(y / tileSize);
 
-            return gameMap.tiles[xProj, yProj] == TileType.Wall;
+            return gameMap.tiles[xProj, yProj].Type == TileType.Wall;
         }
 
         private void DrawDungeon()
@@ -180,7 +155,7 @@ namespace Jam25.Screens
             {
                 for (int y = 0; y < mapHeight; y++)
                 {
-                    Texture2D texture = gameMap.tiles[x, y] switch
+                    Texture2D texture = gameMap.tiles[x, y].Type switch
                     {
                         TileType.Floor => wallsFloor,
                         TileType.Wall => wallsFloor,
@@ -189,10 +164,17 @@ namespace Jam25.Screens
 
                     if (texture != null)
                     {
-                        Rectangle sourceRect = gameMap.tiles[x, y] switch
+                        Rectangle sourceRect = gameMap.tiles[x, y].Type switch
                         {
                             TileType.Floor => new Rectangle(8, 86, 32, 32),
-                            TileType.Wall => new Rectangle(8, 16, 32, 12),
+                            TileType.Wall => gameMap.tiles[x, y].WallMask switch
+                            {
+                                WallMask.North => new Rectangle(8, 0, 30, 24),
+                                WallMask.South => new Rectangle(8, 14, 32, 64),
+                                WallMask.West => new Rectangle(2, 8, 32, 24),
+                                WallMask.East => new Rectangle(14, 8, 32, 24),
+                                _ => Rectangle.Empty
+                            },
                             _ => Rectangle.Empty,
                         };
 
@@ -208,6 +190,25 @@ namespace Jam25.Screens
         }
 
     }
+
+    // Floor horizontal
+    //spriteBatch.Draw(wallsFloor, new Rectangle(0, 0, 32, 32), new Rectangle(8, 80, 32, 64), Color.White);
+
+    // Floor Vertical
+    //spriteBatch.Draw(wallsFloor, new Rectangle(0, 32, 32, 32), new Rectangle(0, 86, 48, 32), Color.White);
+
+    // Floor plain
+    //spriteBatch.Draw(wallsFloor, new Rectangle(0, 64, 32, 32), new Rectangle(8, 86, 32, 32), Color.White);
+
+    // Wall horizontal
+    //spriteBatch.Draw(wallsFloor, new Rectangle(0, 0, 32, 32), new Rectangle(8, 0, 32, 64), Color.White);
+
+    // Wall vertical
+    //spriteBatch.Draw(wallsFloor, new Rectangle(0, 0, 32, 32), new Rectangle(0, 8, 48, 24), Color.White);
+
+    // Wall plain
+    //spriteBatch.Draw(wallsFloor, new Rectangle(0, 0, 32, 32), new Rectangle(8, 16, 32, 12), Color.White);
+
 
     #region private methods
 

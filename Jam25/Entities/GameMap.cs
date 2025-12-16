@@ -3,6 +3,16 @@ using System;
 
 namespace Jam25.Entities
 {
+    [Flags]
+    public enum WallMask
+    {
+        None = 0,
+        North = 1,
+        South = 2,
+        West = 4,
+        East = 8
+    }
+
     public enum TileType
     {
         Empty,
@@ -10,11 +20,26 @@ namespace Jam25.Entities
         Wall
     }
 
+    public class Tile(TileType type)
+    {
+        public TileType Type = type;
+        public WallMask WallMask;
+    }
+
     public class GameMap
     {
-        public TileType[,] tiles;
+        public Tile[,] tiles;
         private readonly int width;
         private readonly int height;
+
+        public GameMap(int width, int height)
+        {
+            this.width = width;
+            this.height = height;
+
+            InitialiseTiles();
+        }
+
 
         public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight, Player player, Key key)
         {
@@ -68,12 +93,10 @@ namespace Jam25.Entities
                             var prevX = rooms[numRooms - 1].Center.X;
                             var prevY = rooms[numRooms - 1].Center.Y;
 
-
                             if (i == keyRoom)
                             {
                                 // This is the room to place the key
-                                key.Sprite.Position = new Vector2(newX * 32, newY * 32);
-
+                                key.Sprite.Position = new Vector2(newX, newY);
                             }
                             // Flip a coin
                             if (rand.Next(0, 1) == 0)
@@ -99,33 +122,48 @@ namespace Jam25.Entities
             }
 
             // Add walls around floors
-            //AddWalls(mapWidth, mapHeight);
+            AddWalls(mapWidth, mapHeight);
 
+
+            ComputeWallMasks();
         }
 
+        void ComputeWallMasks()
+        {
+            int w = tiles.GetLength(0);
+            int h = tiles.GetLength(1);
+
+            for (int x = 1; x < w - 1; x++)
+                for (int y = 1; y < h - 1; y++)
+                {
+                    if (tiles[x, y].Type != TileType.Wall)
+                        continue;
+
+                    WallMask mask = WallMask.None;
+
+                    if (tiles[x, y - 1].Type == TileType.Floor) mask |= WallMask.North;
+                    if (tiles[x, y + 1].Type == TileType.Floor) mask |= WallMask.South;
+                    if (tiles[x - 1, y].Type == TileType.Floor) mask |= WallMask.West;
+                    if (tiles[x + 1, y].Type == TileType.Floor) mask |= WallMask.East;
+
+                    tiles[x, y].WallMask = mask;
+                }
+        }
         private void AddWalls(int mapWidth, int mapHeight)
         {
             for (int x = 1; x < mapWidth - 1; x++)
             {
                 for (int y = 1; y < mapHeight - 1; y++)
                 {
-                    if (tiles[x, y] == TileType.Floor)
+                    if (tiles[x, y].Type == TileType.Floor)
                     {
                         for (int nx = -1; nx <= 1; nx++)
                             for (int ny = -1; ny <= 1; ny++)
-                                if (tiles[x + nx, y + ny] == TileType.Empty)
-                                    tiles[x + nx, y + ny] = TileType.Wall;
+                                if (tiles[x + nx, y + ny].Type == TileType.Empty)
+                                    tiles[x + nx, y + ny].Type = TileType.Wall;
                     }
                 }
             }
-        }
-
-        public GameMap(int width, int height)
-        {
-            this.width = width;
-            this.height = height;
-
-            InitialiseTiles();
         }
 
         public void CreateRoom(Rectangle room)
@@ -135,7 +173,7 @@ namespace Jam25.Entities
                 for (int y = room.Top + 1; y < room.Bottom; y++)
                 {
                     // Set map tile to floor
-                    this.tiles[x, y] = TileType.Floor;
+                    this.tiles[x, y].Type = TileType.Floor;
                 }
             }
         }
@@ -144,7 +182,7 @@ namespace Jam25.Entities
         {
             for (int x = Math.Min(x1, x2); x <= Math.Max(x1, x2); x++)
             {
-                tiles[x, y] = TileType.Floor;
+                tiles[x, y].Type = TileType.Floor;
             }
         }
 
@@ -152,18 +190,19 @@ namespace Jam25.Entities
         {
             for (int y = Math.Min(y1, y2); y <= Math.Max(y1, y2); y++)
             {
-                tiles[x, y] = TileType.Floor;
+                tiles[x, y].Type = TileType.Floor;
             }
         }
 
         public void InitialiseTiles()
         {
-            tiles = new TileType[width, height];
+            tiles = new Tile[width, height];
+
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
                 {
-                    tiles[x, y] = TileType.Wall;
+                    tiles[x, y] = new Tile(TileType.Empty);
                 }
             }
         }

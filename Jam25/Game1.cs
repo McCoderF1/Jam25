@@ -79,29 +79,11 @@ namespace Jam25
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.Black);
 
             spriteBatch.Begin();
 
             screenManager.Draw();
-
-            // Floor horizontal
-            //spriteBatch.Draw(wallsFloor, new Rectangle(0, 0, 32, 32), new Rectangle(8, 80, 32, 64), Color.White);
-
-            // Floor Vertical
-            //spriteBatch.Draw(wallsFloor, new Rectangle(0, 32, 32, 32), new Rectangle(0, 86, 48, 32), Color.White);
-
-            // Floor plain
-            //spriteBatch.Draw(wallsFloor, new Rectangle(0, 64, 32, 32), new Rectangle(8, 86, 32, 32), Color.White);
-
-            // Wall horizontal
-            //spriteBatch.Draw(wallsFloor, new Rectangle(0, 0, 32, 32), new Rectangle(8, 0, 32, 64), Color.White);
-
-            // Wall vertical
-            //spriteBatch.Draw(wallsFloor, new Rectangle(0, 0, 32, 32), new Rectangle(0, 8, 48, 24), Color.White);
-
-            // Wall plain
-            //spriteBatch.Draw(wallsFloor, new Rectangle(0, 0, 32, 32), new Rectangle(8, 16, 32, 12), Color.White);
 
             spriteBatch.End();
 
