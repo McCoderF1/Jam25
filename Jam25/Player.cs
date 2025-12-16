@@ -214,7 +214,7 @@ namespace Jam25
                         LastState &= ~PlayerState.Attacking;  // back to Running
                     }
 
-                    Stamina.TakeStamina(2); // running stamina drain
+                    Stamina.TakeStamina(0.5f); // running stamina drain
 
                     return MovePlayer(deltaSeconds, 2.0f);
 
@@ -241,6 +241,11 @@ namespace Jam25
                         isAttacking = false;
                         ResetAnimation();
                         LastState &= ~PlayerState.Attacking;  // back to Walking
+                    }
+
+                    if(!isAttacking)
+                    {
+                        Stamina.Restore(1);
                     }
 
                     return MovePlayer(deltaSeconds, 1.0f);
