@@ -3,9 +3,8 @@ using HDT.Gaming.Input;
 using HDT.Gaming.Physics;
 using HDT.Gaming.Screens;
 using Jam25.Entities;
-using Jam25.Entities.Pickups;
 using Jam25.Entities.Enemies;
-using Jam25.Graphics;
+using Jam25.Entities.Pickups;
 using Jam25.Scenes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -36,7 +35,7 @@ namespace Jam25.Screens
         private int mapWidth = 80;
         private int mapHeight = 42;
 
-        private int maxRooms = 30;
+        private int maxRooms = 10;
         private int maxRoomSize = 10;
         private int minRoomSize = 6;
 
@@ -77,11 +76,11 @@ namespace Jam25.Screens
 
             gameScene = new(gameMap, player);
 
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player, key);
+            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
 
 
-            EnemyFactory enemyFactory = new (game.Content, audioController);
+            EnemyFactory enemyFactory = new(game.Content, audioController);
 
             gameScene.Enemies.Add(enemyFactory.CreateSlimeEnemy(new(200, 200)));
         }
@@ -115,24 +114,15 @@ namespace Jam25.Screens
 
         public void Show()
         {
-            Texture2D playerTexture = game.Content.Load<Texture2D>("PlayerSprite/lvl1/Swordsman_lvl1_Idle_with_shadow");
-            player = new Player(spriteBatch)
-            {
-                Sprite = new Graphics.Sprite(playerTexture, new Vector2(playerTexture.Width * 0.5f, playerTexture.Height))
-            };
-
-            player.Initalise(game.Content, game.GraphicsDevice);
-
             gameMap = new GameMap(mapWidth, mapHeight);
-
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player, key);
-
+            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
 
             // Add the pickups
             for (int i = 0; i < healthPickupCount; i++)
             {
                 pickups.Add(new HealthPack(PointWithinWalls(), game.Content));
             }
+
             pickups.Add(key);
 
             WorldBounds = new Rectangle(0, 0, mapWidth * tileSize, mapHeight * tileSize);
@@ -142,15 +132,21 @@ namespace Jam25.Screens
 
         private Vector2 PointWithinWalls()
         {
+
             Random rnd = new();
+
             Vector2 pos;
+
             do
             {
                 pos = new Vector2(rnd.Next(mapWidth), rnd.Next(mapHeight));
             }
-            while (gameMap.tiles[(int)pos.X, (int)pos.Y] == TileType.Wall);
+            while (gameMap.tiles[(int)pos.X, (int)pos.Y].Type != TileType.Floor);
+
             return Vector2.Multiply(pos, tileSize);
+
         }
+
 
         public void Update(GameTime gameTime)
         {
@@ -205,13 +201,13 @@ namespace Jam25.Screens
 
                     foreach (IPickup pickup in pickups)
                     {
-                        if (Vector2.Distance(pickup.Position, Vector2.Subtract(player.Body.Position, new Vector2(tileSize / 2, tileSize / 2))) < tileSize)
+                        if (Vector2.Distance(pickup.Sprite.Position, Vector2.Subtract(player.Body.Position, new Vector2(tileSize / 2, tileSize / 2))) < tileSize)
                         {
                             pickup.Collect(player);
                         }
                     }
                 }
-                
+
             }
         }
 
@@ -220,7 +216,7 @@ namespace Jam25.Screens
             int xProj = Convert.ToInt32(x / tileSize);
             int yProj = Convert.ToInt32(y / tileSize);
 
-            return gameMap.tiles[xProj, yProj] == TileType.Wall;
+            return gameMap.tiles[xProj, yProj].Type == TileType.Wall;
         }
 
         private void DrawDungeon()
@@ -229,7 +225,7 @@ namespace Jam25.Screens
             {
                 for (int y = 0; y < mapHeight; y++)
                 {
-                    Texture2D texture = gameMap.tiles[x, y] switch
+                    Texture2D texture = gameMap.tiles[x, y].Type switch
                     {
                         TileType.Floor => wallsFloor,
                         TileType.Wall => wallsFloor,
@@ -238,10 +234,17 @@ namespace Jam25.Screens
 
                     if (texture != null)
                     {
-                        Rectangle sourceRect = gameMap.tiles[x, y] switch
+                        Rectangle sourceRect = gameMap.tiles[x, y].Type switch
                         {
                             TileType.Floor => new Rectangle(8, 86, 32, 32),
-                            TileType.Wall => new Rectangle(8, 16, 32, 12),
+                            TileType.Wall => gameMap.tiles[x, y].WallMask switch
+                            {
+                                WallMask.North => new Rectangle(8, 0, 30, 24),
+                                WallMask.South => new Rectangle(8, 14, 32, 64),
+                                WallMask.West => new Rectangle(2, 8, 32, 24),
+                                WallMask.East => new Rectangle(14, 8, 32, 24),
+                                _ => Rectangle.Empty
+                            },
                             _ => Rectangle.Empty,
                         };
 

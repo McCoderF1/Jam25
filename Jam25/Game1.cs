@@ -87,10 +87,11 @@ namespace Jam25
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.Black);
 
             spriteBatch.Begin(samplerState: SamplerState.PointClamp);
             screenManager.Draw();
+
             spriteBatch.End();
 
             base.Draw(gameTime);
