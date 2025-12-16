@@ -67,6 +67,10 @@ namespace Jam25
             }
         }
 
+        // These need to be split into public/private
+        private Vector2 spritePosition;
+        public Vector2 Position => spritePosition;
+        private int vel;
         private int cellSize;
         private int animationStage;
         private int textureScale;
@@ -116,7 +120,7 @@ namespace Jam25
             Health = new(100);
             Stamina = new Stamina(100);
             Level = 1;  // NOTE: level is from 1-3, while level index in texture array is 0-2.
-            textureScale = 5;
+            textureScale = 1;
             textures = new Dictionary<PlayerState, PlayerTexture>[3];
 
             Body = new Body()
@@ -210,7 +214,7 @@ namespace Jam25
                         LastState &= ~PlayerState.Attacking;  // back to Running
                     }
 
-                    Stamina.TakeStamina(2); // running stamina drain
+                    Stamina.TakeStamina(0.5f); // running stamina drain
 
                     return MovePlayer(deltaSeconds, 2.0f);
 
@@ -237,6 +241,11 @@ namespace Jam25
                         isAttacking = false;
                         ResetAnimation();
                         LastState &= ~PlayerState.Attacking;  // back to Walking
+                    }
+
+                    if(!isAttacking)
+                    {
+                        Stamina.Restore(1);
                     }
 
                     return MovePlayer(deltaSeconds, 1.0f);
@@ -411,6 +420,33 @@ namespace Jam25
             LastState = movementState | nonMovementFlags;
         }
 
+        public void SetPosition(Vector2 position)
+        {
+            spritePosition = position;
+        }
+
+        public Vector2 GetFrameMovement()
+        {
+            Vector2 movement = Vector2.Zero;
+
+            switch (lastDir)
+            {
+                case Direction.Up:
+                    movement.Y -= vel;
+                    break;
+                case Direction.Down:
+                    movement.Y += vel;
+                    break;
+                case Direction.Left:
+                    movement.X -= vel;
+                    break;
+                case Direction.Right:
+                    movement.X += vel;
+                    break;
+            }
+
+            return movement;
+        }
         private bool IsRunning(bool runRequest)
             { return runRequest && Stamina.Current > 0; }
 
