@@ -29,7 +29,6 @@ namespace Jam25
             }
         }
 
-
         enum Direction { Up, Right, Down, Left}
         private Direction lastDir;
 

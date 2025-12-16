@@ -1,6 +1,7 @@
 ﻿using HDT.Gaming.Audio;
 using Jam25.Graphics;
 using Jam25.Screens;
+using Jam25.Stores;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -46,6 +47,8 @@ namespace Jam25
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
+            content.LoadSprite(SpriteID.PlayerLvl1, "Images/StatsPage/PlayerLvl1Idle", 12, 5, new Vector2(64f,64f));
+
             content.LoadFont(FontID.Title, "Fonts/Title");
             content.LoadFont(FontID.Heading, "Fonts/GameState");
             content.LoadFont(FontID.Body, "Fonts/Score");
@@ -60,6 +63,8 @@ namespace Jam25
             var settingScreen = new SettingsScreen(spriteBatch, graphics, content, Content, audioController);
             var gameScreen = new GameScreen(graphics.GraphicsDevice, spriteBatch, Content, audioController, this);
             var playerScreen = new PlayerScreen(spriteBatch, graphics, content, Content, audioController);
+
+            LoadStores();
 
             screenManager = new ScreenManager(startScreen, settingScreen, gameScreen, playerScreen);
         }
@@ -77,31 +82,16 @@ namespace Jam25
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            spriteBatch.Begin();
-
+            spriteBatch.Begin(samplerState: SamplerState.PointClamp);
             screenManager.Draw();
-
-            // Floor horizontal
-            //spriteBatch.Draw(wallsFloor, new Rectangle(0, 0, 32, 32), new Rectangle(8, 80, 32, 64), Color.White);
-
-            // Floor Vertical
-            //spriteBatch.Draw(wallsFloor, new Rectangle(0, 32, 32, 32), new Rectangle(0, 86, 48, 32), Color.White);
-
-            // Floor plain
-            //spriteBatch.Draw(wallsFloor, new Rectangle(0, 64, 32, 32), new Rectangle(8, 86, 32, 32), Color.White);
-
-            // Wall horizontal
-            //spriteBatch.Draw(wallsFloor, new Rectangle(0, 0, 32, 32), new Rectangle(8, 0, 32, 64), Color.White);
-
-            // Wall vertical
-            //spriteBatch.Draw(wallsFloor, new Rectangle(0, 0, 32, 32), new Rectangle(0, 8, 48, 24), Color.White);
-
-            // Wall plain
-            //spriteBatch.Draw(wallsFloor, new Rectangle(0, 0, 32, 32), new Rectangle(8, 16, 32, 12), Color.White);
-
             spriteBatch.End();
 
             base.Draw(gameTime);
+        }
+
+        private void LoadStores()
+        {
+            PlayerTracker.RestorePlayerProgress();
         }
 
         public void Exit()
