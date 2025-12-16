@@ -1,4 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Jam25.Entities.Pickups;
+using Jam25.Scenes;
+using Jam25.Screens;
+using Microsoft.Xna.Framework;
 using System;
 
 namespace Jam25.Entities
@@ -75,7 +78,7 @@ namespace Jam25.Entities
                         // Paint room to map
                         CreateRoom(newRoom);
 
-                        // Center coordinates of new room
+                        // Centre coordinates of new room
 
                         var newX = newRoom.Center.X;
                         var newY = newRoom.Center.Y;
@@ -83,7 +86,7 @@ namespace Jam25.Entities
                         if (numRooms == 0)
                         {
                             // This is the first room where the player starts
-                            player.Body.Position = new Vector2(newX * 32, newY * 32);
+                            scene.Player.Body.Position = new Vector2(newX * 32, newY * 32);
                         }
                         else
                         {
