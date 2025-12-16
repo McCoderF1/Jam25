@@ -43,7 +43,7 @@ namespace Jam25.Entities
         }
 
 
-        public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight, Scene gameScene, KeyPickup key)
+        public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight, GameScene gameScene, KeyPickup key)
         {
             Rectangle[] rooms = new Rectangle[maxRooms];
             int numRooms = 0;

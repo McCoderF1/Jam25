@@ -1,4 +1,5 @@
-﻿using HDT.Gaming.Audio;
+﻿using System;
+using HDT.Gaming.Audio;
 using Jam25.Graphics;
 using Jam25.Screens;
 using Jam25.Screens.UserInterface;
@@ -7,7 +8,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
-using System;
 
 namespace Jam25
 {
@@ -52,7 +52,7 @@ namespace Jam25
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            content.LoadSprite(SpriteID.PlayerLvl1, "Images/StatsPage/PlayerLvl1Idle", 12, 5, new Vector2(64f,64f));
+            content.LoadSprite(SpriteID.PlayerLvl1, "Images/StatsPage/PlayerLvl1Idle", 12, 5, new Vector2(64f, 64f));
 
             content.LoadFont(FontID.Title, "Fonts/Title");
             content.LoadFont(FontID.Heading, "Fonts/GameState");
