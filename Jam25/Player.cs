@@ -172,10 +172,14 @@ namespace Jam25
                         isAttacking = true;
                         ResetAnimation();
                         lastState = PlayerState.Attacking;
+
+                        Stamina.TakeStamina(3);
                     }
                     else if (!attackKeyDown)
                     {
                         isAttacking = false;
+
+                        Stamina.Restore(5);
                     }
                     break;
 
@@ -195,6 +199,7 @@ namespace Jam25
                         isAttacking = true;
                         ResetAnimation();
                         lastState |= PlayerState.Attacking;   // becomes Running | Attacking
+                        Stamina.TakeStamina(7);
                     }
                     else if (!attackKeyDown && isAttacking && animationStage == currentTexture.cols - 1)
                     {
@@ -202,6 +207,8 @@ namespace Jam25
                         ResetAnimation();
                         lastState &= ~PlayerState.Attacking;  // back to Running
                     }
+
+                    Stamina.TakeStamina(2); // running stamina drain
 
                     return MovePlayer(deltaSeconds, 2.0f);
 
@@ -221,6 +228,7 @@ namespace Jam25
                         isAttacking = true;
                         ResetAnimation();
                         lastState |= PlayerState.Attacking;   // Walking | Attacking
+                        Stamina.TakeStamina(5);
                     }
                     else if (!attackKeyDown && isAttacking && animationStage == currentTexture.cols - 1)
                     {
@@ -383,9 +391,12 @@ namespace Jam25
                 lastDir = movementDirection.Y < 0 ? Direction.Up : Direction.Down;
             }
 
-            var movementState = run ? PlayerState.Running : PlayerState.Walking;
+            var movementState = IsRunning(run) ? PlayerState.Running : PlayerState.Walking;
             lastState = movementState | nonMovementFlags;
         }
+
+        private bool IsRunning(bool runRequest)
+            { return runRequest && Stamina.Current > 0; }
 
         #endregion 
     }
