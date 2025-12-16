@@ -42,7 +42,7 @@
     <Folder Include="Stores\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\Users\John.McLaren\source\repos\HDT.Gaming\HDT.Gaming.csproj" />
+    <ProjectReference Include="..\..\..\Jam25\HDT.Gaming\HDT.Gaming\HDT.Gaming.csproj" />
   </ItemGroup>
   <Target Name="RestoreDotnetTools" BeforeTargets="Restore">
     <Message Text="Restoring dotnet tools" Importance="High" />

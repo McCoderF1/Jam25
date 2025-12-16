@@ -25,6 +25,7 @@ namespace Jam25.Screens
         private readonly Game1 game;
         private readonly Scene gameScene;
         private Texture2D wallsFloor;
+        private Texture2D doorsLevers;
         private GameMap gameMap;
         private KeyPickup key;
 
@@ -62,18 +63,17 @@ namespace Jam25.Screens
 
             pickups = new();
 
+            wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
+            doorsLevers = game.Content.Load<Texture2D>("Images/doors_lever_chest_animation");
+
             player = new Player(spriteBatch);
             player.Initalise(content, graphicsDevice);
 
-
-            key = new KeyPickup(Vector2.Zero, game.Content);
+            key = new KeyPickup(game.Content);
             gameMap = new GameMap(mapWidth, mapHeight);
-
             gameScene = new(gameMap, player);
 
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
-            wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
-
+            gameScene.Player.Body.Position = new Vector2(1, 1);
 
             EnemyFactory enemyFactory = new(game.Content, audioController);
 
@@ -85,6 +85,7 @@ namespace Jam25.Screens
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, Matrix.CreateTranslation(new Vector3(-CameraPosition, 0f)));
 
+
             DrawDungeon();
             player.Draw();
 
@@ -92,7 +93,6 @@ namespace Jam25.Screens
             {
                 pickup.Draw(spriteBatch, tileSize);
             }
-            //spriteBatch.Draw(key.Sprite.Texture, key.Sprite.Position, Color.White);
 
             for (int i = 0; i < gameScene.Enemies.Count; i++)
             {
@@ -213,6 +213,7 @@ namespace Jam25.Screens
                     {
                         TileType.Floor => wallsFloor,
                         TileType.Wall => wallsFloor,
+                        TileType.Door => doorsLevers,
                         _ => null,
                     };
 
@@ -227,6 +228,12 @@ namespace Jam25.Screens
                                 WallMask.South => new Rectangle(8, 14, 32, 64),
                                 WallMask.West => new Rectangle(2, 8, 32, 24),
                                 WallMask.East => new Rectangle(14, 8, 32, 24),
+                                _ => Rectangle.Empty
+                            },
+                            TileType.Door => gameMap.tiles[x, y].DoorOrientation switch
+                            {
+                                DoorOrientation.Horizontal => new Rectangle(0, 32, 32, 32),
+                                //DoorOrientation.Vertical => new Rectangle(8, 166, 16, 32),
                                 _ => Rectangle.Empty
                             },
                             _ => Rectangle.Empty,
