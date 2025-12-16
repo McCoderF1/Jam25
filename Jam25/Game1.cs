@@ -2,6 +2,7 @@
 using HDT.Gaming.Audio;
 using Jam25.Graphics;
 using Jam25.Screens;
+using Jam25.Screens.UserInterface;
 using Jam25.Stores;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -69,8 +70,10 @@ namespace Jam25
             var playerScreen = new PlayerScreen(spriteBatch, graphics, content, Content, audioController);
 
             LoadStores();
-
             screenManager = new ScreenManager(startScreen, settingScreen, gameScreen, playerScreen);
+
+            gameScreen.InstallUI(new GameUserInterface(spriteBatch, graphics, content, Content, audioController));
+
         }
 
         protected override void Update(GameTime gameTime)
