@@ -25,7 +25,7 @@ namespace Jam25.Screens.UserInterface
         private readonly Texture2D whitePixel;
         private readonly RoundedRectangle roundedRectangle;
 
-        private Vector2 currentCameraPosition = Vector2.Zero;
+        private Torch torch;
 
         #endregion
 
@@ -48,14 +48,23 @@ namespace Jam25.Screens.UserInterface
             roundedRectangle = new RoundedRectangle(spriteBatch, whitePixel);
         }
 
+        /// <summary>
+        /// Set the torch reference for drawing the torch bar
+        /// </summary>
+        public void SetTorch(Torch torch)
+        {
+            this.torch = torch;
+        }
+
         ///<inheritdoc/>
         public void Draw()
         {
-            DrawPlayerStatusBars();
             spriteBatch.Draw(UIBase,
-                new Rectangle((int)currentCameraPosition.X, (int)currentCameraPosition.Y, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
+                new Rectangle(0, 0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
                 Color.White);
 
+            DrawPlayerStatusBars();
+            DrawTorchBar();
             DrawTimer();
         }
 
@@ -74,7 +83,6 @@ namespace Jam25.Screens.UserInterface
         ///<inheritdoc/>
         public void UpdateWithVector(GameTime gameTime, Vector2 cameraPosition)
         {
-            currentCameraPosition = cameraPosition;
             Update(gameTime);
         }
 
@@ -92,9 +100,10 @@ namespace Jam25.Screens.UserInterface
             const int margin = 20;
             const int cornerRadius = 4;
 
-            int x = (int)currentCameraPosition.X + 95 + margin;
-            int y = (int)currentCameraPosition.Y + 110 - barHeight - margin;
+            int x = 95 + margin;
+            int yStamina = 110 - barHeight - margin;
 
+            // Draw Stamina Bar
             float staminaPercent = 0f;
             if (player?.Stamina != null && player.Stamina.Max > 0)
             {
@@ -102,16 +111,59 @@ namespace Jam25.Screens.UserInterface
                 staminaPercent = MathHelper.Clamp(staminaPercent, 0f, 1f);
             }
 
-            // Draw full-size background as a frame
-            var backgroundRect = new Rectangle(x, y, maxBarWidth, barHeight);
-            roundedRectangle.Draw(backgroundRect, cornerRadius, Color.DarkGray);
+            var staminaBackgroundRect = new Rectangle(x, yStamina, maxBarWidth, barHeight);
+            roundedRectangle.Draw(staminaBackgroundRect, cornerRadius, Color.DarkGray);
 
-            // Scale the visible bar width by remaining stamina
-            int currentBarWidth = (int)(maxBarWidth * staminaPercent);
-            if (currentBarWidth > 0)
+            int currentStaminaWidth = (int)(maxBarWidth * staminaPercent);
+            if (currentStaminaWidth > 0)
             {
-                var staminaRect = new Rectangle(x, y, currentBarWidth, barHeight);
+                var staminaRect = new Rectangle(x, yStamina, currentStaminaWidth, barHeight);
                 roundedRectangle.Draw(staminaRect, cornerRadius, Color.DarkGoldenrod);
+            }
+
+            int yHealth = yStamina - barHeight - 5;
+
+            // Draw Health Bar
+            float healthPercent = 0f;
+            if (player?.Health != null && player.Health.Max > 0)
+            {
+                healthPercent = (float)player.Health.Current / player.Health.Max;
+                healthPercent = MathHelper.Clamp(healthPercent, 0f, 1f);
+            }
+
+            var healthBackgroundRect = new Rectangle(x, yHealth, maxBarWidth, barHeight);
+            roundedRectangle.Draw(healthBackgroundRect, cornerRadius, Color.DarkGray);
+
+            int currentHealthWidth = (int)(maxBarWidth * healthPercent);
+            if (currentHealthWidth > 0)
+            {
+                var healthRect = new Rectangle(x, yHealth, currentHealthWidth, barHeight);
+                roundedRectangle.Draw(healthRect, cornerRadius, Color.DarkRed);
+            }
+        }
+
+        private void DrawTorchBar()
+        {
+            if (torch == null) return;
+
+            const int maxBarWidth = 130;
+            const int barHeight = 15;
+            const int margin = 20;
+            const int cornerRadius = 4;
+
+            int x = 95 + margin;
+            int yTorch = 106 - (barHeight * 2) - margin + barHeight + 5 + barHeight + 5;
+
+            var torchBackgroundRect = new Rectangle(x, yTorch, maxBarWidth, barHeight);
+            roundedRectangle.Draw(torchBackgroundRect, cornerRadius, Color.DarkGray);
+
+            float torchPercent = torch.NormalizedEnergy;
+            int currentTorchWidth = (int)(maxBarWidth * torchPercent);
+            if (currentTorchWidth > 0)
+            {
+                Color torchColor = Color.Lerp(Color.Red, Color.Orange, torchPercent);
+                var torchRect = new Rectangle(x, yTorch, currentTorchWidth, barHeight);
+                roundedRectangle.Draw(torchRect, cornerRadius, torchColor);
             }
         }
 
