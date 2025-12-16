@@ -107,6 +107,8 @@ namespace Jam25
 
         public int Level { get; set; }
 
+        public bool IsAttacking => ((LastState & Player.PlayerState.Attacking) != 0);
+
         public Player(SpriteBatch spriteBatch)
         {
             lastDir = Direction.Down;
