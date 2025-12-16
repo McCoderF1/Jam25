@@ -45,6 +45,8 @@ namespace Jam25
         private float animationTime;          // Accumulated time for current frame
         private float frameDuration = 0.1f;   // Seconds per frame (10 fps as example)
 
+        private Vector2 movementDirection = Vector2.Zero;
+
         public Sprite Sprite { get; set; }
 
         public Body Body { get; set; }
@@ -199,59 +201,66 @@ namespace Jam25
 
         private Vector2 MovePlayer(float deltaSeconds)
         {
-            float dx = 0;
-            float dy = 0;
-
-            float moveStep = speedMultiplier * deltaSeconds * 60f; // 60 is a reference FPS for tuning
-
-            switch (lastDir)
+            if (movementDirection == Vector2.Zero)
             {
-                case Direction.Up:
-                    dy -= moveStep;
-                    break;
-                case Direction.Down:
-                    dy += moveStep;
-                    break;
-                case Direction.Left:
-                    dx -= moveStep;
-                    break;
-                case Direction.Right:
-                    dx += moveStep;
-                    break;
+                return Body.Position;
             }
 
-            return Vector2.Add(Body.Position, new Vector2(dx, dy));
+            // Base per-axis speed (what you currently have on pure horizontal/vertical)
+            float axisSpeed = speedMultiplier * deltaSeconds * 60f;
+
+            // Length of the input vector (1 for straight, sqrt(2) for perfect diagonal, etc.)
+            float length = movementDirection.Length();
+
+            // Apply Pythagoras: total speed = axisSpeed * length
+            Vector2 dir = Vector2.Normalize(movementDirection);
+            Vector2 offset = dir * axisSpeed;
+
+            return Body.Position + offset;
         }
 
         private void FindDirection(bool w, bool a, bool s, bool d)
         {
-            int xVel = (Convert.ToInt32(d) - Convert.ToInt32(a)) * 10;
-            int yVel = (Convert.ToInt32(s) - Convert.ToInt32(w)) * 10;
+            // Build movement vector from input
+            movementDirection = Vector2.Zero;
 
-            if (yVel < 0)
+            if (w)
             {
-                lastDir = Direction.Up;
-                lastState = PlayerState.Running;
+                movementDirection.Y -= 1f;
             }
-            else if (yVel > 0)
+
+            if (s)
             {
-                lastDir = Direction.Down;
-                lastState = PlayerState.Running;
+                movementDirection.Y += 1f;
             }
-            else if (xVel < 0)
+
+            if (a)
             {
-                lastDir = Direction.Left;
-                lastState = PlayerState.Running;
+                movementDirection.X -= 1f;
             }
-            else if (xVel > 0)
+
+            if (d)
             {
-                lastDir = Direction.Right;
-                lastState = PlayerState.Running;
+                movementDirection.X += 1f;
+            }
+
+            if (movementDirection == Vector2.Zero)
+            {
+                lastState = PlayerState.Idle;
+                return;
+            }
+
+            // Determine facing direction based on movement vector (for animations)
+            if (Math.Abs(movementDirection.X) > Math.Abs(movementDirection.Y))
+            {
+                lastDir = movementDirection.X < 0 ? Direction.Left : Direction.Right;
             }
             else
             {
-                lastState = PlayerState.Idle;
+                lastDir = movementDirection.Y < 0 ? Direction.Up : Direction.Down;
             }
+
+            lastState = PlayerState.Running;
         }
 
         public void Draw()

@@ -4,6 +4,7 @@ using HDT.Gaming.Physics;
 using HDT.Gaming.Screens;
 using Jam25.Entities;
 using Jam25.Entities.Pickups;
+using Jam25.Entities.Enemies;
 using Jam25.Graphics;
 using Jam25.Scenes;
 using Microsoft.Xna.Framework;
@@ -70,10 +71,16 @@ namespace Jam25.Screens
 
             key = new KeyPickup(Vector2.Zero, game.Content);
             gameMap = new GameMap(mapWidth, mapHeight);
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player, key);
-            wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
 
             gameScene = new(gameMap, player);
+
+            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
+            wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
+
+
+            EnemyFactory enemyFactory = new (game.Content, audioController);
+
+            gameScene.Enemies.Add(enemyFactory.CreateSlimeEnemy(new(200, 200)));
         }
 
         public void Draw()
@@ -87,6 +94,12 @@ namespace Jam25.Screens
             foreach (IPickup pickup in pickups)
             {
                 pickup.Draw(spriteBatch, tileSize);
+            }
+            spriteBatch.Draw(key.Sprite.Texture, key.Sprite.Position, Color.White);
+
+            for (int i = 0; i < gameScene.Enemies.Count; i++)
+            {
+                gameScene.Enemies[i].CurrentSprite.Draw(spriteBatch, gameScene.Enemies[i].Body.Position);
             }
         }
 
@@ -134,6 +147,7 @@ namespace Jam25.Screens
         public void Update(GameTime gameTime)
         {
             MovePlayer(gameTime);
+            gameScene.Update(gameTime);
 
             Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
 
@@ -145,6 +159,9 @@ namespace Jam25.Screens
             CameraPosition.X = MathHelper.Clamp(targetCameraPosition.X, cameraMinX, cameraMaxX);
             CameraPosition.Y = MathHelper.Clamp(targetCameraPosition.Y, cameraMinY, cameraMaxY);
         }
+
+
+        #region private methods
 
         private void MovePlayer(GameTime gameTime)
         {
@@ -226,8 +243,6 @@ namespace Jam25.Screens
         }
 
     }
-
-    #region private methods
 
 
     #endregion
