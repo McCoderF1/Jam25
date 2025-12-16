@@ -107,7 +107,7 @@ namespace Jam25.Screens
             player.Initalise(game.Content, game.GraphicsDevice);
 
             gameMap = new GameMap(mapWidth, mapHeight);
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player);
+            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player, key);
 
 
             // Add the pickups
@@ -129,7 +129,7 @@ namespace Jam25.Screens
 
         public void Update(GameTime gameTime)
         {
-            MovePlayer();
+            MovePlayer(gameTime);
 
             Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
 
@@ -170,7 +170,7 @@ namespace Jam25.Screens
 
                     foreach (IPickup pickup in pickups)
                     {
-                        if (Vector2.Distance(pickup.Position, player.Body.Position) < 30)
+                        if (Vector2.Distance(pickup.Position, Vector2.Subtract(player.Body.Position, new Vector2(tileSize / 2, tileSize / 2))) < tileSize)
                         {
                             pickup.Collect(player);
                         }
