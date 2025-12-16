@@ -1,17 +1,18 @@
-﻿using HDT.Gaming.Audio;
+﻿using System;
+using System.Collections.Generic;
+using HDT.Gaming.Audio;
 using HDT.Gaming.Input;
 using HDT.Gaming.Physics;
 using HDT.Gaming.Screens;
 using Jam25.Entities;
 using Jam25.Entities.Enemies;
 using Jam25.Entities.Pickups;
+using Jam25.Models;
 using Jam25.Scenes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
-using System.Collections.Generic;
 
 namespace Jam25.Screens
 {
@@ -23,7 +24,7 @@ namespace Jam25.Screens
         private readonly SpriteBatch spriteBatch;
         private readonly AudioController audioController;
         private readonly Game1 game;
-        private readonly Scene gameScene;
+        private readonly GameScene gameScene;
         private Texture2D wallsFloor;
         private GameMap gameMap;
         private KeyPickup key;
@@ -69,15 +70,18 @@ namespace Jam25.Screens
             key = new KeyPickup(Vector2.Zero, game.Content);
             gameMap = new GameMap(mapWidth, mapHeight);
 
-            gameScene = new(gameMap, player);
+            EnemyFactory enemyFactory = new(game.Content, audioController);
+
+            EnemySpawner enemySpawner = new(
+                maxEnemies: 10,
+                minSpawnDistanceFromPlayer: 200,
+                PointWithinWalls,
+                enemyFactory);
+
+            gameScene = new(gameMap, player, enemySpawner);
 
             gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
-
-
-            EnemyFactory enemyFactory = new(game.Content, audioController);
-
-            gameScene.Enemies.Add(enemyFactory.CreateSlimeEnemy(new(200, 200)));
         }
 
         public void Draw()
@@ -92,7 +96,6 @@ namespace Jam25.Screens
             {
                 pickup.Draw(spriteBatch, tileSize);
             }
-            //spriteBatch.Draw(key.Sprite.Texture, key.Sprite.Position, Color.White);
 
             for (int i = 0; i < gameScene.Enemies.Count; i++)
             {
@@ -120,24 +123,6 @@ namespace Jam25.Screens
             WorldBounds = new Rectangle(0, 0, mapWidth * tileSize, mapHeight * tileSize);
         }
 
-        private Vector2 PointWithinWalls()
-        {
-
-            Random rnd = new();
-
-            Vector2 pos;
-
-            do
-            {
-                pos = new Vector2(rnd.Next(mapWidth), rnd.Next(mapHeight));
-            }
-            while (gameMap.tiles[(int)pos.X, (int)pos.Y].Type != TileType.Floor);
-
-            return Vector2.Multiply(pos, tileSize);
-
-        }
-
-
         public void Update(GameTime gameTime)
         {
             MovePlayer(gameTime);
@@ -156,6 +141,21 @@ namespace Jam25.Screens
 
 
         #region private methods
+
+        private Vector2 PointWithinWalls()
+        {
+            Random rnd = new();
+
+            Vector2 pos;
+
+            do
+            {
+                pos = new Vector2(rnd.Next(mapWidth), rnd.Next(mapHeight));
+            }
+            while (gameMap.tiles[(int)pos.X, (int)pos.Y].Type != TileType.Floor);
+
+            return Vector2.Multiply(pos, tileSize);
+        }
 
         private void MovePlayer(GameTime gameTime)
         {
