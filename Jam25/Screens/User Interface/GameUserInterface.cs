@@ -30,6 +30,7 @@ namespace Jam25.Screens.UserInterface
 
         private AnimatedSprite playerIcon;
         private AnimatedTexture animatedPlayerIcon;
+
         private Vector2 currentCameraPosition = Vector2.Zero;
 
         #endregion
@@ -48,12 +49,12 @@ namespace Jam25.Screens.UserInterface
 
             UIBase = content.Load<Texture2D>("Images/UI/UIBase");
             font = content.Load<SpriteFont>("Fonts/Menu");
-            game.LoadSprite(SpriteID.PlayerUIIcon, "Images/UI/PlayerUIIcon", 12, 5, new Vector2(64f, 64f));
 
-            if (game.TryGetSprite(SpriteID.PlayerUIIcon, out AnimatedTexture animatedIcon))
+            // Try to load player icon sprite
+            if (game.TryGetSprite(SpriteID.PlayerLvl1, out AnimatedTexture animatedIcon))
             {
                 this.animatedPlayerIcon = animatedIcon;
-                playerIcon = new AnimatedSprite() { SpriteId = SpriteID.PlayerUIIcon, ScaleX = 4, ScaleY = 4 };
+                playerIcon = new AnimatedSprite() { SpriteId = SpriteID.PlayerLvl1, ScaleX = 4, ScaleY = 4 };
             }
 
             whitePixel = new Texture2D(graphics, 1, 1);
@@ -72,17 +73,15 @@ namespace Jam25.Screens.UserInterface
         ///<inheritdoc/>
         public void Draw()
         {
-            var XPos = (int)currentCameraPosition.X;
-            var YPos = (int)currentCameraPosition.Y;
-            animatedPlayerIcon.DrawFrame(spriteBatch, playerIcon.Frame, new Vector2(XPos + 200, YPos + 227), playerIcon);
-            DrawPlayerStatusBars();
+            // Draw UI at fixed screen position (0,0) - static, not moving with camera
             spriteBatch.Draw(UIBase,
-                new Rectangle(XPos, YPos, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
+                new Rectangle(0, 0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
                 Color.White);
 
             DrawPlayerStatusBars();
             DrawTorchBar();
-            DrawInformation(XPos, YPos);
+            DrawTimer();
+            DrawInformation();
         }
 
         ///<inheritdoc/>
@@ -100,12 +99,14 @@ namespace Jam25.Screens.UserInterface
         ///<inheritdoc/>
         public void UpdateWithVector(GameTime gameTime, Vector2 cameraPosition)
         {
+            currentCameraPosition = cameraPosition;
             Update(gameTime);
         }
 
         public void Update(GameTime gameTime)
         {
-            UpdateSprite(playerIcon, (float)gameTime.ElapsedGameTime.TotalSeconds);
+            if (playerIcon != null)
+                UpdateSprite(playerIcon, (float)gameTime.ElapsedGameTime.TotalSeconds);
         }
 
         #region private methods
@@ -184,9 +185,14 @@ namespace Jam25.Screens.UserInterface
             }
         }
 
-        private void DrawInformation(int xPos, int yPos)
+        private void DrawTimer()
         {
-            spriteBatch.DrawString(font, "Floor 1", new Microsoft.Xna.Framework.Vector2(xPos + 1127, yPos + 60), Color.White);
+            // Timer placeholder
+        }
+
+        private void DrawInformation()
+        {
+            spriteBatch.DrawString(font, "Floor 1", new Vector2(1127, 60), Color.White);
         }
 
         private void UpdateSprite(AnimatedSprite sprite, float elapsed)

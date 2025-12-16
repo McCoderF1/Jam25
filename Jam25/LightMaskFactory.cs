@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -32,7 +28,7 @@ namespace Jam25.Graphics
                     float t = MathHelper.Clamp(dist / radius, 0f, 1f);
 
                     // Smooth falloff
-                    float alpha = t * t;
+                    float alpha = t * t * t;
 
                     data[y * size + x] = new Color(0, 0, 0, alpha);
                 }
