@@ -1,5 +1,6 @@
 ﻿using HDT.Gaming.Audio;
 using HDT.Gaming.Input;
+using HDT.Gaming.Physics;
 using HDT.Gaming.Screens;
 using Jam25.Entities;
 using Jam25.Scenes;
@@ -7,6 +8,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
+using System.ComponentModel;
 
 namespace Jam25.Screens
 {
@@ -32,6 +35,7 @@ namespace Jam25.Screens
 
         private int tileSize = 32;
         private Player player;
+        private PhysicsWorld physicsWorld;
 
         public Vector2 CameraPosition;
         public Rectangle WorldBounds;
@@ -55,7 +59,7 @@ namespace Jam25.Screens
 
             player = new Player(spriteBatch)
             {
-
+                
             };
             player.Initalise(content, graphicsDevice);
 
@@ -70,7 +74,6 @@ namespace Jam25.Screens
         public void Draw()
         {
             spriteBatch.End();
-
             spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, Matrix.CreateTranslation(new Vector3(-CameraPosition, 0f)));
 
             DrawDungeon();
@@ -99,11 +102,6 @@ namespace Jam25.Screens
 
         public void Update(GameTime gameTime)
         {
-            KeyboardInput.GetInput();
-            Vector2 playerMovement = Vector2.Zero;
-
-            KeyboardState keyboardState = Keyboard.GetState();
-
             //if (keyboardState.IsKeyDown(Keys.D) || keyboardState.IsKeyDown(Keys.Right))
             //{
             //    player.Sprite.IsFacingRight = true;
@@ -128,9 +126,11 @@ namespace Jam25.Screens
             //    player.Body.Velocity = Vector2.Zero;
             //}
 
-            player.Update(keyboardState);
-            Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
+            MovePlayer();
+            //physicsWorld.Update(1f);
 
+            Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
+            
             float cameraMinX = WorldBounds.X;
             float cameraMaxX = WorldBounds.Right - game.GraphicsDevice.Viewport.Width;
             float cameraMinY = WorldBounds.Y;
@@ -138,6 +138,44 @@ namespace Jam25.Screens
 
             CameraPosition.X = MathHelper.Clamp(targetCameraPosition.X, cameraMinX, cameraMaxX);
             CameraPosition.Y = MathHelper.Clamp(targetCameraPosition.Y, cameraMinY, cameraMaxY);
+        }
+
+        private void MovePlayer()
+        {
+            // move based on keyboard input
+            KeyboardInput.GetInput();
+            Vector2 playerMovement = Vector2.Zero;
+            KeyboardState keyboardState = Keyboard.GetState();
+            Vector2? probableTargetPosition = player.Update(keyboardState);
+
+            // the player is moving
+            if (probableTargetPosition is not null)
+            {
+                // Top left coordinate of where the player is moving to.
+                Vector2 targetPosition = (Vector2)probableTargetPosition;
+
+                float buffer = 5; // to make going through thin corridors easier
+
+                // check each corner of the player box
+                bool canMove = !(IsWallTile(targetPosition.X - buffer, targetPosition.Y - buffer)
+                    || IsWallTile(targetPosition.X - tileSize + buffer, targetPosition.Y - buffer)
+                    || IsWallTile(targetPosition.X - tileSize + buffer, targetPosition.Y - tileSize + buffer)
+                    || IsWallTile(targetPosition.X - buffer, targetPosition.Y - tileSize + buffer));
+                
+                if (canMove)
+                {
+                    player.Body.Position = targetPosition;
+                }
+                
+            }
+        }
+
+        private bool IsWallTile(float x, float y)
+        {
+            int xProj = Convert.ToInt32(x / tileSize);
+            int yProj = Convert.ToInt32(y / tileSize);
+
+            return gameMap.tiles[xProj, yProj] == TileType.Wall;
         }
 
         private void DrawDungeon()
