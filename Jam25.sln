@@ -5,7 +5,7 @@ VisualStudioVersion = 17.13.36105.23
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jam25", "Jam25\Jam25.csproj", "{7A221742-4BAC-EADE-2326-41776F34B90A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HDT.Gaming", "..\..\..\..\..\Users\John.McLaren\source\repos\HDT.Gaming\HDT.Gaming.csproj", "{3AE8A88A-9A67-3EF5-8B3D-AA6D2B4B8F4F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HDT.Gaming", "..\HDT.Gaming\HDT.Gaming\HDT.Gaming.csproj", "{3AE8A88A-9A67-3EF5-8B3D-AA6D2B4B8F4F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
