@@ -103,8 +103,9 @@ namespace Jam25
             frameInAnimation = 0;
         }
 
-        public void Update(KeyboardState keyboardState)
+        public Vector2? Update(KeyboardState keyboardState)
         {
+
             // Placeholder
             if (keyboardState.IsKeyDown(Keys.T))
             {
@@ -146,14 +147,13 @@ namespace Jam25
                         keyboardState.IsKeyDown(Keys.S),
                         keyboardState.IsKeyDown(Keys.D)
                     );
-                    //MovePlayer();
 
                     if (keyboardState.IsKeyDown(Keys.Space))
                     {
                         ResetAnimation();
                         lastState = PlayerState.Attacking;
                     }
-                    break;
+                    return MovePlayer();
 
                 case PlayerState.Attacking:
                     IncrementAnimation();
@@ -177,6 +177,8 @@ namespace Jam25
                     }
                     break;
             }
+
+            return null;
         }
 
         public void TakeDamage(int damage)
@@ -190,25 +192,28 @@ namespace Jam25
             }
         }
 
-        //private void MovePlayer()
-        //{
-        //    // Move one step
-        //    switch (lastDir)
-        //    {
-        //        case Direction.Up:
-        //            Sprite.Position.Y -= vel;
-        //            break;
-        //        case Direction.Down:
-        //            spritePosition.Y += vel;
-        //            break;
-        //        case Direction.Left:
-        //            spritePosition.X -= vel;
-        //            break;
-        //        case Direction.Right:
-        //            spritePosition.X += vel;
-        //            break;
-        //    }
-        //}
+        private Vector2 MovePlayer()
+        {
+            int dx = 0;
+            int dy = 0;
+            // Move one step
+            switch (lastDir)
+            {
+                case Direction.Up:
+                    dy--;
+                    break;
+                case Direction.Down:
+                    dy++;
+                    break;
+                case Direction.Left:
+                    dx--;
+                    break;
+                case Direction.Right:
+                    dx++;
+                    break;
+            }
+            return Vector2.Add(Body.Position, new Vector2(dx, dy));
+        }
 
         private void FindDirection(bool w, bool a, bool s, bool d)
         {
