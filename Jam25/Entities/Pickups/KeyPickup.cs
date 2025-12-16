@@ -12,7 +12,7 @@ namespace Jam25.Entities.Pickups
 
         public bool Consumed { get; set; }
 
-        public KeyPickup(Vector2 position, ContentManager content)
+        public KeyPickup(ContentManager content)
         {
             Sprite = new Sprite()
             {

@@ -27,6 +27,12 @@ namespace Jam25.Screens.UserInterface
 
         private Torch torch;
 
+        private AnimatedSprite playerIcon;
+        private AnimatedTexture animatedPlayerIcon;
+
+        private AnimatedSprite fireLarge;
+        private AnimatedTexture animatedFireLarge;
+
         #endregion
 
         /// <summary>
@@ -43,6 +49,21 @@ namespace Jam25.Screens.UserInterface
 
             UIBase = content.Load<Texture2D>("Images/UI/UIBase");
             font = content.Load<SpriteFont>("Fonts/Menu");
+            game.LoadSprite(SpriteID.PlayerUIIcon, "Images/UI/PlayerUIIcon", 12, 5, new Vector2(64f, 64f));
+            game.LoadSprite(SpriteID.FireBig, "Images/UI/FireBig", 6, 3, new Vector2(150f, 150f));
+
+            if (game.TryGetSprite(SpriteID.PlayerUIIcon, out AnimatedTexture animatedIcon))
+            {
+                this.animatedPlayerIcon = animatedIcon;
+                playerIcon = new AnimatedSprite() { SpriteId = SpriteID.PlayerUIIcon, ScaleX = 4, ScaleY = 4 };
+            }
+
+            if (game.TryGetSprite(SpriteID.FireBig, out AnimatedTexture animatedFireLarge))
+            {
+                this.animatedFireLarge = animatedFireLarge;
+                fireLarge = new AnimatedSprite() { SpriteId = SpriteID.FireBig, ScaleX = 1, ScaleY = 1 };
+            }
+
             whitePixel = new Texture2D(graphics, 1, 1);
             whitePixel.SetData(new[] { Color.White });
             roundedRectangle = new RoundedRectangle(spriteBatch, whitePixel);
@@ -59,9 +80,15 @@ namespace Jam25.Screens.UserInterface
         ///<inheritdoc/>
         public void Draw()
         {
+            var XPos = (int)currentCameraPosition.X;
+            var YPos = (int)currentCameraPosition.Y;
+            animatedPlayerIcon.DrawFrame(spriteBatch, playerIcon.Frame, new Vector2(XPos + 200, YPos + 227), playerIcon);
+            DrawPlayerStatusBars();
             spriteBatch.Draw(UIBase,
-                new Rectangle(0, 0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
+                new Rectangle(XPos, YPos, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
                 Color.White);
+
+            animatedFireLarge.DrawFrame(spriteBatch, fireLarge.Frame, new Vector2(XPos + 1250, YPos + 150), fireLarge);
 
             DrawPlayerStatusBars();
             DrawTorchBar();
@@ -88,7 +115,8 @@ namespace Jam25.Screens.UserInterface
 
         public void Update(GameTime gameTime)
         {
-
+            UpdateSprite(fireLarge, (float)gameTime.ElapsedGameTime.TotalSeconds);
+            UpdateSprite(playerIcon, (float)gameTime.ElapsedGameTime.TotalSeconds);
         }
 
         #region private methods
