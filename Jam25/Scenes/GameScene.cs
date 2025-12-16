@@ -38,6 +38,19 @@ namespace Jam25.Scenes
             {
                 enemy.EnemyController?.Update(this, enemy, gameTime.ElapsedGameTime);
                 enemy.CurrentSprite.Update(Direction.Down, gameTime);
+
+
+                float distFromPlayer = Vector2.Distance(enemy.Body.Position, Player.Body.Position);
+
+                if (distFromPlayer < 50 && Player.LastState == Player.PlayerState.Attacking)
+                {
+                    enemy.Health.TakeDamage(20);
+                }
+                if (distFromPlayer < 30 && enemy.CurrentState != Enemy.EnemyState.Dying && enemy.CanAttack)
+                {
+                    Player.TakeDamage(20);
+                    _ = enemy.StartAttackCooldown();
+                }
             }
 
             PhysicsWorld.Update((float)gameTime.ElapsedGameTime.TotalSeconds);

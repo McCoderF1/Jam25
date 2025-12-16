@@ -26,17 +26,6 @@ namespace Jam25
             }
         }
 
-        [Flags]
-        private enum PlayerState
-        {
-            Idle = 0x01,
-            Running = 0x02,
-            Attacking = 0x04,
-            Hurt = 0x08,
-            Dying = 0x10,
-            Walking = 0x20,
-        }
-
         #endregion 
 
         #region Private consts
@@ -52,14 +41,12 @@ namespace Jam25
         private enum Direction { Up, Right, Down, Left }
         private Direction lastDir;
 
-        private PlayerState lastState;
-
         private Dictionary<PlayerState, PlayerTexture>[] textures;
         private PlayerTexture currentTexture
         {
             get
             {
-                var state = lastState;
+                var state = LastState;
 
                 // Normalize unsupported combinations to known keys.
                 // If Idle + Attacking, just use Attacking.
@@ -93,7 +80,20 @@ namespace Jam25
 
         private bool isAttacking;
 
-        #endregion 
+        #endregion
+
+        [Flags]
+        public enum PlayerState
+        {
+            Idle = 0x01,
+            Running = 0x02,
+            Attacking = 0x04,
+            Hurt = 0x08,
+            Dying = 0x10,
+            Walking = 0x20,
+        }
+
+        public PlayerState LastState;
 
         public Sprite Sprite { get; set; }
 
@@ -140,7 +140,7 @@ namespace Jam25
 
             animationStage = 0;
             animationTime = 0f;
-            lastState = PlayerState.Idle;
+            LastState = PlayerState.Idle;
         }
 
         public Vector2? Update(GameTime gameTime, KeyboardState keyboardState)
@@ -152,7 +152,7 @@ namespace Jam25
 
             // ... debug T/L
 
-            switch (lastState)
+            switch (LastState)
             {
                 case PlayerState.Idle:
                     IncrementAnimation(deltaSeconds);
@@ -168,7 +168,7 @@ namespace Jam25
                     {
                         isAttacking = true;
                         ResetAnimation();
-                        lastState = PlayerState.Attacking;
+                        LastState = PlayerState.Attacking;
                     }
                     else if (!attackKeyDown)
                     {
@@ -191,13 +191,13 @@ namespace Jam25
                     {
                         isAttacking = true;
                         ResetAnimation();
-                        lastState |= PlayerState.Attacking;   // becomes Running | Attacking
+                        LastState |= PlayerState.Attacking;   // becomes Running | Attacking
                     }
                     else if (!attackKeyDown && isAttacking && animationStage == currentTexture.cols - 1)
                     {
                         isAttacking = false;
                         ResetAnimation();
-                        lastState &= ~PlayerState.Attacking;  // back to Running
+                        LastState &= ~PlayerState.Attacking;  // back to Running
                     }
 
                     return MovePlayer(deltaSeconds, 2.0f);
@@ -217,13 +217,13 @@ namespace Jam25
                     {
                         isAttacking = true;
                         ResetAnimation();
-                        lastState |= PlayerState.Attacking;   // Walking | Attacking
+                        LastState |= PlayerState.Attacking;   // Walking | Attacking
                     }
                     else if (!attackKeyDown && isAttacking && animationStage == currentTexture.cols - 1)
                     {
                         isAttacking = false;
                         ResetAnimation();
-                        lastState &= ~PlayerState.Attacking;  // back to Walking
+                        LastState &= ~PlayerState.Attacking;  // back to Walking
                     }
 
                     return MovePlayer(deltaSeconds, 1.0f);
@@ -236,12 +236,26 @@ namespace Jam25
                     {
                         // End of idle attack anim
                         isAttacking = false;
-                        lastState = PlayerState.Idle;
+                        LastState = PlayerState.Idle;
                         ResetAnimation();
                     }
                     break;
 
-                    // Hurt/Dying unchanged
+                // Hurt/Dying unchanged
+
+                case PlayerState.Hurt:
+                    IncrementAnimation(deltaSeconds);
+                    if (animationStage == currentTexture.cols - 1)
+                    {
+                        LastState = PlayerState.Idle;
+                    }
+                    break;
+                case PlayerState.Dying:
+                    if (animationStage != currentTexture.cols - 1)
+                    {
+                        IncrementAnimation(deltaSeconds);
+                    }
+                    break;
             }
 
             return null;
@@ -249,13 +263,13 @@ namespace Jam25
 
         public void TakeDamage(int damage)
         {
-            if (lastState != PlayerState.Hurt && lastState != PlayerState.Dying)
+            if (LastState != PlayerState.Hurt && LastState != PlayerState.Dying)
             {
                 Health.TakeDamage(damage);
                 animationStage = 0;
                 animationTime = 0f;
 
-                lastState = (Health.Current == 0) ? PlayerState.Dying : PlayerState.Hurt;
+                LastState = (Health.Current == 0) ? PlayerState.Dying : PlayerState.Hurt;
             }
         }
 
@@ -362,11 +376,11 @@ namespace Jam25
             }
 
             // Preserve non-movement flags (e.g. Attacking)
-            var nonMovementFlags = lastState & ~MovementMask;
+            var nonMovementFlags = LastState & ~MovementMask;
 
             if (movementDirection == Vector2.Zero)
             {
-                lastState = PlayerState.Idle | nonMovementFlags;
+                LastState = PlayerState.Idle | nonMovementFlags;
                 return;
             }
 
@@ -381,7 +395,7 @@ namespace Jam25
             }
 
             var movementState = run ? PlayerState.Running : PlayerState.Walking;
-            lastState = movementState | nonMovementFlags;
+            LastState = movementState | nonMovementFlags;
         }
 
         #endregion 
