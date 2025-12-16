@@ -4,6 +4,7 @@ using HDT.Gaming.Physics;
 using HDT.Gaming.Screens;
 using Jam25.Entities;
 using Jam25.Entities.Pickups;
+using Jam25.Graphics;
 using Jam25.Scenes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -18,7 +19,6 @@ namespace Jam25.Screens
 {
     public class GameScreen : IScreen
     {
-
         #region private members
 
         private readonly GraphicsDevice graphicsDevice;
@@ -28,6 +28,7 @@ namespace Jam25.Screens
         private readonly Scene gameScene;
         private Texture2D wallsFloor;
         private GameMap gameMap;
+        private Key key;
 
         private int mapWidth = 80;
         private int mapHeight = 42;
@@ -62,13 +63,15 @@ namespace Jam25.Screens
             this.game = game;
 
             pickups = new();
-
             player = new Player(spriteBatch);
             player.Initalise(content, graphicsDevice);
 
+            var keyImage = game.Content.Load<Texture2D>("Images/key32");
+            key = new Key(new Sprite(keyImage, new Vector2(keyImage.Width * 0.5f, keyImage.Height)));
+
 
             gameMap = new GameMap(mapWidth, mapHeight);
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player);
+            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player, key);
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
 
             gameScene = new(gameMap, player);
@@ -86,6 +89,7 @@ namespace Jam25.Screens
             {
                 pickup.Draw(spriteBatch, tileSize);
             }
+            spriteBatch.Draw(key.Sprite.Texture, key.Sprite.Position, Color.White);
         }
 
         public void Hide()
@@ -102,7 +106,6 @@ namespace Jam25.Screens
 
             player.Initalise(game.Content, game.GraphicsDevice);
 
-            // why do we reinitalise an already initalised gamemap????????
             gameMap = new GameMap(mapWidth, mapHeight);
             gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, player);
 
@@ -129,7 +132,7 @@ namespace Jam25.Screens
             MovePlayer();
 
             Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
-            
+
             float cameraMinX = WorldBounds.X;
             float cameraMaxX = WorldBounds.Right - game.GraphicsDevice.Viewport.Width;
             float cameraMinY = WorldBounds.Y;
@@ -139,13 +142,13 @@ namespace Jam25.Screens
             CameraPosition.Y = MathHelper.Clamp(targetCameraPosition.Y, cameraMinY, cameraMaxY);
         }
 
-        private void MovePlayer()
+        private void MovePlayer(GameTime gameTime)
         {
             // move based on keyboard input
             KeyboardInput.GetInput();
             Vector2 playerMovement = Vector2.Zero;
             KeyboardState keyboardState = Keyboard.GetState();
-            Vector2? probableTargetPosition = player.Update(keyboardState);
+            Vector2? probableTargetPosition = player.Update(gameTime, keyboardState);
 
             // the player is moving
             if (probableTargetPosition is not null)
@@ -173,6 +176,7 @@ namespace Jam25.Screens
                         }
                     }
                 }
+                
             }
         }
 

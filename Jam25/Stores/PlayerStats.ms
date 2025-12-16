@@ -2,7 +2,13 @@ namespace Jam25.Stores
 
 variable PlayerStats
 {
-	string Username
+	i16 TotalLevel
+
+	i8 HealthLevel
+
+	i8 TorchLevel
+
+	i8 SpeedLevel
 
 	i32 Kills
 
