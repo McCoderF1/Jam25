@@ -103,6 +103,8 @@ namespace Jam25
 
         public Health Health { get; set; }
 
+        public Stamina Stamina { get; set; }
+
         public int Level { get; set; }
 
         public Player(SpriteBatch spriteBatch)
@@ -110,6 +112,7 @@ namespace Jam25
             lastDir = Direction.Down;
             cellSize = 64;
             Health = new(100);
+            Stamina = new Stamina(100);
             Level = 1;  // NOTE: level is from 1-3, while level index in texture array is 0-2.
             textureScale = 5;
             textures = new Dictionary<PlayerState, PlayerTexture>[3];
@@ -168,11 +171,15 @@ namespace Jam25
                     {
                         isAttacking = true;
                         ResetAnimation();
-                        LastState = PlayerState.Attacking;
+                        lastState = PlayerState.Attacking;
+
+                        Stamina.TakeStamina(3);
                     }
                     else if (!attackKeyDown)
                     {
                         isAttacking = false;
+
+                        Stamina.Restore(5);
                     }
                     break;
 
@@ -191,7 +198,8 @@ namespace Jam25
                     {
                         isAttacking = true;
                         ResetAnimation();
-                        LastState |= PlayerState.Attacking;   // becomes Running | Attacking
+                        lastState |= PlayerState.Attacking;   // becomes Running | Attacking
+                        Stamina.TakeStamina(7);
                     }
                     else if (!attackKeyDown && isAttacking && animationStage == currentTexture.cols - 1)
                     {
@@ -199,6 +207,8 @@ namespace Jam25
                         ResetAnimation();
                         LastState &= ~PlayerState.Attacking;  // back to Running
                     }
+
+                    Stamina.TakeStamina(2); // running stamina drain
 
                     return MovePlayer(deltaSeconds, 2.0f);
 
@@ -217,7 +227,8 @@ namespace Jam25
                     {
                         isAttacking = true;
                         ResetAnimation();
-                        LastState |= PlayerState.Attacking;   // Walking | Attacking
+                        lastState |= PlayerState.Attacking;   // Walking | Attacking
+                        Stamina.TakeStamina(5);
                     }
                     else if (!attackKeyDown && isAttacking && animationStage == currentTexture.cols - 1)
                     {
@@ -394,9 +405,12 @@ namespace Jam25
                 lastDir = movementDirection.Y < 0 ? Direction.Up : Direction.Down;
             }
 
-            var movementState = run ? PlayerState.Running : PlayerState.Walking;
-            LastState = movementState | nonMovementFlags;
+            var movementState = IsRunning(run) ? PlayerState.Running : PlayerState.Walking;
+            lastState = movementState | nonMovementFlags;
         }
+
+        private bool IsRunning(bool runRequest)
+            { return runRequest && Stamina.Current > 0; }
 
         #endregion 
     }

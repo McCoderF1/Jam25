@@ -58,6 +58,7 @@ namespace Jam25.Screens
         public GameScreen(
             GraphicsDevice gfxDevice,
             SpriteBatch spriteBatch,
+            GameContent gameContent,
             ContentManager content,
             AudioController audioController,
             Game1 game)
@@ -88,6 +89,7 @@ namespace Jam25.Screens
 
             gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
+            gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player);
         }
 
         public void Draw()
@@ -150,11 +152,6 @@ namespace Jam25.Screens
             CameraPosition.Y = MathHelper.Clamp(targetCameraPosition.Y, cameraMinY, cameraMaxY);
 
             gameUI.UpdateWithVector(gameTime, CameraPosition);
-        }
-
-        public void InstallUI(IScreenUI userInterface)
-        {
-            gameUI = userInterface;
         }
 
         #region private methods
