@@ -15,8 +15,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
-using System.Threading.Tasks;
 
 namespace Jam25.Screens
 {
@@ -84,6 +82,8 @@ namespace Jam25.Screens
         private Rectangle WorldBounds => new Rectangle(0, 0, mapWidth * tileSize, mapHeight * tileSize);
         private bool draw = true;
 
+        private bool currentLevelCompleted = false;
+
         #endregion
 
         public EventHandler LevelCompleted { get; set; }
@@ -119,17 +119,11 @@ namespace Jam25.Screens
             key = new KeyPickup(game.Content);
 
             var gameMap = new GameMap(mapWidth, mapHeight);
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene);
-            gameMap.AddKey(key);
-            gameMap.AddPlayer(player);
-            gameMap.AddDoor();
 
             gameScene = new(gameMap, player, enemySpawner);
 
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
             whitePixelTexture = game.Content.Load<Texture2D>("Textures/WhiteRectangle");
-
-            gameScene.Pickups.Add(key);
 
             visibleTiles = new bool[mapWidth, mapHeight];
 
@@ -145,7 +139,7 @@ namespace Jam25.Screens
 
             gameScene.Enemies.Add(enemyFactory.CreateSlimeEnemy(new(200, 200)));
 
-            this.LevelCompleted += (_, _) => Task.Delay(1000).ContinueWith(_ => Transition());
+            this.LevelCompleted += (_, _) => currentLevelCompleted = true;
         }
 
         public void Draw()
@@ -208,6 +202,13 @@ namespace Jam25.Screens
 
         public void Update(GameTime gameTime)
         {
+            if (currentLevelCompleted)
+            {
+                currentLevelCompleted = false;
+                Transition();
+                return;
+            }
+
             KeyboardInput.GetInput();
 
             if (player.LastState == Player.PlayerState.Dying && !playerDied)
@@ -539,6 +540,12 @@ namespace Jam25.Screens
 
         private void Transition()
         {
+            ResetWorld();
+            BuildWorld();
+
+            return;
+
+
             GameMap checkPoint = new GameMap(mapWidth, mapHeight);
             checkPoint.MakeMap(1, 10, 10, mapWidth, mapHeight, gameScene);
             checkPoint.AddPlayer(gameScene.Player);
@@ -575,6 +582,7 @@ namespace Jam25.Screens
             gameScene.GameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene);
             gameScene.GameMap.AddKey(key);
             gameScene.GameMap.AddPlayer(player);
+            gameScene.GameMap.AddDoor();
 
             for (int i = 0; i < healthPickupCount; i++)
             {
@@ -589,6 +597,7 @@ namespace Jam25.Screens
                 gameScene.Pickups.Add(coal);
             }
 
+            key.Reset();
             gameScene.Pickups.Add(key);
         }
 
