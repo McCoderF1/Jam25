@@ -164,7 +164,7 @@ namespace Jam25.Screens
         public void Show()
         {
             pickups.Clear();
-            
+
             gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
 
             for (int i = 0; i < healthPickupCount; i++)
@@ -177,9 +177,6 @@ namespace Jam25.Screens
             if (gameUI is GameUserInterface gui)
             {
                 gui.SetTorch(game.Torch);
-                
-                // Set UI reference on key so it can display when collected
-                key.GameUI = gui;
             }
 
             for (int i = 0; i < coalPickupCount; i++)

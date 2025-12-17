@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using HDT.Gaming.Models;
+﻿using HDT.Gaming.Models;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Jam25.Graphics
 {
@@ -78,10 +74,10 @@ namespace Jam25.Graphics
                 currentFrame = (currentFrame + 1) % framesPerDirection;
             }
 
-            if(!hasStarted && currentFrame != 0)
+            if (!hasStarted && currentFrame != 0)
                 hasStarted = true;
 
-            if(!hasCompleted && hasStarted && currentFrame == 0)
+            if (!hasCompleted && hasStarted && currentFrame == 0)
                 hasCompleted = true;
         }
 
