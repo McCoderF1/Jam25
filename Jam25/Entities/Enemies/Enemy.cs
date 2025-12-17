@@ -112,9 +112,11 @@ namespace Jam25.Entities.Enemies
             if (UseProjectiles)
             {
                 StartCooldown();
-                player.TakeDamage(10);
-                CurrentState = Enemy.EnemyState.Attacking;
-                AudioManager.PlaySound("HitFlesh");
+                //AudioManager.PlaySound("ShootProj");
+
+                //player.TakeDamage(10);
+                //CurrentState = Enemy.EnemyState.Attacking;
+                //AudioManager.PlaySound("HitFlesh");
             }
             else
             {
