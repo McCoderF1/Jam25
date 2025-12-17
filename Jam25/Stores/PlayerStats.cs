@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reactive.Subjects;
 
 namespace Jam25.Stores
 {
@@ -12,10 +13,21 @@ namespace Jam25.Stores
     /// </summary>
     public static class PlayerTracker
     {
+        #region private members
+
+        private static Subject<string> triggerOnLevelUp = new();
+
+        #endregion
+
         /// <summary>
         /// Embers needed to level up, ramped up per level (15 levels total)
         /// </summary>
         public static readonly List<int> EmbersPerLevel = new() { 10, 50, 100, 250, 400, 600, 850, 1100, 1450, 2000, 2500, 3000, 3500, 4000, 5000 };
+
+        /// <summary>
+        /// Watch for when the player levels up
+        /// </summary>
+        public static IObservable<string> OnLevelUp => triggerOnLevelUp;
 
         /// <summary>
         /// Player's stats
@@ -105,7 +117,8 @@ namespace Jam25.Stores
                     case 2: case 5: case 8: case 11: case 14:
                         PlayerStats.SpeedLevel++;
                         break;
-                }    
+                }
+                triggerOnLevelUp.OnNext("Leveled");
             }
         }
 
