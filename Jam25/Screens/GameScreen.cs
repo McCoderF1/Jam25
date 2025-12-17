@@ -168,6 +168,9 @@ namespace Jam25.Screens
             if (gameUI is GameUserInterface gui)
             {
                 gui.SetTorch(game.Torch);
+                
+                // Set UI reference on key so it can display when collected
+                key.GameUI = gui;
             }
 
             for (int i = 0; i < coalPickupCount; i++)
