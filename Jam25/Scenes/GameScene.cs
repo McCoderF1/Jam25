@@ -44,6 +44,7 @@ namespace Jam25.Scenes
             List<Enemy> enemiesToRemove = new();
 
             bool attacking = false;
+            bool hitSomething = false;
             if (Player.IsAttacking != playerAttackState)
             {
                 playerAttackState = Player.IsAttacking;
@@ -68,11 +69,7 @@ namespace Jam25.Scenes
                     if (distFromPlayer < 50)
                     {
                         enemy.TakeDamage(4);
-                        AudioManager.PlaySound("MetalHit");
-                    }
-                    else
-                    {
-                        AudioManager.PlaySound("Miss");
+                        hitSomething = true;
                     }
                 }
                 else if (distFromPlayer < enemy.AttackRange && enemy.CanAttack && Player.LastState != Player.PlayerState.Dying)
@@ -86,6 +83,14 @@ namespace Jam25.Scenes
                 }
 
                 enemy.Update(gameTime);
+            }
+
+            if (attacking)
+            {
+                if (hitSomething)
+                    AudioManager.PlaySound("MetalHit");
+                else
+                    AudioManager.PlaySound("Miss");
             }
 
             foreach (var enemy in enemiesToRemove)

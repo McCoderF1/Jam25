@@ -111,14 +111,17 @@ namespace Jam25.Entities.Enemies
         {
             if (UseProjectiles)
             {
-
+                StartCooldown();
+                player.TakeDamage(10);
+                CurrentState = Enemy.EnemyState.Attacking;
+                AudioManager.PlaySound("HitFlesh");
             }
             else
             {
                 StartCooldown();
                 player.TakeDamage(10);
                 CurrentState = Enemy.EnemyState.Attacking;
-                AudioManager.PlaySound("MetalHit");
+                AudioManager.PlaySound("HitFlesh");
             }
         }
 
