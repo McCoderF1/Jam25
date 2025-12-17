@@ -12,6 +12,8 @@ namespace Jam25.Entities.Pickups
 
         public bool Consumed { get; set; }
 
+        public EventHandler PickedUp { get; set; }
+
         public KeyPickup(ContentManager content)
         {
             Sprite = new Sprite()
@@ -24,7 +26,12 @@ namespace Jam25.Entities.Pickups
 
         public void Collect(Player player)
         {
+            if (Consumed) return;
+
             Consumed = true;
+            player.HasKey = true;
+            PickedUp.Invoke(this, EventArgs.Empty);
+
             Console.WriteLine("Collected Key!");
         }
 

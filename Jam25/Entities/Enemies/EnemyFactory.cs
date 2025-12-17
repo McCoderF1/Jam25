@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using HDT.Gaming.Audio;
+using Jam25.Entities.Enemies.Controllers;
 using Jam25.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -20,6 +21,7 @@ namespace Jam25.Entities.Enemies
 
         private readonly ContentManager content;
         private readonly AudioController audioController;
+        private readonly BasicEnemyController enemyController;
 
         private readonly Texture2D slimeAttackTexture;
         private readonly Texture2D slimeDeathTexture;
@@ -34,6 +36,8 @@ namespace Jam25.Entities.Enemies
         {
             this.content = content;
             this.audioController = audioController;
+
+            enemyController = new();
 
             slimeAttackTexture = content.Load<Texture2D>("EnemySprite/Slime/Slime2_Attack_with_shadow");
             slimeDeathTexture = content.Load<Texture2D>("EnemySprite/Slime/Slime2_Death_with_shadow");
@@ -63,7 +67,8 @@ namespace Jam25.Entities.Enemies
                     PositionOffset = new Vector2(FRAME_WIDTH * 0.5f, FRAME_WIDTH)
                 },
                 Health = new HDT.Gaming.Models.Health(10),
-                MovementSpeed = 1,
+                MovementSpeed = 30,
+                EnemyController = enemyController,
             };
         }
     }

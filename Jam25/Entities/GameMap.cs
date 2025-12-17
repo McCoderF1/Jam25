@@ -107,7 +107,7 @@ namespace Jam25.Entities
                             if (i == keyRoom)
                             {
                                 // This is the room to place the key
-                                key.Sprite.Position = new Vector2(newX, newY);
+                                key.Sprite.Position = new Vector2(newX * 32, newY * 32);
                             }
                             // Flip a coin
                             if (rand.Next(0, 1) == 0)

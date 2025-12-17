@@ -1,11 +1,12 @@
 ﻿using HDT.Gaming.Audio;
 using HDT.Gaming.Models;
 using HDT.Gaming.Screens;
+using Jam25.Entities.Pickups;
 using Jam25.Graphics;
-using Jam25.Stores;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 
 namespace Jam25.Screens.UserInterface
 {
@@ -28,6 +29,7 @@ namespace Jam25.Screens.UserInterface
         private readonly Texture2D LevelPopUp;
         private readonly RoundedRectangle roundedRectangle;
 
+        private KeyPickup keyPickup;
         private Torch torch;
 
         private AnimatedSprite playerIcon;
@@ -40,7 +42,19 @@ namespace Jam25.Screens.UserInterface
         private short previousPlayerLevel = 0;
         private bool levelSoundTriggered = false;
 
+        private const int maxBarWidth = 130;
+        private List<CollectedItem> collectedItems = new List<CollectedItem>();
+
         #endregion
+
+        /// <summary>
+        /// Item collected by the player for UI display
+        /// </summary>
+        private struct CollectedItem
+        {
+            public Texture2D Texture;
+            public string Name;
+        }
 
         /// <summary>
         /// Game User Interface constructor
@@ -58,12 +72,12 @@ namespace Jam25.Screens.UserInterface
             LevelPopUp = content.Load<Texture2D>("Images/UI/LevelUpPop");
             font = content.Load<SpriteFont>("Fonts/Menu");
             game.LoadSprite(SpriteID.PlayerUIIcon, "Images/UI/PlayerUIIcon", 12, 5, new Vector2(64f, 64f));
-            game.LoadSprite(SpriteID.LevelUp, "Images/UI/levelup", 12, 12, new Vector2(64f, 64f));
 
-            if (game.TryGetSprite(SpriteID.PlayerUIIcon, out AnimatedTexture animatedIcon))
+            // Try to load player icon sprite
+            if (game.TryGetSprite(SpriteID.PlayerLvl1, out AnimatedTexture animatedIcon))
             {
                 this.animatedPlayerIcon = animatedIcon;
-                playerIcon = new AnimatedSprite() { SpriteId = SpriteID.PlayerUIIcon, ScaleX = 4, ScaleY = 4 };
+                playerIcon = new AnimatedSprite() { SpriteId = SpriteID.PlayerLvl1, ScaleX = 4, ScaleY = 4 };
             }
 
             if (game.TryGetSprite(SpriteID.LevelUp, out AnimatedTexture animatedLevelUp))
@@ -85,10 +99,17 @@ namespace Jam25.Screens.UserInterface
             this.torch = torch;
         }
 
+        public void SetKey(KeyPickup key)
+        {
+            this.keyPickup = key;
+        }
+
         ///<inheritdoc/>
         public void Draw()
         {
-            animatedPlayerIcon.DrawFrame(spriteBatch, playerIcon.Frame, new Vector2(200, 227), playerIcon);
+            var XPos = (int)currentCameraPosition.X;
+            var YPos = (int)currentCameraPosition.Y;
+            animatedPlayerIcon.DrawFrame(spriteBatch, playerIcon.Frame, new Vector2(XPos + 200, YPos + 227), playerIcon);
             DrawPlayerStatusBars();
             spriteBatch.Draw(UIBase,
                 new Rectangle(0, 0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
@@ -96,8 +117,7 @@ namespace Jam25.Screens.UserInterface
 
             DrawPlayerStatusBars();
             DrawTorchBar();
-            DrawInformation(0, 0);
-            DrawPlayerLevelUp();
+            DrawInformation(XPos, YPos);
         }
 
         ///<inheritdoc/>
@@ -109,7 +129,6 @@ namespace Jam25.Screens.UserInterface
         ///<inheritdoc/>
         public void Show()
         {
-
         }
 
         ///<inheritdoc/>
@@ -122,39 +141,12 @@ namespace Jam25.Screens.UserInterface
         public void Update(GameTime gameTime)
         {
             UpdateSprite(playerIcon, (float)gameTime.ElapsedGameTime.TotalSeconds);
-            UpdateSprite(levelUp, (float)gameTime.ElapsedGameTime.TotalSeconds);
         }
 
         #region private methods
 
-        private void DrawPlayerLevelUp()
-        {
-            var XPos = (int)currentCameraPosition.X;
-            var YPos = (int)currentCameraPosition.Y;
-
-            if (PlayerTracker.PlayerStats.TotalLevel != previousPlayerLevel)
-            {
-                if(!levelSoundTriggered)
-                    audioController.PlaySound("LevelUpSound");
-
-                spriteBatch.Draw(LevelPopUp, new Rectangle(graphicsDevice.Viewport.Width / 2 - 212, graphicsDevice.Viewport.Height / 4 - 67, 424, 135), Color.White);
-                spriteBatch.DrawString(font, "Health Up", new Microsoft.Xna.Framework.Vector2(graphicsDevice.Viewport.Width / 2 - 75, graphicsDevice.Viewport.Height / 4 + 14), Color.White);
-                animatedLevelUp.DrawFrame(spriteBatch, levelUp.Frame, new Vector2((player.Body.Position.X - XPos) + 32, (player.Body.Position.Y - YPos) + 32), levelUp);
-                levelSoundTriggered = true;
-
-                if (levelUp.Frame.Equals(11))
-                    previousPlayerLevel = PlayerTracker.PlayerStats.TotalLevel;
-            }
-            else
-            {
-                levelUp.Frame = 0;
-                levelSoundTriggered = false;
-            }
-        }
-
         private void DrawPlayerStatusBars()
         {
-            const int maxBarWidth = 130;
             const int barHeight = 15;
             const int margin = 20;
             const int cornerRadius = 4;
@@ -201,11 +193,13 @@ namespace Jam25.Screens.UserInterface
             }
         }
 
+        /// <summary>
+        /// Displays the torch energy bar
+        /// </summary>
         private void DrawTorchBar()
         {
             if (torch == null) return;
 
-            const int maxBarWidth = 130;
             const int barHeight = 15;
             const int margin = 20;
             const int cornerRadius = 4;
@@ -226,9 +220,44 @@ namespace Jam25.Screens.UserInterface
             }
         }
 
-        private void DrawInformation(int xPos, int yPos)
+        private void DrawTimer()
         {
-            spriteBatch.DrawString(font, "Floor 1", new Microsoft.Xna.Framework.Vector2(xPos + 1127, yPos + 60), Color.White);
+            // Timer placeholder
+        }
+
+        private void DrawInformation()
+        {
+            spriteBatch.DrawString(font, "Floor 1", new Vector2(1127, 60), Color.White);
+        }
+
+        /// <summary>
+        /// Draws collected items in the UI
+        /// </summary>
+        private void DrawCollectedItems()
+        {
+            const int slotSize = 35;
+            const int slotSpacing = 2;
+            const int margin = 11;
+            const int maxSlots = 4;
+
+            int startX = graphicsDevice.Viewport.Width - margin - (slotSize * maxSlots) - (slotSpacing * (maxSlots - 1));
+            int y = graphicsDevice.Viewport.Height - margin - slotSize;
+
+            for (int i = 0; i < maxSlots; i++)
+            {
+                int slotX = startX + (i * (slotSize + slotSpacing));
+
+                var slotRect = new Rectangle(slotX, y, slotSize, slotSize);
+                roundedRectangle.Draw(slotRect, 4, Color.Black * 0.5f);
+
+                if (i < collectedItems.Count)
+                {
+                    var item = collectedItems[i];
+                    int itemSize = slotSize - 8;
+                    var itemRect = new Rectangle(slotX + 4, y + 4, itemSize, itemSize);
+                    spriteBatch.Draw(item.Texture, itemRect, Color.White);
+                }
+            }
         }
 
         private void UpdateSprite(AnimatedSprite sprite, float elapsed)

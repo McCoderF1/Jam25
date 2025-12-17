@@ -71,8 +71,14 @@ namespace Jam25
 
             audioController = new AudioController();
             audioController.InstallMusic("The Flickering Flame", Content.Load<Song>("Sound/Music/The Flickering Flame"));
+            audioController.InstallEffect("MetalHit", Content.Load<SoundEffect>("Sound/Effects/MetalHit"));
+            audioController.InstallEffect("RetroClick", Content.Load<SoundEffect>("Sound/Effects/RetroClick"));
+            audioController.InstallEffect("AppClick", Content.Load<SoundEffect>("Sound/Effects/AppClick"));
+            audioController.InstallEffect("Miss", Content.Load<SoundEffect>("Sound/Effects/WhooshMiss"));
+            audioController.InstallEffect("HitFlesh", Content.Load<SoundEffect>("Sound/Effects/HitFlesh"));
             audioController.InstallEffect("LevelUpSound", Content.Load<SoundEffect>("Sound/Effect/LevelUpSound"));
             //add audio here
+            // - ok
 
             AudioManager.InstallController(audioController);
 

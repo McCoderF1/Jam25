@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using HDT.Gaming.Models;
+﻿using HDT.Gaming.Models;
 using HDT.Gaming.Physics;
 using Jam25.Entities.Enemies.Controllers;
 using Jam25.Graphics;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Jam25.Entities.Enemies
 {
@@ -15,6 +16,7 @@ namespace Jam25.Entities.Enemies
         #region Private Members
 
         private EnemyState currentState = EnemyState.Idle;
+        private float attackBlockedUntil;
 
         #endregion Private Members
 
@@ -42,33 +44,33 @@ namespace Jam25.Entities.Enemies
         public Health Health { get; init; }
 
 
-        public bool CanAttack { get; private set; }
+        public bool CanAttack => (CurrentState == EnemyState.Idle || CurrentState == EnemyState.Running) && attackBlockedUntil <= 0f;
+
+        public Vector2 MovementDirection { get; set; } = Vector2.Zero;
 
         public Enemy()
         {
             Body.Owner = this;
-            CanAttack = true;
+            Health = new Health(50);
             //StartAttackCooldown();
         }
 
         public void TakeDamage(int amount)
         {
             Health.TakeDamage(amount);
-            if (Health.Current == 0)
+            if (Health.Current <= 0)
             {
                 CurrentState = EnemyState.Dying;
             }
+            else
+            {
+                CurrentState = EnemyState.Hurt;
+            }
         }
 
-        public async Task StartAttackCooldown()
+        public void StartCooldown()
         {
-            if (!CanAttack)
-            {
-                return;
-            }
-            CanAttack = false;
-            await Task.Delay(5000);
-            CanAttack = true;
+            attackBlockedUntil = 1000f;
         }
 
         /// <summary>
@@ -79,10 +81,26 @@ namespace Jam25.Entities.Enemies
         /// <param name="gameTime">The current game time, used to determine state transitions and animation progress.</param>
         public void Update(GameTime gameTime)
         {
-            // If we are dying and the dying animation has completed, set state to Dead
-            if (CurrentState == EnemyState.Dying && CurrentSprite.LoopCompleted)
+            // When the current animation loop is completed
+            if (!CurrentSprite.LoopCompleted)
             {
-                CurrentState = EnemyState.Dead;
+                return;
+            }
+
+            if(attackBlockedUntil > 0f)
+            {
+                attackBlockedUntil -= (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+            }
+
+            switch (CurrentState)
+            {
+                case EnemyState.Hurt:
+                case EnemyState.Attacking:
+                    CurrentState = EnemyState.Idle;
+                    break;
+                case EnemyState.Dying:
+                    CurrentState = EnemyState.Dead;
+                    break;
             }
         }
     }

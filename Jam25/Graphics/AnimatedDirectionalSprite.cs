@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using HDT.Gaming.Models;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Jam25.Graphics
 {
@@ -77,14 +74,14 @@ namespace Jam25.Graphics
                 currentFrame = (currentFrame + 1) % framesPerDirection;
             }
 
-            if(!hasStarted && currentFrame != 0)
+            if (!hasStarted && currentFrame != 0)
                 hasStarted = true;
 
-            if(!hasCompleted && hasStarted && currentFrame == 0)
+            if (!hasCompleted && hasStarted && currentFrame == 0)
                 hasCompleted = true;
         }
 
-        public void Draw(SpriteBatch spriteBatch, Vector2 position)
+        public void Draw(SpriteBatch spriteBatch, Vector2 position, Texture2D? whitePixel = null, Health? health = null)
         {
             if (spriteBatch == null)
                 throw new ArgumentNullException(nameof(spriteBatch));
@@ -109,6 +106,32 @@ namespace Jam25.Graphics
                 Vector2.One,
                 SpriteEffects.None,
                 layerDepth: 1f);
+
+
+            // draw the health bar
+            if (health is not null && whitePixel is not null)
+            {
+                float healthPercent = Math.Clamp((float)health.Current / (float)health.Max, 0f, 1f);
+
+                if (healthPercent == 1f || healthPercent == 0f)
+                    return;
+
+                int barWidth = frameWidth;
+                int barHeight = Math.Max(4, frameWidth / 16);
+                float topOfSpriteY = position.Y - (frameWidth / 2f);
+                int barX = (int)(position.X - (barWidth / 2f));
+                int barY = (int)(topOfSpriteY - 8 - barHeight);
+
+                // Background
+                var bgRect = new Rectangle(barX, barY, barWidth, barHeight);
+                spriteBatch.Draw(whitePixel, bgRect, Color.Black * 0.75f);
+
+                // Fill
+                int fillWidth = (int)(barWidth * healthPercent);
+                var fillRect = new Rectangle(barX + 1, barY + 1, Math.Max(0, fillWidth - 2), barHeight - 2);
+                var fillColor = Color.Lerp(Color.Red, Color.Green, healthPercent);
+                spriteBatch.Draw(whitePixel, fillRect, fillColor);
+            }
         }
     }
 }
