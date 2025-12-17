@@ -1,4 +1,5 @@
 ﻿using HDT.Gaming;
+using System.Threading.Tasks;
 
 namespace Jam25.Screens
 {
@@ -7,12 +8,17 @@ namespace Jam25.Screens
         public ScreenManager(StartScreen startScreen, SettingsScreen settingsScreen, GameScreen gameScreen, PlayerScreen playerScreen)
         {
             //TODO: Screen navigation
-            startScreen.Settings += (_,_) => ChangeScreen(settingsScreen);
-            startScreen.Start += (_,_) => ChangeScreen(gameScreen);
-            startScreen.Player += (_,_) => ChangeScreen(playerScreen);
+            startScreen.Settings += (_, _) => ChangeScreen(settingsScreen);
+            startScreen.Start += (_, _) => ChangeScreen(gameScreen);
+            startScreen.Player += (_, _) => ChangeScreen(playerScreen);
 
-            settingsScreen.BackToMainMenu += (_,_) => ChangeScreen(startScreen);
-            playerScreen.BackToMainMenu += (_,_) => ChangeScreen(startScreen);
+            settingsScreen.BackToMainMenu += (_, _) => ChangeScreen(startScreen);
+            playerScreen.BackToMainMenu += (_, _) => ChangeScreen(startScreen);
+
+            gameScreen.LevelCompleted += (_, _) =>
+            {
+                Task.Delay(1000).ContinueWith((x) => ChangeScreen(startScreen));
+            };
 
             ChangeScreen(startScreen);
         }
@@ -21,5 +27,6 @@ namespace Jam25.Screens
         {
             throw new System.NotImplementedException();
         }
+
     }
 }

@@ -1,20 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using HDT.Gaming.Audio;
+﻿using HDT.Gaming.Audio;
 using HDT.Gaming.Input;
 using HDT.Gaming.Physics;
 using HDT.Gaming.Screens;
 using Jam25.Entities;
 using Jam25.Entities.Enemies;
 using Jam25.Entities.Pickups;
-using Jam25.Models;
 using Jam25.Graphics;
+using Jam25.Models;
 using Jam25.Scenes;
 using Jam25.Screens.UserInterface;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
+using System.Collections.Generic;
 
 namespace Jam25.Screens
 {
@@ -57,7 +57,7 @@ namespace Jam25.Screens
         private int healthPickupCount = 20;
         private int coalPickupCount = 15;
 
-        private int tileSize = 32;
+        private const int tileSize = 32;
         private PhysicsWorld physicsWorld;
 
         private bool[,] visibleTiles;
@@ -65,7 +65,7 @@ namespace Jam25.Screens
         private float rayStep = 8f;
 
         public List<IPickup> pickups;
-        private IScreenUI gameUI;
+        private GameUserInterface gameUI;
         private readonly Random spawnRandom = new Random();
 
         // Camera
@@ -73,6 +73,8 @@ namespace Jam25.Screens
         private Rectangle WorldBounds => new Rectangle(0, 0, mapWidth * tileSize, mapHeight * tileSize);
 
         #endregion
+
+        public EventHandler LevelCompleted { get; set; }
 
         public GameScreen(
             GraphicsDevice gfxDevice,
@@ -96,6 +98,8 @@ namespace Jam25.Screens
             player.Initalise(content, graphicsDevice);
 
             key = new KeyPickup(game.Content);
+            pickups.Add(key);
+
             gameMap = new GameMap(mapWidth, mapHeight);
 
             EnemyFactory enemyFactory = new(game.Content, audioController);
@@ -114,6 +118,9 @@ namespace Jam25.Screens
 
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
             gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player);
+
+            key.PickedUp += (_, _) => gameUI.SetKey(key);
+
             objectSpriteSheet = game.Content.Load<Texture2D>("Images/supplies_objects");
 
             lightMask = LightMaskFactory.CreateRadialMask(graphicsDevice, lightMaskSize);
@@ -158,7 +165,7 @@ namespace Jam25.Screens
         public void Show()
         {
             pickups.Clear();
-            
+
             gameMap = new GameMap(mapWidth, mapHeight);
             gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
 
@@ -242,14 +249,19 @@ namespace Jam25.Screens
                 Vector2 targetPosition = (Vector2)probableTargetPosition;
                 float buffer = 8;
 
-                bool canMove = !(IsWallTile(targetPosition.X - buffer, targetPosition.Y - buffer)
-                    || IsWallTile(targetPosition.X - tileSize + buffer, targetPosition.Y - buffer)
-                    || IsWallTile(targetPosition.X - tileSize + buffer, targetPosition.Y - tileSize + buffer)
-                    || IsWallTile(targetPosition.X - buffer, targetPosition.Y - tileSize + buffer));
+                bool canMove = IsTileType(TileType.Floor, targetPosition.X - buffer, targetPosition.Y)
+                    || (player.HasKey && (IsTileType(TileType.Door, targetPosition.X, targetPosition.Y)));
 
                 if (canMove)
                 {
                     player.Body.Position = targetPosition;
+
+                    if (IsTileType(TileType.Door, targetPosition.X, targetPosition.Y))
+                    {
+                        player.MoveSpeed = 0f;
+
+                        LevelCompleted?.Invoke(this, EventArgs.Empty);
+                    }
 
                     foreach (IPickup pickup in pickups)
                     {
@@ -262,12 +274,12 @@ namespace Jam25.Screens
             }
         }
 
-        private bool IsWallTile(float x, float y)
+        private bool IsTileType(TileType type, float x, float y)
         {
-            int xProj = Convert.ToInt32(x / tileSize);
-            int yProj = Convert.ToInt32(y / tileSize);
+            int xProj = Convert.ToInt32(Math.Round(x / tileSize, MidpointRounding.ToZero));
+            int yProj = Convert.ToInt32(Math.Round(y / tileSize, MidpointRounding.ToZero));
 
-            return gameMap.tiles[xProj, yProj].Type == TileType.Wall;
+            return gameMap.tiles[xProj, yProj].Type == type;
         }
 
         private void DrawDungeon()

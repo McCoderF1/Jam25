@@ -1,5 +1,6 @@
 ﻿using HDT.Gaming.Audio;
 using HDT.Gaming.Screens;
+using Jam25.Entities.Pickups;
 using Jam25.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -25,6 +26,7 @@ namespace Jam25.Screens.UserInterface
         private readonly Texture2D whitePixel;
         private readonly RoundedRectangle roundedRectangle;
 
+        private KeyPickup keyPickup;
         private Torch torch;
 
         private AnimatedSprite playerIcon;
@@ -33,6 +35,8 @@ namespace Jam25.Screens.UserInterface
         private AnimatedSprite fireLarge;
         private AnimatedTexture animatedFireLarge;
         private Vector2 currentCameraPosition = Vector2.Zero;
+
+        private const int maxBarWidth = 130;
 
         #endregion
 
@@ -78,12 +82,19 @@ namespace Jam25.Screens.UserInterface
             this.torch = torch;
         }
 
+        public void SetKey(KeyPickup key)
+        {
+            this.keyPickup = key;
+        }
+
         ///<inheritdoc/>
         public void Draw()
         {
             var XPos = (int)currentCameraPosition.X;
             var YPos = (int)currentCameraPosition.Y;
+
             animatedPlayerIcon.DrawFrame(spriteBatch, playerIcon.Frame, new Vector2(XPos + 200, YPos + 227), playerIcon);
+
             DrawPlayerStatusBars();
             spriteBatch.Draw(UIBase,
                 new Rectangle(XPos, YPos, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
@@ -94,6 +105,15 @@ namespace Jam25.Screens.UserInterface
             DrawPlayerStatusBars();
             DrawTorchBar();
             DrawTimer();
+
+            if (keyPickup != null)
+            {
+                //var testKey = new KeyPickup(content);
+                spriteBatch.Draw(keyPickup.Sprite.Texture,
+                    new Rectangle(XPos + maxBarWidth - 20, YPos + 125, 32, 32),
+                    null,
+                    Color.White);
+            }
         }
 
         ///<inheritdoc/>
@@ -124,7 +144,6 @@ namespace Jam25.Screens.UserInterface
 
         private void DrawPlayerStatusBars()
         {
-            const int maxBarWidth = 130;
             const int barHeight = 15;
             const int margin = 20;
             const int cornerRadius = 4;
@@ -175,7 +194,6 @@ namespace Jam25.Screens.UserInterface
         {
             if (torch == null) return;
 
-            const int maxBarWidth = 130;
             const int barHeight = 15;
             const int margin = 20;
             const int cornerRadius = 4;

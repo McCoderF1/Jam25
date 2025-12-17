@@ -78,13 +78,13 @@ namespace Jam25.Screens
             int ySelection = 505 + (int)currentSelection * 50;
             spriteBatch.Draw(whiteRectangle, new Microsoft.Xna.Framework.Vector2(100, ySelection),
                 new Rectangle(0, 0, 160, 50),
-                new Color(232,190,84) * 0.5f,
+                new Color(232, 190, 84) * 0.5f,
                 0f,
                 new Microsoft.Xna.Framework.Vector2(0, 0),
                 1f,
                 SpriteEffects.None,
                 0);
-            
+
             spriteBatch.DrawString(font, "Start", new Microsoft.Xna.Framework.Vector2(110, 505), Color.WhiteSmoke);
             spriteBatch.DrawString(font, "Player", new Microsoft.Xna.Framework.Vector2(110, 555), Color.WhiteSmoke);
             spriteBatch.DrawString(font, "Settings", new Microsoft.Xna.Framework.Vector2(110, 605), Color.WhiteSmoke);
@@ -103,7 +103,6 @@ namespace Jam25.Screens
         public void Update(GameTime gameTime)
         {
             KeyboardInput.GetInput();
-
 
             if (KeyboardInput.HasBeenPressed(Keys.Space) || KeyboardInput.HasBeenPressed(Keys.Enter))
             {
