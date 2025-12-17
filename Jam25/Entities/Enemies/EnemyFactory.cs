@@ -68,6 +68,8 @@ namespace Jam25.Entities.Enemies
                 },
                 Health = new HDT.Gaming.Models.Health(10),
                 MovementSpeed = 30,
+                ChaseMemoryDuration = TimeSpan.FromSeconds(3),
+                SightRange = 250,
                 EnemyController = enemyController,
             };
         }
