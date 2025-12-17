@@ -152,13 +152,13 @@ namespace Jam25
                 string prefix = $"PlayerSprite/lvl{level}/";
                 var newTextureSet = new Dictionary<PlayerState, PlayerTexture>();
                 newTextureSet.Add(PlayerState.Idle, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_Idle_with_shadow"), cellSize));
-                newTextureSet.Add(PlayerState.Running, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_run_with_shadow"), cellSize));
-                newTextureSet.Add(PlayerState.Running | PlayerState.Attacking, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_run_attack_with_shadow"), cellSize));
+                newTextureSet.Add(PlayerState.Running, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_Run_with_shadow"), cellSize));
+                newTextureSet.Add(PlayerState.Running | PlayerState.Attacking, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_Run_Attack_with_shadow"), cellSize));
                 newTextureSet.Add(PlayerState.Attacking, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_attack_with_shadow"), cellSize));
                 newTextureSet.Add(PlayerState.Hurt, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_Hurt_with_shadow"), cellSize));
                 newTextureSet.Add(PlayerState.Dying, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_Death_with_shadow"), cellSize));
-                newTextureSet.Add(PlayerState.Walking, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_walk_with_shadow"), cellSize));
-                newTextureSet.Add(PlayerState.Walking | PlayerState.Attacking, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_walk_attack_with_shadow"), cellSize));
+                newTextureSet.Add(PlayerState.Walking, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_Walk_with_shadow"), cellSize));
+                newTextureSet.Add(PlayerState.Walking | PlayerState.Attacking, new PlayerTexture(content.Load<Texture2D>($"{prefix}Swordsman_lvl{level}_Walk_Attack_with_shadow"), cellSize));
                 textures[level - 1] = newTextureSet;
             }
 
