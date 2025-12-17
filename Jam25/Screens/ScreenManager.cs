@@ -1,4 +1,5 @@
 ﻿using HDT.Gaming;
+using Jam25.Screens.Transitions;
 using Jam25.Stores;
 using System.Threading.Tasks;
 
@@ -6,7 +7,7 @@ namespace Jam25.Screens
 {
     public class ScreenManager : BasicScreenManager
     {
-        public ScreenManager(StartScreen startScreen, SettingsScreen settingsScreen, GameScreen gameScreen, PlayerScreen playerScreen)
+        public ScreenManager(StartScreen startScreen, SettingsScreen settingsScreen, GameScreen gameScreen, PlayerScreen playerScreen, TransitionHandler transitions)
         {
             //TODO: Screen navigation
             startScreen.Settings += (_, _) => ChangeScreen(settingsScreen);
@@ -16,6 +17,8 @@ namespace Jam25.Screens
             settingsScreen.BackToMainMenu += (_, _) => ChangeScreen(startScreen);
             playerScreen.BackToMainMenu += (_, _) => ChangeScreen(startScreen);
 
+
+            //transitions.TransitionRandom();
             gameScreen.LevelCompleted += (_, _) =>
             {
                 Task.Delay(1000).ContinueWith((x) => ChangeScreen(startScreen));

@@ -245,6 +245,54 @@
 /processorParam:TextureFormat=Color
 /build:Images/supplies_objects.png
 
+#begin Images/Transitions/Boss.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/Transitions/Boss.png
+
+#begin Images/Transitions/Merchant.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/Transitions/Merchant.png
+
+#begin Images/Transitions/NextLevel.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/Transitions/NextLevel.png
+
+#begin Images/Transitions/RestArea.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/Transitions/RestArea.png
+
 #begin Images/UI/levelup.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -593,6 +641,12 @@
 /processorParam:TextureFormat=Color
 /build:PlayerSprite/lvl3/Swordsman_lvl3_Walk_with_shadow.png
 
+#begin Sound/Effect/LevelUpSound.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sound/Effect/LevelUpSound.wav
+
 #begin Sound/Effects/AppClick.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
@@ -622,12 +676,6 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Sound/Effects/WhooshMiss.wav
-
-#begin Sound/Effect/LevelUpSound.wav
-/importer:WavImporter
-/processor:SoundEffectProcessor
-/processorParam:Quality=Best
-/build:Sound/Effect/LevelUpSound.wav
 
 #begin Sound/Music/The Flickering Flame.mp3
 /importer:Mp3Importer

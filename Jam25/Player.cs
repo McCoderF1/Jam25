@@ -527,7 +527,6 @@ namespace Jam25
             Health.Max = 100 + (PlayerTracker.PlayerStats.HealthLevel * 50);
             Stamina.Max = 100 + (PlayerTracker.PlayerStats.SpeedLevel * 20);
 
-
             Health.Heal(Health.Max);
             Stamina.Restore(Stamina.Max);
         }
