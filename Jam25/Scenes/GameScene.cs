@@ -72,14 +72,14 @@ namespace Jam25.Scenes
                     p.Update(gameTime.ElapsedGameTime.Milliseconds);
                     if (Vector2.Distance(p.Position, Player.Body.Position) < 20)
                     {
-                        toRemove.Add(p);
+                        p.HitSomething();
                         Player.TakeDamage(p.Damage);
                     }
-                    if (!p.Alive)
-                    {
-                        toRemove.Add(p);
-                    }
                     if (GameMap.tiles[(int)p.Position.X / 32, (int)p.Position.Y / 32].Type != TileType.Floor)
+                    {
+                        p.HitSomething();
+                    }
+                    if (p.CurrentState == Projectile.ProjectileState.Dead)
                     {
                         toRemove.Add(p);
                     }

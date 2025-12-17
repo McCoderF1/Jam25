@@ -45,6 +45,7 @@ namespace Jam25.Entities.Enemies
         private readonly Texture2D vampireRunTexture;
 
         private readonly Texture2D projectileTexture;
+        private readonly List<Texture2D> explosionTextures;
 
         #endregion Private Members
 
@@ -77,6 +78,12 @@ namespace Jam25.Entities.Enemies
             vampireRunTexture = content.Load<Texture2D>("EnemySprite/Vampire/Vampires2_Run_with_shadow");
 
             projectileTexture = content.Load<Texture2D>("Images/projectile");
+
+            explosionTextures = new List<Texture2D>();
+            for (int i = 1; i <= 10; i++)
+            {
+                explosionTextures.Add(content.Load<Texture2D>($"Images/explosion/Circle_explosion{i}"));
+            }
         }
 
         public Enemy CreateSlimeEnemy(Vector2 position)
@@ -168,7 +175,8 @@ namespace Jam25.Entities.Enemies
                 EnemyController = enemyController,
                 AttackRange = 200,
                 UseProjectiles = true,
-                ProjectileTexture = projectileTexture
+                ProjectileTexture = projectileTexture,
+                ExplosionTextures = explosionTextures
             };
         }
     }
