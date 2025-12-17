@@ -71,6 +71,14 @@ namespace Jam25.Entities.Enemies
 
         public void TakeDamage(int amount)
         {
+            if (Player.DebugInvincibleMode)
+            {
+                Health.TakeDamage(Health.Current);
+                CurrentState = EnemyState.Dying;
+                PlayerTracker.RecordKill();
+                return;
+            }
+
             Health.TakeDamage(amount);
             if (Health.Current <= 0)
             {
