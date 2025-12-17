@@ -248,7 +248,7 @@ namespace Jam25.Screens
             if (playerDied)
             {
                 deathTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
-                
+
                 if (deathTimer < DeathShrinkDuration)
                 {
                     float shrinkProgress = deathTimer / DeathShrinkDuration;
@@ -265,7 +265,7 @@ namespace Jam25.Screens
                 {
                     game.Torch.SetEmpty();
                 }
-                
+
                 if (deathTimer >= DeathDelay)
                 {
                     PlayerDied?.Invoke(this, EventArgs.Empty);
