@@ -317,6 +317,54 @@
 /processorParam:TextureFormat=Color
 /build:Images/supplies_objects.png
 
+#begin Images/Transitions/Boss.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/Transitions/Boss.png
+
+#begin Images/Transitions/Merchant.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/Transitions/Merchant.png
+
+#begin Images/Transitions/NextLevel.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/Transitions/NextLevel.png
+
+#begin Images/Transitions/RestArea.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/Transitions/RestArea.png
+
 #begin Images/UI/levelup.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -677,11 +725,23 @@
 /processorParam:Quality=Best
 /build:Sound/Effects/AppClick.wav
 
+#begin Sound/Effects/GetKey.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sound/Effects/GetKey.wav
+
 #begin Sound/Effects/HitFlesh.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Sound/Effects/HitFlesh.wav
+
+#begin Sound/Effects/LevelUp.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sound/Effects/LevelUp.wav
 
 #begin Sound/Effects/MetalHit.wav
 /importer:WavImporter
@@ -694,6 +754,12 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Sound/Effects/RetroClick.wav
+
+#begin Sound/Effects/TakeItem.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sound/Effects/TakeItem.wav
 
 #begin Sound/Effects/WhooshMiss.wav
 /importer:WavImporter

@@ -290,12 +290,15 @@ namespace Jam25.Screens.UserInterface
             if (PlayerTracker.PlayerStats.TotalLevel != previousPlayerLevel)
             {
                 if (!levelSoundTriggered)
+                {
                     audioController.PlaySound("LevelUpSound");
+                    levelSoundTriggered = true;
+                }
 
                 spriteBatch.Draw(LevelPopUp, new Rectangle(graphicsDevice.Viewport.Width / 2 - 212, graphicsDevice.Viewport.Height / 4 - 67, 424, 135), Color.White);
                 spriteBatch.DrawString(font, "Health Up", new Microsoft.Xna.Framework.Vector2(graphicsDevice.Viewport.Width / 2 - 75, graphicsDevice.Viewport.Height / 4 + 14), Color.White);
                 animatedLevelUp.DrawFrame(spriteBatch, levelUp.Frame, new Vector2((player.Body.Position.X - XPos) + 32, (player.Body.Position.Y - YPos) + 32), levelUp);
-                levelSoundTriggered = true;
+                
 
                 if (levelUp.Frame.Equals(11))
                     previousPlayerLevel = PlayerTracker.PlayerStats.TotalLevel;

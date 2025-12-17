@@ -1,6 +1,7 @@
 ﻿using HDT.Gaming.Audio;
 using Jam25.Graphics;
 using Jam25.Screens;
+using Jam25.Screens.Transitions;
 using Jam25.Screens.UserInterface;
 using Jam25.Stores;
 using Microsoft.Xna.Framework;
@@ -77,17 +78,27 @@ namespace Jam25
             audioController.InstallEffect("Miss", Content.Load<SoundEffect>("Sound/Effects/WhooshMiss"));
             audioController.InstallEffect("HitFlesh", Content.Load<SoundEffect>("Sound/Effects/HitFlesh"));
             audioController.InstallEffect("LevelUpSound", Content.Load<SoundEffect>("Sound/Effect/LevelUpSound"));
+            audioController.InstallEffect("LevelUp", Content.Load<SoundEffect>("Sound/Effects/LevelUp"));
+            audioController.InstallEffect("GetKey", Content.Load<SoundEffect>("Sound/Effects/GetKey"));
+            audioController.InstallEffect("TakeItem", Content.Load<SoundEffect>("Sound/Effects/TakeItem"));
             //add audio here
             // - ok
 
             AudioManager.InstallController(audioController);
+
+            var bossTransition = new BossScreen(spriteBatch, graphics, Content, audioController);
+            var restTransition = new RestAreaScreen(spriteBatch, graphics, Content, audioController);
+            var nextLevelTransition = new NextLevelScreen(spriteBatch, graphics, Content, audioController);
+            var merchantTransition = new MerchantScreen(spriteBatch, graphics, Content, audioController);
+
+            var transitionHandler = new TransitionHandler(merchantTransition, restTransition, nextLevelTransition, bossTransition);
 
             var startScreen = new StartScreen(graphics.GraphicsDevice, spriteBatch, Content, audioController, this);
             var settingScreen = new SettingsScreen(spriteBatch, graphics, content, Content, audioController);
             var gameScreen = new GameScreen(graphics.GraphicsDevice, spriteBatch, content, Content, audioController, this);
             var playerScreen = new PlayerScreen(spriteBatch, graphics, content, Content, audioController);
 
-            screenManager = new ScreenManager(startScreen, settingScreen, gameScreen, playerScreen);
+            screenManager = new ScreenManager(startScreen, settingScreen, gameScreen, playerScreen, transitionHandler);
         }
 
         protected override void Update(GameTime gameTime)

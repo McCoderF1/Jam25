@@ -14,6 +14,8 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Jam25.Screens
@@ -159,6 +161,11 @@ namespace Jam25.Screens
                 if (gameScene.Enemies[i].CurrentState != Enemy.EnemyState.Dead)
                 {
                     gameScene.Enemies[i].CurrentSprite.Draw(spriteBatch, gameScene.Enemies[i].Body.Position, whitePixelTexture, gameScene.Enemies[i].Health);
+
+                    foreach (Projectile p in gameScene.Enemies[i].Projectiles)
+                    {
+                        p.Draw(spriteBatch);
+                    }
                 }
             }
 
@@ -217,7 +224,7 @@ namespace Jam25.Screens
 
             MovePlayer(gameTime);
             gameScene.Update(gameTime);
-
+            
             Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
 
             float cameraMinX = WorldBounds.X;

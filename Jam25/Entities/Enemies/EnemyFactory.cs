@@ -37,6 +37,8 @@ namespace Jam25.Entities.Enemies
         private readonly Texture2D vampireWalkTexture;
         private readonly Texture2D vampireRunTexture;
 
+        private readonly Texture2D projectileTexture;
+
         #endregion Private Members
 
         public EnemyFactory(ContentManager content, AudioController audioController)
@@ -59,6 +61,8 @@ namespace Jam25.Entities.Enemies
             vampireIdleTexture = content.Load<Texture2D>("EnemySprite/Vampire/Vampires2_Idle_with_shadow");
             vampireWalkTexture = content.Load<Texture2D>("EnemySprite/Vampire/Vampires2_Walk_with_shadow");
             vampireRunTexture = content.Load<Texture2D>("EnemySprite/Vampire/Vampires2_Run_with_shadow");
+
+            projectileTexture = content.Load<Texture2D>("Images/key32");
         }
 
         public Enemy CreateSlimeEnemy(Vector2 position)
@@ -115,7 +119,8 @@ namespace Jam25.Entities.Enemies
                 SightRange = 250,
                 EnemyController = enemyController,
                 AttackRange = 200,
-                UseProjectiles = true
+                UseProjectiles = true,
+                ProjectileTexture = projectileTexture
             };
         }
     }
