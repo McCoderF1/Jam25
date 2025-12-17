@@ -45,8 +45,8 @@ namespace Jam25.Screens
         private readonly Random flickerRandom = new Random();
         private float flickerTimer;
         private float currentFlicker = 1f;
-        private const float FlickerFrequency = 3f;
-        private const float FlickerStrength = 0f;
+        private const float FlickerFrequency = 1.5f;
+        private const float FlickerStrength = 0.05f;
 
         private int mapWidth = 80;
         private int mapHeight = 42;
@@ -69,6 +69,14 @@ namespace Jam25.Screens
         private readonly Random spawnRandom = new Random();
         private Texture2D whitePixelTexture;
 
+        // Death handling
+        private bool playerDied = false;
+        private float deathTimer = 0f;
+        private const float DeathDelay = 5f;
+        private const float DeathShrinkDuration = 3.5f;
+        private const float DeathFadeDuration = 1.5f;
+        private float deathTorchEnergyAtDeath = 0f;
+
         // Camera
         private Vector2 CameraPosition;
         private Rectangle WorldBounds => new Rectangle(0, 0, mapWidth * tileSize, mapHeight * tileSize);
@@ -77,6 +85,7 @@ namespace Jam25.Screens
         #endregion
 
         public EventHandler LevelCompleted { get; set; }
+        public EventHandler PlayerDied { get; set; }
 
         public GameScreen(
             GraphicsDevice gfxDevice,
@@ -182,12 +191,29 @@ namespace Jam25.Screens
 
         public void Show()
         {
+            gameScene.Pickups.Clear();
+
+            // Reset death state
+            playerDied = false;
+            deathTimer = 0f;
+            deathTorchEnergyAtDeath = 0f;
+
+            // Reset player state
+            player.Health.Heal(player.Health.Max);
+            player.LastState = Player.PlayerState.Idle;
+            player.HasKey = false;
+            player.MoveSpeed = 1.0f;
+
+            gameScene.GameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene);
+            gameScene.GameMap.AddKey(key);
+            gameScene.GameMap.AddPlayer(player);
+
             for (int i = 0; i < healthPickupCount; i++)
             {
                 gameScene.Pickups.Add(new HealthPack(PointWithinWalls(), game.Content));
             }
 
-            game.Torch = new Torch(maxEnergy: 100f, drainPerSecond: 0.1f, maxRadius: 250f, minRadius: 60f);
+            game.Torch = new Torch(maxEnergy: 100f, drainPerSecond: 0.4f, maxRadius: 250f, minRadius: 60f);
 
             if (gameUI is GameUserInterface gui)
             {
@@ -202,12 +228,51 @@ namespace Jam25.Screens
                 gameScene.Pickups.Add(coal);
             }
 
+            gameScene.Pickups.Add(key);
+
             gameUI?.Show();
         }
 
         public void Update(GameTime gameTime)
         {
             KeyboardInput.GetInput();
+
+            if (player.LastState == Player.PlayerState.Dying && !playerDied)
+            {
+                playerDied = true;
+                deathTimer = 0f;
+                deathTorchEnergyAtDeath = game.Torch.NormalizedEnergy;
+            }
+
+            // Death delay with torch fade effect
+            if (playerDied)
+            {
+                deathTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                
+                if (deathTimer < DeathShrinkDuration)
+                {
+                    float shrinkProgress = deathTimer / DeathShrinkDuration;
+
+                    float targetEnergy = MathHelper.Lerp(deathTorchEnergyAtDeath * game.Torch.MaxEnergy, 1f, shrinkProgress);
+
+                    float currentTarget = MathHelper.Lerp(game.Torch.MaxEnergy * deathTorchEnergyAtDeath, 1f, shrinkProgress);
+
+                    game.Torch.SetEmpty();
+
+                    game.Torch.AddEnergy(currentTarget);
+                }
+                else if (deathTimer < DeathShrinkDuration + DeathFadeDuration)
+                {
+                    game.Torch.SetEmpty();
+                }
+                
+                if (deathTimer >= DeathDelay)
+                {
+                    PlayerDied?.Invoke(this, EventArgs.Empty);
+                    return;
+                }
+            }
+
             game.Torch.Update(gameTime);
 
             // Debug: P (unlimited stamina, health, one shot enemies, no lighting feature)

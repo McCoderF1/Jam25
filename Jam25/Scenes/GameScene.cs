@@ -100,6 +100,11 @@ namespace Jam25.Scenes
                     enemy.Attack(Player);
                 }
 
+                if (enemy.CanMove && Player.LastState != Player.PlayerState.Dying)
+                {
+                    MoveEnemy(enemy, gameTime);
+                }
+
                 if (enemy.CurrentState == Enemy.EnemyState.Dead)
                 {
                     enemiesToRemove.Add(enemy);
