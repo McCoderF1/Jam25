@@ -16,8 +16,11 @@ namespace Jam25.Entities.Enemies
         private static readonly TimeSpan DefaultChaseMemoryDuration = TimeSpan.FromSeconds(2);
 
         private EnemyState currentState = EnemyState.Idle;
-        private float attackBlockedUntil;
         private float playerSightMemoryTimerMs = 0f;
+        private float attackBlockedUntil;
+        private readonly float attackCooldown = 2000f;
+        private float moveBlockedUntil;
+        private readonly float stunCooldown = 3000f;
 
         #endregion Private Members
 
@@ -45,6 +48,7 @@ namespace Jam25.Entities.Enemies
         public Health Health { get; init; }
 
 
+        public bool CanMove => (CurrentState != EnemyState.Dead) && (CurrentState != EnemyState.Dying) && (moveBlockedUntil <= 0f);
         public bool CanAttack => (CurrentState == EnemyState.Idle || CurrentState == EnemyState.Running) && attackBlockedUntil <= 0f;
 
         public Vector2 MovementDirection { get; set; } = Vector2.Zero;
@@ -54,6 +58,7 @@ namespace Jam25.Entities.Enemies
         public TimeSpan ChaseMemoryDuration { get; set; } = DefaultChaseMemoryDuration;
 
         public bool HasRecentPlayerSighting => playerSightMemoryTimerMs > 0f;
+
 
 
         public Enemy()
@@ -72,13 +77,19 @@ namespace Jam25.Entities.Enemies
             }
             else
             {
+                StartStun();
                 CurrentState = EnemyState.Hurt;
             }
         }
 
         public void StartCooldown()
         {
-            attackBlockedUntil = 1000f;
+            attackBlockedUntil = attackCooldown;
+        }
+
+        public void StartStun()
+        {
+            moveBlockedUntil = stunCooldown;
         }
 
 
@@ -101,15 +112,15 @@ namespace Jam25.Entities.Enemies
                 attackBlockedUntil -= (float)gameTime.ElapsedGameTime.TotalMilliseconds;
             }
 
+            if (moveBlockedUntil > 0f)
+            {
+                moveBlockedUntil -= (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+            }
+
             // When the current animation loop is completed
             if (!CurrentSprite.LoopCompleted)
             {
                 return;
-            }
-
-            if (attackBlockedUntil > 0f)
-            {
-                attackBlockedUntil -= (float)gameTime.ElapsedGameTime.TotalMilliseconds;
             }
 
             switch (CurrentState)
