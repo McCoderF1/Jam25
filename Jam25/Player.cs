@@ -26,7 +26,7 @@ namespace Jam25
             }
         }
 
-        #endregion 
+        #endregion
 
         #region Private consts
 
@@ -83,7 +83,6 @@ namespace Jam25
         private Vector2 movementDirection = Vector2.Zero;
 
         private bool isAttacking;
-
         #endregion
 
         [Flags]
@@ -103,15 +102,17 @@ namespace Jam25
 
         public Body Body { get; set; }
 
-        public int MovementSpeed { get; set; }
-
         public Health Health { get; set; }
 
         public Stamina Stamina { get; set; }
 
+        public float MoveSpeed { get; set; } = 1.0f;
+
         public int Level { get; set; }
 
         public int IsAttacking { get; private set; }
+
+        public bool HasKey { get; set; } = false;
 
         public Player(SpriteBatch spriteBatch)
         {
@@ -373,7 +374,7 @@ namespace Jam25
             }
 
             // Base per-axis speed (what you currently have on pure horizontal/vertical)
-            float axisSpeed = speedMultiplier * deltaSeconds * 60f;
+            float axisSpeed = MoveSpeed * speedMultiplier * deltaSeconds * 60f;
 
             // Length of the input vector (1 for straight, sqrt(2) for perfect diagonal, etc.)
             float length = movementDirection.Length();
@@ -433,10 +434,7 @@ namespace Jam25
             LastState = movementState | nonMovementFlags;
         }
 
-        public void SetPosition(Vector2 position)
-        {
-            spritePosition = position;
-        }
+        public void SetPosition(Vector2 position) => spritePosition = position;
 
         public Vector2 GetFrameMovement()
         {
@@ -460,9 +458,9 @@ namespace Jam25
 
             return movement;
         }
-        private bool IsRunning(bool runRequest)
-            { return runRequest && Stamina.Current > 0; }
 
-        #endregion 
+        private bool IsRunning(bool runRequest) => runRequest && Stamina.Current > 0;
+
+        #endregion
     }
 }

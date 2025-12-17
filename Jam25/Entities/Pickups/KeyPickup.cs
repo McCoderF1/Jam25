@@ -1,5 +1,4 @@
 ﻿using Jam25.Graphics;
-using Jam25.Screens.UserInterface;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -13,10 +12,7 @@ namespace Jam25.Entities.Pickups
 
         public bool Consumed { get; set; }
 
-        /// <summary>
-        /// Reference to the game UI for displaying collected key
-        /// </summary>
-        public GameUserInterface GameUI { get; set; }
+        public EventHandler PickedUp { get; set; }
 
         public KeyPickup(ContentManager content)
         {
@@ -33,9 +29,10 @@ namespace Jam25.Entities.Pickups
             if (Consumed) return;
 
             Consumed = true;
-            Console.WriteLine("Collected Key!");
+            player.HasKey = true;
+            PickedUp.Invoke(this, EventArgs.Empty);
 
-            GameUI?.AddKey();
+            Console.WriteLine("Collected Key!");
         }
 
         public void Draw(SpriteBatch spriteBatch, int tileSize)

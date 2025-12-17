@@ -1,7 +1,7 @@
 ﻿using HDT.Gaming.Audio;
 using HDT.Gaming.Screens;
+using Jam25.Entities.Pickups;
 using Jam25.Graphics;
-using Jam25.Stores;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -27,6 +27,7 @@ namespace Jam25.Screens.UserInterface
         private readonly Texture2D whitePixel;
         private readonly RoundedRectangle roundedRectangle;
 
+        private KeyPickup keyPickup;
         private Torch torch;
 
         private AnimatedSprite playerIcon;
@@ -34,9 +35,8 @@ namespace Jam25.Screens.UserInterface
 
         private Vector2 currentCameraPosition = Vector2.Zero;
 
-        // Collected items to display in UI
-        private readonly List<CollectedItem> collectedItems = new();
-        private readonly Texture2D keyTexture;
+        private const int maxBarWidth = 130;
+        private List<CollectedItem> collectedItems = new List<CollectedItem>();
 
         #endregion
 
@@ -63,7 +63,6 @@ namespace Jam25.Screens.UserInterface
 
             UIBase = content.Load<Texture2D>("Images/UI/UIBase");
             font = content.Load<SpriteFont>("Fonts/Menu");
-            keyTexture = content.Load<Texture2D>("Images/key32");
 
             // Try to load player icon sprite
             if (game.TryGetSprite(SpriteID.PlayerLvl1, out AnimatedTexture animatedIcon))
@@ -85,17 +84,9 @@ namespace Jam25.Screens.UserInterface
             this.torch = torch;
         }
 
-        /// <summary>
-        /// Add the key to the UI display
-        /// </summary>
-        public void AddKey()
+        public void SetKey(KeyPickup key)
         {
-            collectedItems.Add(new CollectedItem { Texture = keyTexture, Name = "Key" });
-        }
-
-        public void ClearItems()
-        {
-            collectedItems.Clear();
+            this.keyPickup = key;
         }
 
         ///<inheritdoc/>
@@ -109,6 +100,15 @@ namespace Jam25.Screens.UserInterface
             DrawPlayerStatusBars();
             DrawTorchBar();
             DrawTimer();
+
+            if (keyPickup != null)
+            {
+                //var testKey = new KeyPickup(content);
+                spriteBatch.Draw(keyPickup.Sprite.Texture,
+                    new Rectangle(maxBarWidth - 20, 125, 32, 32),
+                    null,
+                    Color.White);
+            }
             DrawInformation();
             DrawCollectedItems();
         }
@@ -122,7 +122,6 @@ namespace Jam25.Screens.UserInterface
         ///<inheritdoc/>
         public void Show()
         {
-            ClearItems();
         }
 
         ///<inheritdoc/>
@@ -145,7 +144,6 @@ namespace Jam25.Screens.UserInterface
         /// </summary>
         private void DrawPlayerStatusBars()
         {
-            const int maxBarWidth = 130;
             const int barHeight = 15;
             const int margin = 20;
             const int cornerRadius = 4;
@@ -199,7 +197,6 @@ namespace Jam25.Screens.UserInterface
         {
             if (torch == null) return;
 
-            const int maxBarWidth = 130;
             const int barHeight = 15;
             const int margin = 20;
             const int cornerRadius = 4;
@@ -237,7 +234,7 @@ namespace Jam25.Screens.UserInterface
         {
             const int slotSize = 35;
             const int slotSpacing = 2;
-            const int margin =11;
+            const int margin = 11;
             const int maxSlots = 4;
 
             int startX = graphicsDevice.Viewport.Width - margin - (slotSize * maxSlots) - (slotSpacing * (maxSlots - 1));
