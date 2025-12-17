@@ -7,18 +7,34 @@ namespace Jam25.Entities.Enemies.Controllers
 {
     public class BasicEnemyController : IEnemyController
     {
+        #region Private Members
+
         private const int TILE_SIZE = 32;
+
+        #endregion Private Members
 
         public void Update(GameScene scene, Enemy enemy, TimeSpan deltaTime)
         {
             Tile[,] gameMap = scene.GameMap.tiles;
+
+            bool canSeePlayer = HasSightOfPlayer(scene, enemy);
+
+            if (canSeePlayer)
+            {
+                enemy.RefreshPlayerSighting();
+            }
+            else if (!enemy.HasRecentPlayerSighting)
+            {
+                enemy.MovementDirection = Vector2.Zero;
+                return;
+            }
 
             (int x, int y)? nextTileIndex = GetNextMoveTile(gameMap, scene.Player.Body.Position, enemy.Body.Position);
 
             // If no next tile, do not move, or move directly towards the player.
             if (nextTileIndex == null)
             {
-                if (Vector2.Distance(scene.Player.Body.Position, enemy.Body.Position) > 5)
+                if (Vector2.Distance(scene.Player.Body.Position, enemy.Body.Position) is < TILE_SIZE and > 5)
                 {
                     Vector2 directionToPlayer = scene.Player.Body.Position - enemy.Body.Position;
                     directionToPlayer.Normalize();
@@ -40,6 +56,73 @@ namespace Jam25.Entities.Enemies.Controllers
             Vector2 moveDirection = nextTileCenter - enemy.Body.Position;
             moveDirection.Normalize();
             enemy.MovementDirection = moveDirection;
+        }
+
+        #region Private Methods
+
+        private bool HasSightOfPlayer(GameScene scene, Enemy enemy)
+        {
+            float distance = Vector2.Distance(scene.Player.Body.Position, enemy.Body.Position);
+
+            if (distance >= enemy.SightRange)
+            {
+                return false;
+            }
+
+            Tile[,] gameMap = scene.GameMap.tiles;
+            int width = gameMap.GetLength(0);
+            int height = gameMap.GetLength(1);
+
+            (int x, int y) enemyTileIndex = ((int)(enemy.Body.Position.X / TILE_SIZE), (int)(enemy.Body.Position.Y / TILE_SIZE));
+            (int x, int y) playerTileIndex = ((int)(scene.Player.Body.Position.X / TILE_SIZE), (int)(scene.Player.Body.Position.Y / TILE_SIZE));
+
+            if (!IsWithinBounds(enemyTileIndex, width, height) || !IsWithinBounds(playerTileIndex, width, height))
+            {
+                return false;
+            }
+
+            return HasClearPath(enemyTileIndex, playerTileIndex, gameMap, width, height);
+        }
+
+        private bool HasClearPath((int x, int y) start, (int x, int y) end, Tile[,] gameMap, int width, int height)
+        {
+            int x = start.x;
+            int y = start.y;
+
+            int dx = Math.Abs(end.x - start.x);
+            int sx = start.x < end.x ? 1 : -1;
+
+            int dy = -Math.Abs(end.y - start.y);
+            int sy = start.y < end.y ? 1 : -1;
+
+            int err = dx + dy;
+
+            while (true)
+            {
+                if ((x, y) != start && !IsWalkable((x, y), gameMap, width, height))
+                {
+                    return false;
+                }
+
+                if (x == end.x && y == end.y)
+                {
+                    return true;
+                }
+
+                int e2 = err << 1;
+
+                if (e2 >= dy)
+                {
+                    err += dy;
+                    x += sx;
+                }
+
+                if (e2 <= dx)
+                {
+                    err += dx;
+                    y += sy;
+                }
+            }
         }
 
         private (int x, int y)? GetNextMoveTile(Tile[,] gameMap, Vector2 playerPosition, Vector2 enemyPosition)
@@ -207,5 +290,7 @@ namespace Jam25.Entities.Enemies.Controllers
         {
             return tile.x >= 0 && tile.x < width && tile.y >= 0 && tile.y < height;
         }
+
+        #endregion Private Methods
     }
 }
