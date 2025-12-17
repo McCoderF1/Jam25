@@ -320,10 +320,17 @@ namespace Jam25.Screens
                                 WallMask.South => new Rectangle(8, 14, 32, 64),
                                 WallMask.West => new Rectangle(2, 8, 32, 24),
                                 WallMask.East => new Rectangle(14, 8, 32, 24),
-                                _ => Rectangle.Empty
+                                _ => gameScene.GameMap.tiles[x, y].WallShape switch
+                                {
+                                    WallShape.InnerCornerNW => new Rectangle(2, 0, 32, 32),
+                                    WallShape.InnerCornerNE => new Rectangle(16, 0, 30, 32),
+                                    WallShape.InnerCornerSW => new Rectangle(2, 16, 32, 32),
+                                    WallShape.InnerCornerSE => new Rectangle(16, 16, 30, 32),
+                                    _ => Rectangle.Empty
+                                }
                             },
                             TileType.Door => new Rectangle(1, 32, 32, 32),
-                            _ => Rectangle.Empty,
+                            _ => Rectangle.Empty
                         };
 
                         spriteBatch.Draw(
