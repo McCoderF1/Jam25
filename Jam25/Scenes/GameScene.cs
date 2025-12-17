@@ -75,12 +75,9 @@ namespace Jam25.Scenes
                         AudioManager.PlaySound("Miss");
                     }
                 }
-                else if (distFromPlayer < 30 && enemy.CanAttack && Player.LastState != Player.PlayerState.Dying)
+                else if (distFromPlayer < enemy.AttackRange && enemy.CanAttack && Player.LastState != Player.PlayerState.Dying)
                 {
-                    enemy.StartCooldown();
-                    //Player.TakeDamage(20);
-                    enemy.CurrentState = Enemy.EnemyState.Attacking;
-                    AudioManager.PlaySound("MetalHit");
+                    enemy.Attack(Player);
                 }
 
                 if (enemy.CurrentState == Enemy.EnemyState.Dead)
