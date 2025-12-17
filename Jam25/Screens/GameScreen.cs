@@ -66,6 +66,7 @@ namespace Jam25.Screens
         public List<IPickup> pickups;
         private IScreenUI gameUI;
         private readonly Random spawnRandom = new Random();
+        private Texture2D whitePixelTexture;
 
         // Camera
         private Vector2 CameraPosition;
@@ -89,6 +90,7 @@ namespace Jam25.Screens
             pickups = new();
 
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
+            whitePixelTexture = game.Content.Load<Texture2D>("Textures/WhiteRectangle");
 
             player = new Player(spriteBatch);
             player.Initalise(content, graphicsDevice);
@@ -135,7 +137,7 @@ namespace Jam25.Screens
 
             for (int i = 0; i < gameScene.Enemies.Count; i++)
             {
-                gameScene.Enemies[i].CurrentSprite.Draw(spriteBatch, gameScene.Enemies[i].Body.Position);
+                gameScene.Enemies[i].CurrentSprite.Draw(spriteBatch, gameScene.Enemies[i].Body.Position, whitePixelTexture, gameScene.Enemies[i].Health);
             }
 
             DrawLighting();
