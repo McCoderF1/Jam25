@@ -86,11 +86,6 @@ namespace Jam25.Scenes
                 }
                 enemy.Projectiles.RemoveAll(i => toRemove.Contains(i));
 
-                if (enemy.CanMove
-                    && Player.LastState != Player.PlayerState.Dying)
-                {
-                    MoveEnemy(enemy, gameTime);
-                }
                 enemy.EnemyController?.Update(this, enemy, gameTime.ElapsedGameTime);
                 enemy.CurrentSprite.Update(GetDirection(enemy), gameTime);
 
@@ -163,7 +158,40 @@ namespace Jam25.Scenes
         {
             float speed = enemy.MovementSpeed;
             Vector2 movement = enemy.MovementDirection * speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            enemy.Body.Position += movement;
+            Vector2 proposedPosition = enemy.Body.Position + movement;
+
+            const float enemyRadius = 10f;
+            const float minDistance = enemyRadius * 2f;
+
+            // First, move to proposed position
+            enemy.Body.Position = proposedPosition;
+
+            // Then apply simple separation from other enemies
+            foreach (var other in Enemies)
+            {
+                if (ReferenceEquals(other, enemy))
+                {
+                    continue;
+                }
+
+                Vector2 delta = enemy.Body.Position - other.Body.Position;
+                float distance = delta.Length();
+                if (distance <= 0.0001f)
+                {
+                    continue;
+                }
+
+                if (distance < minDistance)
+                {
+                    float overlap = minDistance - distance;
+                    Vector2 pushDir = delta / distance;
+
+                    // Move this enemy away by half the overlap
+                    enemy.Body.Position += pushDir * (overlap * 0.5f);
+                    // Optionally also push the other enemy:
+                    // other.Body.Position -= pushDir * (overlap * 0.5f);
+                }
+            }
         }
     }
 }
