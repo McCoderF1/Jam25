@@ -1,4 +1,5 @@
-﻿using Jam25.Graphics;
+﻿using HDT.Gaming.Audio;
+using Jam25.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -31,7 +32,7 @@ namespace Jam25.Entities.Pickups
             Consumed = true;
             player.HasKey = true;
             PickedUp.Invoke(this, EventArgs.Empty);
-
+            AudioManager.PlaySound("GetKey");
             Console.WriteLine("Collected Key!");
         }
 

@@ -1,3 +1,4 @@
+using HDT.Gaming.Audio;
 using Jam25.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -59,6 +60,7 @@ namespace Jam25.Entities.Pickups
             }
 
             Consumed = true;
+            AudioManager.PlaySound("TakeItem");
         }
 
         public void Draw(SpriteBatch spriteBatch, int tileSize)

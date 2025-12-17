@@ -132,7 +132,7 @@ namespace Jam25.Entities.Enemies
                 StartCooldown();
                 player.TakeDamage(10);
                 CurrentState = Enemy.EnemyState.Attacking;
-                AudioManager.PlaySound("MetalHit");
+                AudioManager.PlaySound("HitFlesh");
             }
         }
 

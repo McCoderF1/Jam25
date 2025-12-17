@@ -1,7 +1,5 @@
 ﻿using HDT.Gaming.Audio;
-using HDT.Gaming.Models;
 using HDT.Gaming.Screens;
-using Jam25.Entities.Pickups;
 using Jam25.Graphics;
 using Jam25.Stores;
 using Microsoft.Xna.Framework;
@@ -11,6 +9,15 @@ using System.Collections.Generic;
 
 namespace Jam25.Screens.UserInterface
 {
+    /// <summary>
+    /// Item collected by the player for UI display
+    /// </summary>
+    public struct CollectedItem(Texture2D texture, string name)
+    {
+        public Texture2D Texture = texture;
+        public string Name = name;
+    }
+
     /// <summary>
     /// User interface overall during the main game loop
     /// </summary>
@@ -30,7 +37,6 @@ namespace Jam25.Screens.UserInterface
         private readonly Texture2D LevelPopUp;
         private readonly RoundedRectangle roundedRectangle;
 
-        private KeyPickup keyPickup;
         private Torch torch;
 
         private AnimatedSprite playerIcon;
@@ -44,18 +50,12 @@ namespace Jam25.Screens.UserInterface
         private bool levelSoundTriggered = false;
 
         private const int maxBarWidth = 130;
-        private List<CollectedItem> collectedItems = new List<CollectedItem>();
 
         #endregion
 
-        /// <summary>
-        /// Item collected by the player for UI display
-        /// </summary>
-        private struct CollectedItem
-        {
-            public Texture2D Texture;
-            public string Name;
-        }
+
+
+        public List<CollectedItem> CollectedItems { get; } = new List<CollectedItem>();
 
         /// <summary>
         /// Game User Interface constructor
@@ -101,19 +101,12 @@ namespace Jam25.Screens.UserInterface
             this.torch = torch;
         }
 
-        public void SetKey(KeyPickup key)
-        {
-            this.keyPickup = key;
-            // Add key to collected items for display in bottom right slots
-            collectedItems.Add(new CollectedItem { Texture = key.Sprite.Texture, Name = "Key" });
-        }
-
         ///<inheritdoc/>
         public void Draw()
         {
             var XPos = (int)currentCameraPosition.X;
             var YPos = (int)currentCameraPosition.Y;
-            animatedPlayerIcon.DrawFrame(spriteBatch, playerIcon.Frame, new Vector2(200,227), playerIcon);
+            animatedPlayerIcon.DrawFrame(spriteBatch, playerIcon.Frame, new Vector2(200, 227), playerIcon);
             DrawPlayerStatusBars();
             spriteBatch.Draw(UIBase,
                 new Rectangle(0, 0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
@@ -261,9 +254,9 @@ namespace Jam25.Screens.UserInterface
                 var slotRect = new Rectangle(slotX, y, slotSize, slotSize);
                 roundedRectangle.Draw(slotRect, 4, Color.Black * 0.5f);
 
-                if (i < collectedItems.Count)
+                if (i < CollectedItems.Count)
                 {
-                    var item = collectedItems[i];
+                    var item = CollectedItems[i];
                     int itemSize = slotSize - 8;
                     var itemRect = new Rectangle(slotX + 4, y + 4, itemSize, itemSize);
                     spriteBatch.Draw(item.Texture, itemRect, Color.White);
@@ -297,17 +290,20 @@ namespace Jam25.Screens.UserInterface
             if (PlayerTracker.PlayerStats.TotalLevel != previousPlayerLevel)
             {
                 if (!levelSoundTriggered)
+                {
                     audioController.PlaySound("LevelUpSound");
+                    levelSoundTriggered = true;
+                }
 
                 spriteBatch.Draw(LevelPopUp, new Rectangle(graphicsDevice.Viewport.Width / 2 - 212, graphicsDevice.Viewport.Height / 4 - 67, 424, 135), Color.White);
                 spriteBatch.DrawString(font, "Health Up", new Microsoft.Xna.Framework.Vector2(graphicsDevice.Viewport.Width / 2 - 75, graphicsDevice.Viewport.Height / 4 + 14), Color.White);
                 animatedLevelUp.DrawFrame(spriteBatch, levelUp.Frame, new Vector2((player.Body.Position.X - XPos) + 32, (player.Body.Position.Y - YPos) + 32), levelUp);
-                levelSoundTriggered = true;
+                
 
                 if (levelUp.Frame.Equals(11))
                     previousPlayerLevel = PlayerTracker.PlayerStats.TotalLevel;
             }
-            else if(levelUp != null)
+            else if (levelUp != null)
             {
                 levelUp.Frame = 0;
                 levelSoundTriggered = false;

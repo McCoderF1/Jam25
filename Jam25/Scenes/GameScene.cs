@@ -18,7 +18,7 @@ namespace Jam25.Scenes
     /// </summary>
     public class GameScene
     {
-        public GameMap GameMap { get; }
+        public GameMap GameMap { get; set; }
 
         public Player Player { get; }
 
@@ -28,7 +28,7 @@ namespace Jam25.Scenes
 
         public PhysicsWorld PhysicsWorld { get; } = new();
 
-        public IEnemySpawner EnemySpawner { get; internal set; }
+        public IEnemySpawner EnemySpawner { get; set; }
 
         public GameScene(GameMap gameMap, Player player, IEnemySpawner enemySpawner)
         {
@@ -41,11 +41,12 @@ namespace Jam25.Scenes
 
         public void Update(GameTime gameTime)
         {
-            EnemySpawner.Update(this, gameTime);
+            EnemySpawner?.Update(this, gameTime);
 
             List<Enemy> enemiesToRemove = new();
 
             bool attacking = false;
+            bool hitSomething = false;
             if (Player.IsAttacking != playerAttackState)
             {
                 playerAttackState = Player.IsAttacking;
@@ -91,11 +92,7 @@ namespace Jam25.Scenes
                     if (distFromPlayer < 50)
                     {
                         enemy.TakeDamage(4);
-                        AudioManager.PlaySound("MetalHit");
-                    }
-                    else
-                    {
-                        AudioManager.PlaySound("Miss");
+                        hitSomething = true;
                     }
                 }
                 else if (distFromPlayer < enemy.AttackRange && enemy.CanAttack && Player.LastState != Player.PlayerState.Dying)
@@ -109,6 +106,14 @@ namespace Jam25.Scenes
                 }
 
                 enemy.Update(gameTime);
+            }
+
+            if (attacking)
+            {
+                if (hitSomething)
+                    AudioManager.PlaySound("MetalHit");
+                else
+                    AudioManager.PlaySound("Miss");
             }
 
             foreach (var enemy in enemiesToRemove)
