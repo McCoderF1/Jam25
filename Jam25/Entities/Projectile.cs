@@ -59,7 +59,7 @@ namespace Jam25.Entities
             if (CurrentState == ProjectileState.Alive)
             {
                 var origin = new Vector2(Texture.Width / 2f, Texture.Height / 2f);
-                spriteBatch.Draw(Texture, Position, null, Color.White, (float)Direction, origin, 1f, SpriteEffects.None, 0f);
+                spriteBatch.Draw(Texture, Position, null, Color.White, (float)(Direction + Math.PI / 2f), origin, 1f, SpriteEffects.None, 0f);
             }
             else if (CurrentState == ProjectileState.Animating)
             {
