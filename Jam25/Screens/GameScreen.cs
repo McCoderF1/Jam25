@@ -72,6 +72,7 @@ namespace Jam25.Screens
         // Camera
         private Vector2 CameraPosition;
         private Rectangle WorldBounds => new Rectangle(0, 0, mapWidth * tileSize, mapHeight * tileSize);
+        private bool draw = true;
 
         #endregion
 
@@ -138,6 +139,9 @@ namespace Jam25.Screens
 
         public void Draw()
         {
+            if (!draw)
+                return;
+
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, Matrix.CreateTranslation(new Vector3(-CameraPosition, 0f)));
 
@@ -493,6 +497,8 @@ namespace Jam25.Screens
             gameUI.CollectedItems.Clear();
 
             gameScene.GameMap = checkPoint;
+            draw = false;
+            Task.Delay(1000).ContinueWith(_ => draw = true);
         }
 
         #endregion
