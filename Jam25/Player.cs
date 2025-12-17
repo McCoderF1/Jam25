@@ -111,7 +111,7 @@ namespace Jam25
 
         public int Level { get; set; }
 
-        public bool IsAttacking => ((LastState & Player.PlayerState.Attacking) != 0);
+        public int IsAttacking { get; private set; }
 
         public Player(SpriteBatch spriteBatch)
         {
@@ -175,17 +175,20 @@ namespace Jam25
 
                     if (attackKeyDown && !isAttacking)
                     {
-                        isAttacking = true;
-                        ResetAnimation();
-                        LastState = PlayerState.Attacking;
+                        StartAttacking();
 
                         Stamina.TakeStamina(3);
                     }
                     else if (!attackKeyDown)
                     {
-                        isAttacking = false;
+                        if(isAttacking && IsAnimationComplete())
+                            StopAttacking();
 
                         Stamina.Restore(5);
+                    }
+                    else if (!attackKeyDown && isAttacking && IsAnimationComplete())
+                    {
+                        StopAttacking();
                     }
                     break;
 
@@ -202,16 +205,12 @@ namespace Jam25
 
                     if (attackKeyDown && !isAttacking)
                     {
-                        isAttacking = true;
-                        ResetAnimation();
-                        LastState |= PlayerState.Attacking;   // becomes Running | Attacking
+                        StartAttacking();
                         Stamina.TakeStamina(7);
                     }
-                    else if (!attackKeyDown && isAttacking && animationStage == currentTexture.cols - 1)
+                    else if (!attackKeyDown && isAttacking && IsAnimationComplete())
                     {
-                        isAttacking = false;
-                        ResetAnimation();
-                        LastState &= ~PlayerState.Attacking;  // back to Running
+                        StopAttacking();
                     }
 
                     Stamina.TakeStamina(1); // running stamina drain
@@ -231,19 +230,15 @@ namespace Jam25
 
                     if (attackKeyDown && !isAttacking)
                     {
-                        isAttacking = true;
-                        ResetAnimation();
-                        LastState |= PlayerState.Attacking;   // Walking | Attacking
+                        StartAttacking();
                         Stamina.TakeStamina(5);
                     }
-                    else if (!attackKeyDown && isAttacking && animationStage == currentTexture.cols - 1)
+                    else if (!attackKeyDown && isAttacking && IsAnimationComplete())
                     {
-                        isAttacking = false;
-                        ResetAnimation();
-                        LastState &= ~PlayerState.Attacking;  // back to Walking
+                        StopAttacking();
                     }
 
-                    if(!isAttacking)
+                    if (!isAttacking)
                     {
                         Stamina.Restore(1);
                     }
@@ -256,10 +251,7 @@ namespace Jam25
                     IncrementAnimation(deltaSeconds);
                     if (animationStage == currentTexture.cols - 1)
                     {
-                        // End of idle attack anim
-                        isAttacking = false;
-                        LastState = PlayerState.Idle;
-                        ResetAnimation();
+                        StopAttacking();
                     }
                     break;
 
@@ -281,6 +273,27 @@ namespace Jam25
             }
 
             return null;
+        }
+
+        private bool IsAnimationComplete()
+        {
+            return animationStage == currentTexture.cols - 1;
+        }
+
+        private void StartAttacking()
+        {
+            IsAttacking++;
+            isAttacking = true;
+            ResetAnimation();
+            LastState |= PlayerState.Attacking;
+        }
+
+        private void StopAttacking()
+        {
+            isAttacking = false;
+            ResetAnimation();
+            LastState &= ~PlayerState.Attacking;  // back to Walking
+            IsAttacking--;
         }
 
         public void TakeDamage(int damage)
