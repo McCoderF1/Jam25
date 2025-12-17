@@ -115,12 +115,12 @@ namespace Jam25.Graphics
             // draw the health bar
             if (health is not null && whitePixel is not null)
             {
-                float healthPercent = Math.Clamp(health.Current / health.Max, 0f, 1f);
-                int barWidth = frameWidth; // match sprite width
-                int barHeight = Math.Max(4, frameWidth / 16); // small bar height
+                float healthPercent = Math.Clamp((float)health.Current / (float)health.Max, 0f, 1f);
+                int barWidth = frameWidth;
+                int barHeight = Math.Max(4, frameWidth / 16);
                 float topOfSpriteY = position.Y - (frameWidth / 2f);
                 int barX = (int)(position.X - (barWidth / 2f));
-                int barY = (int)(topOfSpriteY - 8 - barHeight); // 8px gap above sprite
+                int barY = (int)(topOfSpriteY - 8 - barHeight);
 
                 // Background
                 var bgRect = new Rectangle(barX, barY, barWidth, barHeight);
@@ -131,12 +131,10 @@ namespace Jam25.Graphics
                 if (fillWidth > 0)
                 {
                     var fillRect = new Rectangle(barX + 1, barY + 1, Math.Max(0, fillWidth - 2), barHeight - 2);
-                    // color: red -> green
                     var fillColor = Color.Lerp(Color.Red, Color.Green, healthPercent);
                     spriteBatch.Draw(whitePixel, fillRect, fillColor);
                 }
 
-                // 1px border
                 var borderColor = Color.Black * 0.9f;
                 spriteBatch.Draw(whitePixel, new Rectangle(barX, barY, 1, barHeight), borderColor);
                 spriteBatch.Draw(whitePixel, new Rectangle(barX + barWidth - 1, barY, 1, barHeight), borderColor);
