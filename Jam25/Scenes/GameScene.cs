@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using HDT.Gaming.Audio;
+﻿using HDT.Gaming.Audio;
 using HDT.Gaming.Physics;
 using Jam25.Entities;
 using Jam25.Entities.Enemies;
+using Jam25.Entities.Pickups;
 using Jam25.Graphics;
 using Jam25.Models;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 
 namespace Jam25.Scenes
@@ -21,6 +21,8 @@ namespace Jam25.Scenes
         public Player Player { get; }
 
         public List<Enemy> Enemies { get; } = [];
+
+        public List<IPickup> Pickups { get; } = [];
 
         public PhysicsWorld PhysicsWorld { get; } = new();
 
@@ -74,7 +76,7 @@ namespace Jam25.Scenes
                 if (distFromPlayer < 30 && enemy.CanAttack && Player.LastState != Player.PlayerState.Dying)
                 {
                     enemy.StartCooldown();
-                    Player.TakeDamage(20);
+                    //Player.TakeDamage(20);
                     enemy.CurrentState = Enemy.EnemyState.Attacking;
                     AudioManager.PlaySound("MetalHit");
                 }
