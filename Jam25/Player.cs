@@ -84,6 +84,13 @@ namespace Jam25
         private Vector2 movementDirection = Vector2.Zero;
 
         private bool isAttacking;
+        
+        // Stamina exhaustion tracking
+        private bool staminaExhausted = false;
+        private bool shiftWasReleased = true;
+        
+        // Debug: Unlimited stamina
+        public static bool DebugUnlimitedStamina { get; set; } = false;
         #endregion
 
         [Flags]
@@ -182,14 +189,16 @@ namespace Jam25
                     {
                         StartAttacking();
 
-                        Stamina.TakeStamina(3);
+                        if (!DebugUnlimitedStamina)
+                            Stamina.TakeStamina(3);
                     }
                     else if (!attackKeyDown)
                     {
                         if(isAttacking && IsAnimationComplete())
                             StopAttacking();
 
-                        Stamina.Restore(5);
+                        if (!DebugUnlimitedStamina)
+                            Stamina.Restore(5);
                     }
                     else if (!attackKeyDown && isAttacking && IsAnimationComplete())
                     {
@@ -211,14 +220,16 @@ namespace Jam25
                     if (attackKeyDown && !isAttacking)
                     {
                         StartAttacking();
-                        Stamina.TakeStamina(7);
+                        if (!DebugUnlimitedStamina)
+                            Stamina.TakeStamina(7);
                     }
                     else if (!attackKeyDown && isAttacking && IsAnimationComplete())
                     {
                         StopAttacking();
                     }
 
-                    Stamina.TakeStamina(1); // running stamina drain
+                    if (!DebugUnlimitedStamina)
+                        Stamina.TakeStamina(1); // running stamina drain
 
                     return MovePlayer(deltaSeconds, 2.0f);
 
@@ -236,14 +247,15 @@ namespace Jam25
                     if (attackKeyDown && !isAttacking)
                     {
                         StartAttacking();
-                        Stamina.TakeStamina(5);
+                        if (!DebugUnlimitedStamina)
+                            Stamina.TakeStamina(5);
                     }
                     else if (!attackKeyDown && isAttacking && IsAnimationComplete())
                     {
                         StopAttacking();
                     }
 
-                    if (!isAttacking)
+                    if (!isAttacking && !DebugUnlimitedStamina)
                     {
                         Stamina.Restore(1);
                     }
@@ -464,7 +476,51 @@ namespace Jam25
             return movement;
         }
 
-        private bool IsRunning(bool runRequest) => runRequest && Stamina.Current > 0;
+        private bool IsRunning(bool runRequest)
+        {
+            // Debug: Unlimited stamina bypass
+            if (DebugUnlimitedStamina)
+            {
+                return runRequest;
+            }
+
+            // Track shift release to reset exhaustion
+            if (!runRequest)
+            {
+                shiftWasReleased = true;
+            }
+
+            // If exhausted, require shift to be released before sprinting again
+            if (staminaExhausted)
+            {
+                if (shiftWasReleased && runRequest)
+                {
+                    // Player pressed shift again after releasing
+                    staminaExhausted = false;
+                    shiftWasReleased = false;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            // Check if we have stamina to run
+            if (runRequest && Stamina.Current <= 0)
+            {
+                // Stamina depleted - force stop running
+                staminaExhausted = true;
+                shiftWasReleased = false;
+                return false;
+            }
+
+            if (runRequest)
+            {
+                shiftWasReleased = false;
+            }
+
+            return runRequest && Stamina.Current > 0;
+        }
 
         private void LeveledUp()
         {

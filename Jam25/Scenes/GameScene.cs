@@ -51,8 +51,7 @@ namespace Jam25.Scenes
 
             foreach (var enemy in Enemies)
             {
-                if (enemy.CurrentState != Enemy.EnemyState.Dead 
-                    && enemy.CurrentState != Enemy.EnemyState.Dying
+                if (enemy.CanMove
                     && Player.LastState != Player.PlayerState.Dying)
                 {
                     MoveEnemy(enemy, gameTime);
@@ -77,7 +76,7 @@ namespace Jam25.Scenes
                 else if (distFromPlayer < 30 && enemy.CanAttack && Player.LastState != Player.PlayerState.Dying)
                 {
                     enemy.StartCooldown();
-                    Player.TakeDamage(20);
+                    Player.TakeDamage(10);
                     enemy.CurrentState = Enemy.EnemyState.Attacking;
                     AudioManager.PlaySound("MetalHit");
                 }
