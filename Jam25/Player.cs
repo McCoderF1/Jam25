@@ -1,4 +1,5 @@
-﻿using HDT.Gaming.Models;
+﻿using HDT.Gaming.Audio;
+using HDT.Gaming.Models;
 using HDT.Gaming.Physics;
 using Jam25.Graphics;
 using Jam25.Stores;
@@ -80,6 +81,8 @@ namespace Jam25
         // Time-based animation fields
         private float animationTime;          // Accumulated time for current frame
         private float frameDuration = 0.1f;   // Seconds per frame (10 fps as example)
+        private const float AttackFrameDuration = 0.06f; // Faster attack animation
+        private const float DefaultFrameDuration = 0.1f;
 
         private Vector2 movementDirection = Vector2.Zero;
 
@@ -302,6 +305,7 @@ namespace Jam25
         {
             IsAttacking++;
             isAttacking = true;
+            frameDuration = AttackFrameDuration; // speed up
             ResetAnimation();
             LastState |= PlayerState.Attacking;
         }
@@ -309,8 +313,9 @@ namespace Jam25
         private void StopAttacking()
         {
             isAttacking = false;
+            frameDuration = DefaultFrameDuration; // restore
             ResetAnimation();
-            LastState &= ~PlayerState.Attacking;  // back to Walking
+            LastState &= ~PlayerState.Attacking;
             IsAttacking--;
         }
 
@@ -320,6 +325,7 @@ namespace Jam25
 
             if (LastState != PlayerState.Hurt && LastState != PlayerState.Dying)
             {
+                AudioManager.PlaySound("HitFlesh");
                 Health.TakeDamage(damage);
                 animationStage = 0;
                 animationTime = 0f;

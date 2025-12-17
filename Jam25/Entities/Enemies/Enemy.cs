@@ -123,7 +123,7 @@ namespace Jam25.Entities.Enemies
                     Velocity = 300,
                     Texture = ProjectileTexture,
                     Damage = 5,
-                    Lifespan = 2000
+                    Lifespan = 200
                 });
                 CurrentState = Enemy.EnemyState.Attacking;
             }
@@ -132,10 +132,8 @@ namespace Jam25.Entities.Enemies
                 StartCooldown();
                 player.TakeDamage(10);
                 CurrentState = Enemy.EnemyState.Attacking;
-                AudioManager.PlaySound("HitFlesh");
             }
         }
-
 
         public void RefreshPlayerSighting()
         {
