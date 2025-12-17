@@ -9,15 +9,11 @@ using Jam25.Entities.Enemies;
 using Jam25.Entities.Pickups;
 using Jam25.Models;
 using Jam25.Scenes;
+using Jam25.Screens.UserInterface;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Reflection.Metadata;
-using Jam25.Screens.UserInterface;
 
 namespace Jam25.Screens
 {
@@ -80,14 +76,13 @@ namespace Jam25.Screens
             EnemyFactory enemyFactory = new(game.Content, audioController);
 
             EnemySpawner enemySpawner = new(
-                maxEnemies: 10,
+                maxEnemies: 50,
                 minSpawnDistanceFromPlayer: 200,
                 PointWithinWalls,
                 enemyFactory);
 
             gameScene = new(gameMap, player, enemySpawner);
 
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
             gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player);
         }
@@ -120,7 +115,6 @@ namespace Jam25.Screens
 
         public void Show()
         {
-            gameMap = new GameMap(mapWidth, mapHeight);
             gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
 
             // Add the pickups

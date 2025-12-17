@@ -33,7 +33,7 @@ namespace Jam25.Models
         /// <param name="gameTime"></param>
         public void Update(GameScene gameScene, GameTime gameTime)
         {
-            if (gameScene.Enemies.Count < maxEnemies)
+            while (gameScene.Enemies.Count < maxEnemies)
             {
                 SpawnEnemy(gameScene);
             }
@@ -51,7 +51,7 @@ namespace Jam25.Models
             {
                 spawnPosition = getSpawnPosition();
             }
-            while (Vector2.Distance(spawnPosition, playerPosition) < minSpawnDistanceFromPlayer);
+            while (Vector2.Distance(spawnPosition, playerPosition) <= minSpawnDistanceFromPlayer);
 
             Enemy newEnemy = enemyFactory.CreateSlimeEnemy(spawnPosition);
             gameScene.Enemies.Add(newEnemy);
