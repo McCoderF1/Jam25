@@ -55,6 +55,7 @@ namespace Jam25
 
         protected override void LoadContent()
         {
+            LoadStores();
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             content.LoadSprite(SpriteID.PlayerLvl1, "Images/StatsPage/PlayerLvl1Idle", 12, 5, new Vector2(64f, 64f));
@@ -75,6 +76,7 @@ namespace Jam25
             audioController.InstallEffect("AppClick", Content.Load<SoundEffect>("Sound/Effects/AppClick"));
             audioController.InstallEffect("Miss", Content.Load<SoundEffect>("Sound/Effects/WhooshMiss"));
             audioController.InstallEffect("HitFlesh", Content.Load<SoundEffect>("Sound/Effects/HitFlesh"));
+            audioController.InstallEffect("LevelUpSound", Content.Load<SoundEffect>("Sound/Effect/LevelUpSound"));
             //add audio here
             // - ok
 
@@ -85,7 +87,6 @@ namespace Jam25
             var gameScreen = new GameScreen(graphics.GraphicsDevice, spriteBatch, content, Content, audioController, this);
             var playerScreen = new PlayerScreen(spriteBatch, graphics, content, Content, audioController);
 
-            LoadStores();
             screenManager = new ScreenManager(startScreen, settingScreen, gameScreen, playerScreen);
         }
 

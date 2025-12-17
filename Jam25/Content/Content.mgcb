@@ -245,6 +245,30 @@
 /processorParam:TextureFormat=Color
 /build:Images/supplies_objects.png
 
+#begin Images/UI/levelup.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/UI/levelup.png
+
+#begin Images/UI/LevelUpPop.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/UI/LevelUpPop.png
+
 #begin Images/UI/PlayerUIIcon.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -598,6 +622,12 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Sound/Effects/WhooshMiss.wav
+
+#begin Sound/Effect/LevelUpSound.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sound/Effect/LevelUpSound.wav
 
 #begin Sound/Music/The Flickering Flame.mp3
 /importer:Mp3Importer
