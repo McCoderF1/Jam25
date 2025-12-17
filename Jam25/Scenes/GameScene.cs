@@ -1,15 +1,13 @@
-﻿using HDT.Gaming.Audio;
+﻿using System;
+using System.Collections.Generic;
+using HDT.Gaming.Audio;
 using HDT.Gaming.Physics;
 using Jam25.Entities;
 using Jam25.Entities.Enemies;
 using Jam25.Entities.Pickups;
 using Jam25.Graphics;
 using Jam25.Models;
-using Jam25.Screens;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
-using System;
-using System.Collections.Generic;
 
 namespace Jam25.Scenes
 {
@@ -18,6 +16,9 @@ namespace Jam25.Scenes
     /// </summary>
     public class GameScene
     {
+        private int playerAttackState = 0;
+
+
         public GameMap GameMap { get; set; }
 
         public Player Player { get; }
@@ -37,7 +38,12 @@ namespace Jam25.Scenes
             EnemySpawner = enemySpawner;
         }
 
-        private int playerAttackState = 0;
+        public void Reset()
+        {
+            Enemies.Clear();
+            Pickups.Clear();
+            PhysicsWorld.ClearBodies();
+        }
 
         public void Update(GameTime gameTime)
         {
