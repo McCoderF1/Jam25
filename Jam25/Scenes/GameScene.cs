@@ -43,6 +43,7 @@ namespace Jam25.Scenes
             Enemies.Clear();
             Pickups.Clear();
             PhysicsWorld.ClearBodies();
+            GameMap.Reset();
         }
 
         public void Update(GameTime gameTime)
@@ -60,8 +61,10 @@ namespace Jam25.Scenes
                 attacking = playerAttackState > 0;
             }
 
-            foreach (var enemy in Enemies)
+            for (int i = 0; i < Enemies.Count; i++)
             {
+                Enemy enemy = Enemies[i];
+
                 // Update the projectiles
                 List<Projectile> toRemove = new();
                 foreach (Projectile p in enemy.Projectiles)
