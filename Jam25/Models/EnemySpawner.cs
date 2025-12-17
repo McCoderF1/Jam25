@@ -58,17 +58,30 @@ namespace Jam25.Models
             Enemy newEnemy;
             double roll = rand.NextDouble();
 
-            if (roll < 0.2)
+            if (roll < 0.15)
             {
+                // 15% chance for vampire
                 newEnemy = enemyFactory.CreateVampireEnemy(spawnPosition);
             }
-            else if (roll < 0.8)
+            else if (roll < 0.25)
             {
-                newEnemy = enemyFactory.CreateSlimeEnemy(spawnPosition);
+                // 10% chance for Orc2 (heavy tank)
+                newEnemy = enemyFactory.CreateOrc2Enemy(spawnPosition);
+            }
+            else if (roll < 0.35)
+            {
+                // 10% chance for Orc1 (light tank)
+                newEnemy = enemyFactory.CreateOrc1Enemy(spawnPosition);
+            }
+            else if (roll < 0.55)
+            {
+                // 20% chance for lava slime
+                newEnemy = enemyFactory.CreateLavaSlimeEnemy(spawnPosition);
             }
             else
             {
-                newEnemy = enemyFactory.CreateLavaSlimeEnemy(spawnPosition);
+                // 45% chance for regular slime
+                newEnemy = enemyFactory.CreateSlimeEnemy(spawnPosition);
             }
 
             gameScene.Enemies.Add(newEnemy);

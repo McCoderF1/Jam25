@@ -44,6 +44,20 @@ namespace Jam25.Entities.Enemies
         private readonly Texture2D vampireWalkTexture;
         private readonly Texture2D vampireRunTexture;
 
+        private readonly Texture2D orc1AttackTexture;
+        private readonly Texture2D orc1DeathTexture;
+        private readonly Texture2D orc1HurtTexture;
+        private readonly Texture2D orc1IdleTexture;
+        private readonly Texture2D orc1WalkTexture;
+        private readonly Texture2D orc1RunTexture;
+
+        private readonly Texture2D orc2AttackTexture;
+        private readonly Texture2D orc2DeathTexture;
+        private readonly Texture2D orc2HurtTexture;
+        private readonly Texture2D orc2IdleTexture;
+        private readonly Texture2D orc2WalkTexture;
+        private readonly Texture2D orc2RunTexture;
+
         private readonly Texture2D projectileTexture;
 
         #endregion Private Members
@@ -75,6 +89,20 @@ namespace Jam25.Entities.Enemies
             vampireIdleTexture = content.Load<Texture2D>("EnemySprite/Vampire/Vampires2_Idle_with_shadow");
             vampireWalkTexture = content.Load<Texture2D>("EnemySprite/Vampire/Vampires2_Walk_with_shadow");
             vampireRunTexture = content.Load<Texture2D>("EnemySprite/Vampire/Vampires2_Run_with_shadow");
+
+            orc1AttackTexture = content.Load<Texture2D>("EnemySprite/Orc1/Orc1_Attack_with_shadow");
+            orc1DeathTexture = content.Load<Texture2D>("EnemySprite/Orc1/Orc1_Death_with_shadow");
+            orc1HurtTexture = content.Load<Texture2D>("EnemySprite/Orc1/Orc1_Hurt_with_shadow");
+            orc1IdleTexture = content.Load<Texture2D>("EnemySprite/Orc1/Orc1_Idle_with_shadow");
+            orc1WalkTexture = content.Load<Texture2D>("EnemySprite/Orc1/Orc1_Walk_with_shadow");
+            orc1RunTexture = content.Load<Texture2D>("EnemySprite/Orc1/Orc1_Run_with_shadow");
+
+            orc2AttackTexture = content.Load<Texture2D>("EnemySprite/Orc2/Orc2_Attack_with_shadow");
+            orc2DeathTexture = content.Load<Texture2D>("EnemySprite/Orc2/Orc2_Death_with_shadow");
+            orc2HurtTexture = content.Load<Texture2D>("EnemySprite/Orc2/Orc2_Hurt_with_shadow");
+            orc2IdleTexture = content.Load<Texture2D>("EnemySprite/Orc2/Orc2_Idle_with_shadow");
+            orc2WalkTexture = content.Load<Texture2D>("EnemySprite/Orc2/Orc2_Walk_with_shadow");
+            orc2RunTexture = content.Load<Texture2D>("EnemySprite/Orc2/Orc2_Run_with_shadow");
 
             projectileTexture = content.Load<Texture2D>("Images/key32");
         }
@@ -137,7 +165,7 @@ namespace Jam25.Entities.Enemies
                 AttackRange = 40,
                 UseProjectiles = false,
                 StopsToAttack = true,
-                AttackWindUpMs = 800f, // 0.8 second delay before attack
+                AttackWindUpMs = 800f,
                 AttackDamage = 35
             };
         }
@@ -169,6 +197,75 @@ namespace Jam25.Entities.Enemies
                 AttackRange = 200,
                 UseProjectiles = true,
                 ProjectileTexture = projectileTexture
+            };
+        }
+
+        /// <summary>
+        /// Weaker Orc
+        /// </summary>
+        public Enemy CreateOrc1Enemy(Vector2 position)
+        {
+            return new Enemy()
+            {
+                Sprites = new Dictionary<Enemy.EnemyState, AnimatedDirectionalSprite>
+                {
+                    {Enemy.EnemyState.Idle, new AnimatedDirectionalSprite(orc1IdleTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Attacking, new AnimatedDirectionalSprite(orc1AttackTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Hurt, new AnimatedDirectionalSprite(orc1HurtTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Dying, new AnimatedDirectionalSprite(orc1DeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Running, new AnimatedDirectionalSprite(orc1RunTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Dead, new AnimatedDirectionalSprite(orc1DeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                },
+                Body =
+                {
+                    Position = position,
+                    LocalBounds = new (0, 0, FRAME_WIDTH, FRAME_WIDTH),
+                    PositionOffset = new Vector2(FRAME_WIDTH * 0.5f, FRAME_WIDTH)
+                },
+                Health = new HDT.Gaming.Models.Health(40),
+                MovementSpeed = 18,
+                ChaseMemoryDuration = TimeSpan.FromSeconds(4),
+                SightRange = 200,
+                EnemyController = enemyController,
+                AttackRange = 35,
+                UseProjectiles = false,
+                StopsToAttack = false,
+                AttackDamage = 20
+            };
+        }
+
+        /// <summary>
+        /// Stronger Orc
+        /// </summary>
+        public Enemy CreateOrc2Enemy(Vector2 position)
+        {
+            return new Enemy()
+            {
+                Sprites = new Dictionary<Enemy.EnemyState, AnimatedDirectionalSprite>
+                {
+                    {Enemy.EnemyState.Idle, new AnimatedDirectionalSprite(orc2IdleTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Attacking, new AnimatedDirectionalSprite(orc2AttackTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Hurt, new AnimatedDirectionalSprite(orc2HurtTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Dying, new AnimatedDirectionalSprite(orc2DeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Running, new AnimatedDirectionalSprite(orc2RunTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Dead, new AnimatedDirectionalSprite(orc2DeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                },
+                Body =
+                {
+                    Position = position,
+                    LocalBounds = new (0, 0, FRAME_WIDTH, FRAME_WIDTH),
+                    PositionOffset = new Vector2(FRAME_WIDTH * 0.5f, FRAME_WIDTH)
+                },
+                Health = new HDT.Gaming.Models.Health(60),
+                MovementSpeed = 12,
+                ChaseMemoryDuration = TimeSpan.FromSeconds(5),
+                SightRange = 220,
+                EnemyController = enemyController,
+                AttackRange = 40,
+                UseProjectiles = false,
+                StopsToAttack = true,
+                AttackWindUpMs = 500f,
+                AttackDamage = 30
             };
         }
     }
