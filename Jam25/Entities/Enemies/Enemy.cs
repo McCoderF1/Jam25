@@ -4,6 +4,7 @@ using HDT.Gaming.Models;
 using HDT.Gaming.Physics;
 using Jam25.Entities.Enemies.Controllers;
 using Jam25.Graphics;
+using Jam25.Stores;
 using Microsoft.Xna.Framework;
 
 namespace Jam25.Entities.Enemies
@@ -69,10 +70,12 @@ namespace Jam25.Entities.Enemies
             if (Health.Current <= 0)
             {
                 CurrentState = EnemyState.Dying;
+                PlayerTracker.RecordKill();
             }
             else
             {
                 CurrentState = EnemyState.Hurt;
+                PlayerTracker.CollectEmber();
             }
         }
 
