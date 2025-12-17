@@ -70,7 +70,7 @@ namespace Jam25.Scenes
                 foreach (Projectile p in enemy.Projectiles)
                 {
                     p.Update(gameTime.ElapsedGameTime.Milliseconds);
-                    if (Vector2.Distance(p.Position, Player.Body.Position) < 20)
+                    if (Vector2.Distance(p.Position, Player.Body.Position) < 20 && p.CurrentState == Projectile.ProjectileState.Alive)
                     {
                         p.HitSomething();
                         Player.TakeDamage(p.Damage);
