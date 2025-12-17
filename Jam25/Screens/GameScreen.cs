@@ -203,16 +203,11 @@ namespace Jam25.Screens
             KeyboardInput.GetInput();
             game.Torch.Update(gameTime);
 
-            // Debug: Toggle lighting with P
+            // Debug: P (unlimited stamina, health, one shot enemies, no lighting feature)
             if (KeyboardInput.HasBeenPressed(Keys.P))
             {
-                debugLightingDisabled = !debugLightingDisabled;
-            }
-
-            // Debug: Toggle unlimited stamina with M
-            if (KeyboardInput.HasBeenPressed(Keys.M))
-            {
-                Player.DebugUnlimitedStamina = !Player.DebugUnlimitedStamina;
+                Player.DebugInvincibleMode = !Player.DebugInvincibleMode;
+                debugLightingDisabled = Player.DebugInvincibleMode;
             }
 
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
