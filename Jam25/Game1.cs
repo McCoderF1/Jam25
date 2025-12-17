@@ -1,13 +1,14 @@
-﻿using System;
-using HDT.Gaming.Audio;
+﻿using HDT.Gaming.Audio;
 using Jam25.Graphics;
 using Jam25.Screens;
 using Jam25.Screens.UserInterface;
 using Jam25.Stores;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System;
 
 namespace Jam25
 {
@@ -54,6 +55,7 @@ namespace Jam25
 
         protected override void LoadContent()
         {
+            LoadStores();
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             content.LoadSprite(SpriteID.PlayerLvl1, "Images/StatsPage/PlayerLvl1Idle", 12, 5, new Vector2(64f, 64f));
@@ -69,6 +71,7 @@ namespace Jam25
 
             audioController = new AudioController();
             audioController.InstallMusic("The Flickering Flame", Content.Load<Song>("Sound/Music/The Flickering Flame"));
+            audioController.InstallEffect("LevelUpSound", Content.Load<SoundEffect>("Sound/Effect/LevelUpSound"));
             //add audio here
 
             AudioManager.InstallController(audioController);
@@ -78,7 +81,6 @@ namespace Jam25
             var gameScreen = new GameScreen(graphics.GraphicsDevice, spriteBatch, content, Content, audioController, this);
             var playerScreen = new PlayerScreen(spriteBatch, graphics, content, Content, audioController);
 
-            LoadStores();
             screenManager = new ScreenManager(startScreen, settingScreen, gameScreen, playerScreen);
         }
 

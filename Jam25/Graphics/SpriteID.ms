@@ -12,4 +12,5 @@ u8 SpriteID
     Coal_Huge: 7
 	PlayerUIIcon: 8
 	FireBig: 9
+	LevelUp: 10
 }

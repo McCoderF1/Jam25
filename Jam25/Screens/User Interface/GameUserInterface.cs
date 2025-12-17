@@ -1,4 +1,5 @@
 ﻿using HDT.Gaming.Audio;
+using HDT.Gaming.Models;
 using HDT.Gaming.Screens;
 using Jam25.Graphics;
 using Jam25.Stores;
@@ -24,13 +25,20 @@ namespace Jam25.Screens.UserInterface
         private readonly Texture2D UIBase;
         private readonly SpriteFont font;
         private readonly Texture2D whitePixel;
+        private readonly Texture2D LevelPopUp;
         private readonly RoundedRectangle roundedRectangle;
 
         private Torch torch;
 
         private AnimatedSprite playerIcon;
         private AnimatedTexture animatedPlayerIcon;
+
+        private AnimatedSprite levelUp;
+        private AnimatedTexture animatedLevelUp;
+
         private Vector2 currentCameraPosition = Vector2.Zero;
+        private short previousPlayerLevel = 0;
+        private bool levelSoundTriggered = false;
 
         #endregion
 
@@ -47,13 +55,21 @@ namespace Jam25.Screens.UserInterface
             this.player = player;
 
             UIBase = content.Load<Texture2D>("Images/UI/UIBase");
+            LevelPopUp = content.Load<Texture2D>("Images/UI/LevelUpPop");
             font = content.Load<SpriteFont>("Fonts/Menu");
             game.LoadSprite(SpriteID.PlayerUIIcon, "Images/UI/PlayerUIIcon", 12, 5, new Vector2(64f, 64f));
+            game.LoadSprite(SpriteID.LevelUp, "Images/UI/levelup", 12, 12, new Vector2(64f, 64f));
 
             if (game.TryGetSprite(SpriteID.PlayerUIIcon, out AnimatedTexture animatedIcon))
             {
                 this.animatedPlayerIcon = animatedIcon;
                 playerIcon = new AnimatedSprite() { SpriteId = SpriteID.PlayerUIIcon, ScaleX = 4, ScaleY = 4 };
+            }
+
+            if (game.TryGetSprite(SpriteID.LevelUp, out AnimatedTexture animatedLevelUp))
+            {
+                this.animatedLevelUp = animatedLevelUp;
+                levelUp = new AnimatedSprite() { SpriteId = SpriteID.LevelUp };
             }
 
             whitePixel = new Texture2D(graphics, 1, 1);
@@ -72,17 +88,16 @@ namespace Jam25.Screens.UserInterface
         ///<inheritdoc/>
         public void Draw()
         {
-            var XPos = (int)currentCameraPosition.X;
-            var YPos = (int)currentCameraPosition.Y;
-            animatedPlayerIcon.DrawFrame(spriteBatch, playerIcon.Frame, new Vector2(XPos + 200, YPos + 227), playerIcon);
+            animatedPlayerIcon.DrawFrame(spriteBatch, playerIcon.Frame, new Vector2(200, 227), playerIcon);
             DrawPlayerStatusBars();
             spriteBatch.Draw(UIBase,
-                new Rectangle(XPos, YPos, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
+                new Rectangle(0, 0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
                 Color.White);
 
             DrawPlayerStatusBars();
             DrawTorchBar();
-            DrawInformation(XPos, YPos);
+            DrawInformation(0, 0);
+            DrawPlayerLevelUp();
         }
 
         ///<inheritdoc/>
@@ -100,15 +115,42 @@ namespace Jam25.Screens.UserInterface
         ///<inheritdoc/>
         public void UpdateWithVector(GameTime gameTime, Vector2 cameraPosition)
         {
+            currentCameraPosition = cameraPosition;
             Update(gameTime);
         }
 
         public void Update(GameTime gameTime)
         {
             UpdateSprite(playerIcon, (float)gameTime.ElapsedGameTime.TotalSeconds);
+            UpdateSprite(levelUp, (float)gameTime.ElapsedGameTime.TotalSeconds);
         }
 
         #region private methods
+
+        private void DrawPlayerLevelUp()
+        {
+            var XPos = (int)currentCameraPosition.X;
+            var YPos = (int)currentCameraPosition.Y;
+
+            if (PlayerTracker.PlayerStats.TotalLevel != previousPlayerLevel)
+            {
+                if(!levelSoundTriggered)
+                    audioController.PlaySound("LevelUpSound");
+
+                spriteBatch.Draw(LevelPopUp, new Rectangle(graphicsDevice.Viewport.Width / 2 - 212, graphicsDevice.Viewport.Height / 4 - 67, 424, 135), Color.White);
+                spriteBatch.DrawString(font, "Health Up", new Microsoft.Xna.Framework.Vector2(graphicsDevice.Viewport.Width / 2 - 75, graphicsDevice.Viewport.Height / 4 + 14), Color.White);
+                animatedLevelUp.DrawFrame(spriteBatch, levelUp.Frame, new Vector2((player.Body.Position.X - XPos) + 32, (player.Body.Position.Y - YPos) + 32), levelUp);
+                levelSoundTriggered = true;
+
+                if (levelUp.Frame.Equals(11))
+                    previousPlayerLevel = PlayerTracker.PlayerStats.TotalLevel;
+            }
+            else
+            {
+                levelUp.Frame = 0;
+                levelSoundTriggered = false;
+            }
+        }
 
         private void DrawPlayerStatusBars()
         {
