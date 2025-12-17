@@ -102,6 +102,8 @@ namespace Jam25.Screens.UserInterface
         public void SetKey(KeyPickup key)
         {
             this.keyPickup = key;
+            // Add key to collected items for display in bottom right slots
+            collectedItems.Add(new CollectedItem { Texture = key.Sprite.Texture, Name = "Key" });
         }
 
         ///<inheritdoc/>
@@ -117,7 +119,9 @@ namespace Jam25.Screens.UserInterface
 
             DrawPlayerStatusBars();
             DrawTorchBar();
+            DrawTimer();
             DrawInformation();
+            DrawCollectedItems();
         }
 
         ///<inheritdoc/>

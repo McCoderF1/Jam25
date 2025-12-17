@@ -28,6 +28,7 @@ namespace Jam25.Screens
         private readonly Game1 game;
         private readonly GameScene gameScene;
         private Texture2D wallsFloor;
+        private Texture2D doorsTexture;
         private Texture2D objectSpriteSheet;
         private GameMap gameMap;
         private KeyPickup key;
@@ -38,6 +39,7 @@ namespace Jam25.Screens
         private Texture2D lightMask;
         private Texture2D tileShadowMask;
         private int lightMaskSize = 1024;
+        private bool debugLightingDisabled = false;
 
         // Torch flicker
         private readonly Random flickerRandom = new Random();
@@ -92,6 +94,7 @@ namespace Jam25.Screens
             pickups = new();
 
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
+            doorsTexture = game.Content.Load<Texture2D>("Images/doors_lever_chest_animation");
             whitePixelTexture = game.Content.Load<Texture2D>("Textures/WhiteRectangle");
 
             player = new Player(spriteBatch);
@@ -200,6 +203,12 @@ namespace Jam25.Screens
             KeyboardInput.GetInput();
             game.Torch.Update(gameTime);
 
+            // Debug: Toggle lighting with P
+            if (KeyboardInput.HasBeenPressed(Keys.P))
+            {
+                debugLightingDisabled = !debugLightingDisabled;
+            }
+
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
             flickerTimer += dt;
 
@@ -293,6 +302,7 @@ namespace Jam25.Screens
                     {
                         TileType.Floor => wallsFloor,
                         TileType.Wall => wallsFloor,
+                        TileType.Door => doorsTexture,
                         _ => null,
                     };
 
@@ -309,6 +319,7 @@ namespace Jam25.Screens
                                 WallMask.East => new Rectangle(14, 8, 32, 24),
                                 _ => Rectangle.Empty
                             },
+                            TileType.Door => new Rectangle(0, 32, 32, 32),
                             _ => Rectangle.Empty,
                         };
 
@@ -325,6 +336,11 @@ namespace Jam25.Screens
 
         private void DrawLighting()
         {
+            if (debugLightingDisabled)
+            {
+                return;
+            }
+
             if (lightMask == null || game.Torch == null || game.UiWhitePixel == null)
             {
                 return;
@@ -378,7 +394,7 @@ namespace Jam25.Screens
                     if (tile == TileType.Floor)
                         visibleTiles[tx, ty] = true;
 
-                    if (tile == TileType.Wall)
+                    if (tile == TileType.Wall || tile == TileType.Door)
                     {
                         visibleTiles[tx, ty] = true;
                         break;
@@ -421,6 +437,10 @@ namespace Jam25.Screens
                         continue;
 
                     if (visibleTiles[x, y])
+                        continue;
+
+                    TileType tileType = gameMap.tiles[x, y].Type;
+                    if (tileType == TileType.Wall || tileType == TileType.Door)
                         continue;
 
                     Vector2 tileCenterWorld = new Vector2(x * tileSize + tileSize / 2f, y * tileSize + tileSize / 2f);
