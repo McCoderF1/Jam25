@@ -1,4 +1,6 @@
-﻿using HDT.Gaming.Audio;
+﻿using System;
+using System.Threading.Tasks;
+using HDT.Gaming.Audio;
 using HDT.Gaming.Input;
 using HDT.Gaming.Physics;
 using HDT.Gaming.Screens;
@@ -13,10 +15,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Jam25.Screens
 {
@@ -193,27 +191,8 @@ namespace Jam25.Screens
 
         public void Show()
         {
-            gameScene.Pickups.Clear();
-
-            // Reset death state
-            playerDied = false;
-            deathTimer = 0f;
-            deathTorchEnergyAtDeath = 0f;
-
-            // Reset player state
-            player.Health.Heal(player.Health.Max);
-            player.LastState = Player.PlayerState.Idle;
-            player.HasKey = false;
-            player.MoveSpeed = 1.0f;
-
-            gameScene.GameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene);
-            gameScene.GameMap.AddKey(key);
-            gameScene.GameMap.AddPlayer(player);
-
-            for (int i = 0; i < healthPickupCount; i++)
-            {
-                gameScene.Pickups.Add(new HealthPack(PointWithinWalls(), game.Content));
-            }
+            ResetWorld();
+            BuildWorld();
 
             game.Torch = new Torch(maxEnergy: 100f, drainPerSecond: 0.4f, maxRadius: 250f, minRadius: 60f);
 
@@ -221,16 +200,6 @@ namespace Jam25.Screens
             {
                 gui.SetTorch(game.Torch);
             }
-
-            for (int i = 0; i < coalPickupCount; i++)
-            {
-                CoalSize size = (CoalSize)spawnRandom.Next(0, 4);
-                var coal = new CoalPickup(PointWithinWalls(), size, game.Content);
-                coal.TargetTorch = game.Torch;
-                gameScene.Pickups.Add(coal);
-            }
-
-            gameScene.Pickups.Add(key);
 
             gameUI?.Show();
         }
@@ -250,7 +219,7 @@ namespace Jam25.Screens
             if (playerDied)
             {
                 deathTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
-                
+
                 if (deathTimer < DeathShrinkDuration)
                 {
                     float shrinkProgress = deathTimer / DeathShrinkDuration;
@@ -267,7 +236,7 @@ namespace Jam25.Screens
                 {
                     game.Torch.SetEmpty();
                 }
-                
+
                 if (deathTimer >= DeathDelay)
                 {
                     PlayerDied?.Invoke(this, EventArgs.Empty);
@@ -289,7 +258,7 @@ namespace Jam25.Screens
 
             MovePlayer(gameTime);
             gameScene.Update(gameTime);
-            
+
             Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
 
             float cameraMinX = WorldBounds.X;
@@ -571,6 +540,44 @@ namespace Jam25.Screens
             gameScene.GameMap = checkPoint;
             draw = false;
             Task.Delay(1000).ContinueWith(_ => draw = true);
+        }
+
+        private void ResetWorld()
+        {
+            gameScene.Reset();
+
+            // Reset death state
+            playerDied = false;
+            deathTimer = 0f;
+            deathTorchEnergyAtDeath = 0f;
+
+            // Reset player state
+            player.Health.Heal(player.Health.Max);
+            player.LastState = Player.PlayerState.Idle;
+            player.HasKey = false;
+            player.MoveSpeed = 1.0f;
+        }
+
+        private void BuildWorld()
+        {
+            gameScene.GameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene);
+            gameScene.GameMap.AddKey(key);
+            gameScene.GameMap.AddPlayer(player);
+
+            for (int i = 0; i < healthPickupCount; i++)
+            {
+                gameScene.Pickups.Add(new HealthPack(PointWithinWalls(), game.Content));
+            }
+
+            for (int i = 0; i < coalPickupCount; i++)
+            {
+                CoalSize size = (CoalSize)spawnRandom.Next(0, 4);
+                var coal = new CoalPickup(PointWithinWalls(), size, game.Content);
+                coal.TargetTorch = game.Torch;
+                gameScene.Pickups.Add(coal);
+            }
+
+            gameScene.Pickups.Add(key);
         }
 
         #endregion
