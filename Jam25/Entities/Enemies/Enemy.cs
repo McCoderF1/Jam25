@@ -58,7 +58,7 @@ namespace Jam25.Entities.Enemies
         public void TakeDamage(int amount)
         {
             Health.TakeDamage(amount);
-            if (Health.Current == 0)
+            if (Health.Current <= 0)
             {
                 CurrentState = EnemyState.Dying;
             }

@@ -51,13 +51,15 @@ namespace Jam25.Scenes
 
             foreach (var enemy in Enemies)
             {
-                if (enemy.CurrentState != Enemy.EnemyState.Dead && enemy.CurrentState != Enemy.EnemyState.Dying)
+                if (enemy.CurrentState != Enemy.EnemyState.Dead 
+                    && enemy.CurrentState != Enemy.EnemyState.Dying
+                    && Player.LastState != Player.PlayerState.Dying)
                 {
-                    enemy.EnemyController?.Update(this, enemy, gameTime.ElapsedGameTime);
                     MoveEnemy(enemy, gameTime);
-                    enemy.CurrentSprite.Update(GetDirection(enemy), gameTime);
-                    enemy.CurrentSprite.Update(Direction.Down, gameTime);
                 }
+                enemy.EnemyController?.Update(this, enemy, gameTime.ElapsedGameTime);
+                enemy.CurrentSprite.Update(GetDirection(enemy), gameTime);
+                enemy.CurrentSprite.Update(Direction.Down, gameTime);
 
                 float distFromPlayer = Vector2.Distance(enemy.Body.Position, Player.Body.Position);
 

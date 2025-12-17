@@ -112,6 +112,10 @@ namespace Jam25.Graphics
             if (health is not null && whitePixel is not null)
             {
                 float healthPercent = Math.Clamp((float)health.Current / (float)health.Max, 0f, 1f);
+
+                if (healthPercent == 1f || healthPercent == 0f)
+                    return;
+
                 int barWidth = frameWidth;
                 int barHeight = Math.Max(4, frameWidth / 16);
                 float topOfSpriteY = position.Y - (frameWidth / 2f);
@@ -124,12 +128,9 @@ namespace Jam25.Graphics
 
                 // Fill
                 int fillWidth = (int)(barWidth * healthPercent);
-                if (fillWidth > 0)
-                {
-                    var fillRect = new Rectangle(barX + 1, barY + 1, Math.Max(0, fillWidth - 2), barHeight - 2);
-                    var fillColor = Color.Lerp(Color.Red, Color.Green, healthPercent);
-                    spriteBatch.Draw(whitePixel, fillRect, fillColor);
-                }
+                var fillRect = new Rectangle(barX + 1, barY + 1, Math.Max(0, fillWidth - 2), barHeight - 2);
+                var fillColor = Color.Lerp(Color.Red, Color.Green, healthPercent);
+                spriteBatch.Draw(whitePixel, fillRect, fillColor);
             }
         }
     }
