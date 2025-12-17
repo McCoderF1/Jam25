@@ -5,7 +5,9 @@ using Jam25.Entities.Enemies;
 using Jam25.Entities.Pickups;
 using Jam25.Graphics;
 using Jam25.Models;
+using Jam25.Screens;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 
@@ -53,6 +55,27 @@ namespace Jam25.Scenes
 
             foreach (var enemy in Enemies)
             {
+                // Update the projectiles
+                List<Projectile> toRemove = new();
+                foreach (Projectile p in enemy.Projectiles)
+                {
+                    p.Update(gameTime.ElapsedGameTime.Milliseconds);
+                    if (Vector2.Distance(p.Position, Player.Body.Position) < 20)
+                    {
+                        toRemove.Add(p);
+                        Player.TakeDamage(p.Damage);
+                    }
+                    if (!p.Alive)
+                    {
+                        toRemove.Add(p);
+                    }
+                    if (GameMap.tiles[(int)p.Position.X / 32, (int)p.Position.Y / 32].Type != TileType.Floor)
+                    {
+                        toRemove.Add(p);
+                    }
+                }
+                enemy.Projectiles.RemoveAll(i => toRemove.Contains(i));
+
                 if (enemy.CanMove
                     && Player.LastState != Player.PlayerState.Dying)
                 {

@@ -5,8 +5,10 @@ using Jam25.Entities.Enemies.Controllers;
 using Jam25.Graphics;
 using Jam25.Stores;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Reflection.Metadata;
 
 namespace Jam25.Entities.Enemies
 {
@@ -64,6 +66,8 @@ namespace Jam25.Entities.Enemies
         public int AttackRange { get; set; }
 
         public bool UseProjectiles { get; set; }
+        public List<Projectile> Projectiles { get; } = [];
+        public Texture2D ProjectileTexture { get; set; }
 
 
         public Enemy()
@@ -111,7 +115,17 @@ namespace Jam25.Entities.Enemies
         {
             if (UseProjectiles)
             {
-
+                StartCooldown();
+                Projectiles.Add(new Projectile()
+                {
+                    Position = Body.Position,
+                    Direction = Math.Atan2(player.Body.Position.Y - Body.Position.Y, player.Body.Position.X - Body.Position.X),
+                    Velocity = 300,
+                    Texture = ProjectileTexture,
+                    Damage = 5,
+                    Lifespan = 2000
+                });
+                CurrentState = Enemy.EnemyState.Attacking;
             }
             else
             {
