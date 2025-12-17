@@ -89,8 +89,8 @@ namespace Jam25
         private bool staminaExhausted = false;
         private bool shiftWasReleased = true;
         
-        // Debug: Unlimited stamina
-        public static bool DebugUnlimitedStamina { get; set; } = false;
+
+        public static bool DebugInvincibleMode { get; set; } = false;
         #endregion
 
         [Flags]
@@ -189,7 +189,7 @@ namespace Jam25
                     {
                         StartAttacking();
 
-                        if (!DebugUnlimitedStamina)
+                        if (!DebugInvincibleMode)
                             Stamina.TakeStamina(3);
                     }
                     else if (!attackKeyDown)
@@ -197,7 +197,7 @@ namespace Jam25
                         if(isAttacking && IsAnimationComplete())
                             StopAttacking();
 
-                        if (!DebugUnlimitedStamina)
+                        if (!DebugInvincibleMode)
                             Stamina.Restore(5);
                     }
                     else if (!attackKeyDown && isAttacking && IsAnimationComplete())
@@ -220,7 +220,7 @@ namespace Jam25
                     if (attackKeyDown && !isAttacking)
                     {
                         StartAttacking();
-                        if (!DebugUnlimitedStamina)
+                        if (!DebugInvincibleMode)
                             Stamina.TakeStamina(7);
                     }
                     else if (!attackKeyDown && isAttacking && IsAnimationComplete())
@@ -228,7 +228,7 @@ namespace Jam25
                         StopAttacking();
                     }
 
-                    if (!DebugUnlimitedStamina)
+                    if (!DebugInvincibleMode)
                         Stamina.TakeStamina(1); // running stamina drain
 
                     return MovePlayer(deltaSeconds, 2.0f);
@@ -247,7 +247,7 @@ namespace Jam25
                     if (attackKeyDown && !isAttacking)
                     {
                         StartAttacking();
-                        if (!DebugUnlimitedStamina)
+                        if (!DebugInvincibleMode)
                             Stamina.TakeStamina(5);
                     }
                     else if (!attackKeyDown && isAttacking && IsAnimationComplete())
@@ -255,7 +255,7 @@ namespace Jam25
                         StopAttacking();
                     }
 
-                    if (!isAttacking && !DebugUnlimitedStamina)
+                    if (!isAttacking && !DebugInvincibleMode)
                     {
                         Stamina.Restore(1);
                     }
@@ -316,6 +316,8 @@ namespace Jam25
 
         public void TakeDamage(int damage)
         {
+            if (DebugInvincibleMode) return;
+
             if (LastState != PlayerState.Hurt && LastState != PlayerState.Dying)
             {
                 Health.TakeDamage(damage);
@@ -478,24 +480,24 @@ namespace Jam25
 
         private bool IsRunning(bool runRequest)
         {
-            // Debug: Unlimited stamina bypass
-            if (DebugUnlimitedStamina)
+
+            if (DebugInvincibleMode)
             {
                 return runRequest;
             }
 
-            // Track shift release to reset exhaustion
+
             if (!runRequest)
             {
                 shiftWasReleased = true;
             }
 
-            // If exhausted, require shift to be released before sprinting again
+
             if (staminaExhausted)
             {
                 if (shiftWasReleased && runRequest)
                 {
-                    // Player pressed shift again after releasing
+
                     staminaExhausted = false;
                     shiftWasReleased = false;
                 }
@@ -505,10 +507,9 @@ namespace Jam25
                 }
             }
 
-            // Check if we have stamina to run
+
             if (runRequest && Stamina.Current <= 0)
             {
-                // Stamina depleted - force stop running
                 staminaExhausted = true;
                 shiftWasReleased = false;
                 return false;
@@ -526,6 +527,7 @@ namespace Jam25
         {
             Health.Max = 100 + (PlayerTracker.PlayerStats.HealthLevel * 50);
             Stamina.Max = 100 + (PlayerTracker.PlayerStats.SpeedLevel * 20);
+
 
             Health.Heal(Health.Max);
             Stamina.Restore(Stamina.Max);

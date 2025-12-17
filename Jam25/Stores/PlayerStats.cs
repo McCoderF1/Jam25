@@ -105,7 +105,7 @@ namespace Jam25.Stores
 
             if(PlayerStats.EmbersCollected >= EmbersPerLevel[PlayerStats.TotalLevel])
             {
-                PlayerStats.TotalLevel++;
+
                 switch(PlayerStats.TotalLevel)
                 {
                     case 0: case 3: case 6: case 9: case 12:
@@ -118,6 +118,7 @@ namespace Jam25.Stores
                         PlayerStats.SpeedLevel++;
                         break;
                 }
+                PlayerStats.TotalLevel++;
                 triggerOnLevelUp.OnNext("Leveled");
             }
         }

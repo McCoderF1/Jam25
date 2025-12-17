@@ -44,6 +44,9 @@ namespace Jam25.Entities
         private readonly int width;
         private readonly int height;
 
+        public Rectangle[] Rooms { get; private set; }
+
+
         public GameMap(int width, int height)
         {
             this.width = width;
@@ -52,16 +55,12 @@ namespace Jam25.Entities
             InitialiseTiles();
         }
 
-
-        public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight, GameScene gameScene, KeyPickup key)
+        public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight, GameScene gameScene)
         {
-            Rectangle[] rooms = new Rectangle[maxRooms];
+            Rooms = new Rectangle[maxRooms];
             int numRooms = 0;
 
             Random rand = new Random();
-
-            // Determine random room to generate key (latter half)
-            int keyRoom = rand.Next(maxRooms / 2, maxRooms);
 
             for (int i = 0; i < maxRooms; i++)
             {
@@ -77,7 +76,7 @@ namespace Jam25.Entities
                 Rectangle newRoom = new Rectangle(x, y, width, height);
 
                 // Loop through the rooms and see if they intersect
-                foreach (var otherRoom in rooms)
+                foreach (var otherRoom in Rooms)
                 {
                     if (newRoom.Intersects(otherRoom))
                         break;
@@ -93,22 +92,15 @@ namespace Jam25.Entities
 
                         if (numRooms == 0)
                         {
-                            // This is the first room where the player starts
-                            gameScene.Player.Body.Position = new Vector2(newX * 32, newY * 32);
                         }
                         else
                         {
                             // All rooms after the first
 
                             // Centre coordinates of previous room
-                            var prevX = rooms[numRooms - 1].Center.X;
-                            var prevY = rooms[numRooms - 1].Center.Y;
+                            var prevX = Rooms[numRooms - 1].Center.X;
+                            var prevY = Rooms[numRooms - 1].Center.Y;
 
-                            if (i == keyRoom)
-                            {
-                                // This is the room to place the key
-                                key.Sprite.Position = new Vector2(newX * 32, newY * 32);
-                            }
                             // Flip a coin
                             if (rand.Next(0, 1) == 0)
                             {
@@ -127,7 +119,7 @@ namespace Jam25.Entities
                 }
 
                 // Add new room to list
-                rooms[numRooms] = newRoom;
+                Rooms[numRooms] = newRoom;
                 numRooms += 1;
             }
 
@@ -138,10 +130,24 @@ namespace Jam25.Entities
 
             for (int tries = 0; tries < maxRooms; tries++)
             {
-                if (PlaceSingleSealedDoor(tiles, rooms, rand))
+                if (PlaceSingleSealedDoor(tiles, Rooms, rand))
                     break;
             }
         }
+
+        public void AddKey(KeyPickup key)
+        {
+            var rand = new Random();
+            int keyRoom = rand.Next(0, Rooms.Length);
+
+            key.Sprite.Position = Rooms[keyRoom].Center.ToVector2() * 32;
+        }
+
+        public void AddPlayer(Player player)
+        {
+            player.Body.Position = Rooms[0].Center.ToVector2() * 32;
+        }
+
 
         bool PlaceSingleSealedDoor(Tile[,] map, Rectangle[] rooms, Random rng)
         {
