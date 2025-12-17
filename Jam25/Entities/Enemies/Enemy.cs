@@ -177,7 +177,6 @@ namespace Jam25.Entities.Enemies
             if (distFromPlayer < AttackRange + 10)
             {
                 windUpTarget.TakeDamage(AttackDamage);
-                AudioManager.PlaySound("HitFlesh");
             }
             else
             {
