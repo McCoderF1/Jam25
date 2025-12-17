@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using HDT.Gaming.Physics;
 using Jam25.Entities;
 using Jam25.Entities.Enemies;
@@ -38,6 +39,8 @@ namespace Jam25.Scenes
             foreach (var enemy in Enemies)
             {
                 enemy.EnemyController?.Update(this, enemy, gameTime.ElapsedGameTime);
+                MoveEnemy(enemy, gameTime);
+                enemy.CurrentSprite.Update(GetDirection(enemy), gameTime);
                 enemy.CurrentSprite.Update(Direction.Down, gameTime);
 
                 float distFromPlayer = Vector2.Distance(enemy.Body.Position, Player.Body.Position);
@@ -47,10 +50,10 @@ namespace Jam25.Scenes
                     enemy.TakeDamage(2);
 
                 }
-                if (distFromPlayer < 30 && enemy.CurrentState != Enemy.EnemyState.Dying && enemy.CanAttack)
+                if (distFromPlayer < 30 && enemy.CanAttack)
                 {
                     Player.TakeDamage(20);
-                    _ = enemy.StartAttackCooldown();
+                    enemy.CurrentState = Enemy.EnemyState.Attacking;
                 }
 
                 if (enemy.CurrentState == Enemy.EnemyState.Dead)
@@ -68,6 +71,33 @@ namespace Jam25.Scenes
             }
 
             PhysicsWorld.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
+        }
+
+        private Direction GetDirection(Enemy enemy)
+        {
+            Vector2 dir = enemy.MovementDirection;
+            if (dir.Length() < 0.0001f)
+            {
+                return Direction.Down;
+            }
+
+            dir.Normalize();
+
+            if (Math.Abs(dir.X) <= Math.Abs(dir.Y))
+            {
+                return dir.Y > 0 ? Direction.Down : Direction.Up;
+            }
+            else
+            {
+                return dir.X > 0 ? Direction.Right : Direction.Left;
+            }
+        }
+
+        private void MoveEnemy(Enemy enemy, GameTime gameTime)
+        {
+            float speed = enemy.MovementSpeed;
+            Vector2 movement = enemy.MovementDirection * speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            enemy.Body.Position += movement;
         }
     }
 }

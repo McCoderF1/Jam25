@@ -28,7 +28,6 @@ namespace Jam25.Screens
         private readonly Game1 game;
         private readonly GameScene gameScene;
         private Texture2D wallsFloor;
-        private Texture2D doorsLevers;
         private Texture2D objectSpriteSheet;
         private GameMap gameMap;
         private KeyPickup key;
@@ -45,7 +44,7 @@ namespace Jam25.Screens
         private float flickerTimer;
         private float currentFlicker = 1f;
         private const float FlickerFrequency = 3f;
-        private const float FlickerStrength = 0.05f;
+        private const float FlickerStrength = 0f;
 
         private int mapWidth = 80;
         private int mapHeight = 42;
@@ -92,7 +91,6 @@ namespace Jam25.Screens
             pickups = new();
 
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
-            doorsLevers = game.Content.Load<Texture2D>("Images/doors_lever_chest_animation");
 
             player = new Player(spriteBatch);
             player.Initalise(content, graphicsDevice);
@@ -105,7 +103,7 @@ namespace Jam25.Screens
             EnemyFactory enemyFactory = new(game.Content, audioController);
 
             EnemySpawner enemySpawner = new(
-                maxEnemies: 10,
+                maxEnemies: 50,
                 minSpawnDistanceFromPlayer: 200,
                 PointWithinWalls,
                 enemyFactory);
@@ -133,7 +131,6 @@ namespace Jam25.Screens
         {
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, Matrix.CreateTranslation(new Vector3(-CameraPosition, 0f)));
-
 
             DrawDungeon();
 
@@ -165,8 +162,7 @@ namespace Jam25.Screens
         public void Show()
         {
             pickups.Clear();
-
-            gameMap = new GameMap(mapWidth, mapHeight);
+            
             gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
 
             for (int i = 0; i < healthPickupCount; i++)
@@ -174,7 +170,7 @@ namespace Jam25.Screens
                 pickups.Add(new HealthPack(PointWithinWalls(), game.Content));
             }
 
-            game.Torch = new Torch(maxEnergy: 100f, drainPerSecond: 2f, maxRadius: 250f, minRadius: 60f);
+            game.Torch = new Torch(maxEnergy: 100f, drainPerSecond: 0.1f, maxRadius: 250f, minRadius: 60f);
 
             if (gameUI is GameUserInterface gui)
             {
@@ -292,7 +288,6 @@ namespace Jam25.Screens
                     {
                         TileType.Floor => wallsFloor,
                         TileType.Wall => wallsFloor,
-                        TileType.Door => doorsLevers,
                         _ => null,
                     };
 
@@ -307,12 +302,6 @@ namespace Jam25.Screens
                                 WallMask.South => new Rectangle(8, 14, 32, 64),
                                 WallMask.West => new Rectangle(2, 8, 32, 24),
                                 WallMask.East => new Rectangle(14, 8, 32, 24),
-                                _ => Rectangle.Empty
-                            },
-                            TileType.Door => gameMap.tiles[x, y].DoorOrientation switch
-                            {
-                                DoorOrientation.Horizontal => new Rectangle(0, 32, 32, 32),
-                                //DoorOrientation.Vertical => new Rectangle(8, 166, 16, 32),
                                 _ => Rectangle.Empty
                             },
                             _ => Rectangle.Empty,
@@ -385,7 +374,10 @@ namespace Jam25.Screens
                         visibleTiles[tx, ty] = true;
 
                     if (tile == TileType.Wall)
+                    {
+                        visibleTiles[tx, ty] = true;
                         break;
+                    }
                 }
             }
 

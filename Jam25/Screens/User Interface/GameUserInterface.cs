@@ -32,8 +32,6 @@ namespace Jam25.Screens.UserInterface
         private AnimatedSprite playerIcon;
         private AnimatedTexture animatedPlayerIcon;
 
-        private AnimatedSprite fireLarge;
-        private AnimatedTexture animatedFireLarge;
         private Vector2 currentCameraPosition = Vector2.Zero;
 
         private const int maxBarWidth = 130;
@@ -54,19 +52,12 @@ namespace Jam25.Screens.UserInterface
 
             UIBase = content.Load<Texture2D>("Images/UI/UIBase");
             font = content.Load<SpriteFont>("Fonts/Menu");
-            game.LoadSprite(SpriteID.PlayerUIIcon, "Images/UI/PlayerUIIcon", 12, 5, new Vector2(64f, 64f));
-            game.LoadSprite(SpriteID.FireBig, "Images/UI/FireBig", 6, 3, new Vector2(150f, 150f));
 
-            if (game.TryGetSprite(SpriteID.PlayerUIIcon, out AnimatedTexture animatedIcon))
+            // Try to load player icon sprite
+            if (game.TryGetSprite(SpriteID.PlayerLvl1, out AnimatedTexture animatedIcon))
             {
                 this.animatedPlayerIcon = animatedIcon;
-                playerIcon = new AnimatedSprite() { SpriteId = SpriteID.PlayerUIIcon, ScaleX = 4, ScaleY = 4 };
-            }
-
-            if (game.TryGetSprite(SpriteID.FireBig, out AnimatedTexture animatedFireLarge))
-            {
-                this.animatedFireLarge = animatedFireLarge;
-                fireLarge = new AnimatedSprite() { SpriteId = SpriteID.FireBig, ScaleX = 1, ScaleY = 1 };
+                playerIcon = new AnimatedSprite() { SpriteId = SpriteID.PlayerLvl1, ScaleX = 4, ScaleY = 4 };
             }
 
             whitePixel = new Texture2D(graphics, 1, 1);
@@ -90,17 +81,10 @@ namespace Jam25.Screens.UserInterface
         ///<inheritdoc/>
         public void Draw()
         {
-            var XPos = (int)currentCameraPosition.X;
-            var YPos = (int)currentCameraPosition.Y;
-
-            animatedPlayerIcon.DrawFrame(spriteBatch, playerIcon.Frame, new Vector2(XPos + 200, YPos + 227), playerIcon);
-
-            DrawPlayerStatusBars();
+            // Draw UI at fixed screen position (0,0) - static, not moving with camera
             spriteBatch.Draw(UIBase,
-                new Rectangle(XPos, YPos, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
+                new Rectangle(0, 0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
                 Color.White);
-
-            animatedFireLarge.DrawFrame(spriteBatch, fireLarge.Frame, new Vector2(XPos + 1250, YPos + 150), fireLarge);
 
             DrawPlayerStatusBars();
             DrawTorchBar();
@@ -110,10 +94,11 @@ namespace Jam25.Screens.UserInterface
             {
                 //var testKey = new KeyPickup(content);
                 spriteBatch.Draw(keyPickup.Sprite.Texture,
-                    new Rectangle(XPos + maxBarWidth - 20, YPos + 125, 32, 32),
+                    new Rectangle(maxBarWidth - 20, 125, 32, 32),
                     null,
                     Color.White);
             }
+            DrawInformation();
         }
 
         ///<inheritdoc/>
@@ -131,13 +116,14 @@ namespace Jam25.Screens.UserInterface
         ///<inheritdoc/>
         public void UpdateWithVector(GameTime gameTime, Vector2 cameraPosition)
         {
+            currentCameraPosition = cameraPosition;
             Update(gameTime);
         }
 
         public void Update(GameTime gameTime)
         {
-            UpdateSprite(fireLarge, (float)gameTime.ElapsedGameTime.TotalSeconds);
-            UpdateSprite(playerIcon, (float)gameTime.ElapsedGameTime.TotalSeconds);
+            if (playerIcon != null)
+                UpdateSprite(playerIcon, (float)gameTime.ElapsedGameTime.TotalSeconds);
         }
 
         #region private methods
@@ -216,7 +202,12 @@ namespace Jam25.Screens.UserInterface
 
         private void DrawTimer()
         {
+            // Timer placeholder
+        }
 
+        private void DrawInformation()
+        {
+            spriteBatch.DrawString(font, "Floor 1", new Vector2(1127, 60), Color.White);
         }
 
         private void UpdateSprite(AnimatedSprite sprite, float elapsed)
