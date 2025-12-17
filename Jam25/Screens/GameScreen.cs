@@ -209,6 +209,12 @@ namespace Jam25.Screens
                 debugLightingDisabled = !debugLightingDisabled;
             }
 
+            // Debug: Toggle unlimited stamina with M
+            if (KeyboardInput.HasBeenPressed(Keys.M))
+            {
+                Player.DebugUnlimitedStamina = !Player.DebugUnlimitedStamina;
+            }
+
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
             flickerTimer += dt;
 
