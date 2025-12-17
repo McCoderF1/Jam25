@@ -14,8 +14,6 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Jam25.Screens
@@ -250,7 +248,7 @@ namespace Jam25.Screens
             if (playerDied)
             {
                 deathTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
-                
+
                 if (deathTimer < DeathShrinkDuration)
                 {
                     float shrinkProgress = deathTimer / DeathShrinkDuration;
@@ -267,7 +265,7 @@ namespace Jam25.Screens
                 {
                     game.Torch.SetEmpty();
                 }
-                
+
                 if (deathTimer >= DeathDelay)
                 {
                     PlayerDied?.Invoke(this, EventArgs.Empty);
@@ -289,7 +287,7 @@ namespace Jam25.Screens
 
             MovePlayer(gameTime);
             gameScene.Update(gameTime);
-            
+
             Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
 
             float cameraMinX = WorldBounds.X;
@@ -389,13 +387,23 @@ namespace Jam25.Screens
                             TileType.Wall => gameScene.GameMap.tiles[x, y].WallMask switch
                             {
                                 WallMask.North => new Rectangle(8, 0, 30, 24),
-                                WallMask.South => new Rectangle(8, 14, 32, 64),
+                                WallMask.South => new Rectangle(8, 32, 32, 32),
                                 WallMask.West => new Rectangle(2, 8, 32, 24),
                                 WallMask.East => new Rectangle(14, 8, 32, 24),
-                                _ => Rectangle.Empty
+                                _ => gameScene.GameMap.tiles[x, y].WallShape switch
+                                {
+                                    WallShape.InnerCornerNW => new Rectangle(2, 0, 32, 32),
+                                    WallShape.InnerCornerNE => new Rectangle(16, 0, 30, 32),
+                                    WallShape.InnerCornerSW => new Rectangle(2, 32, 32, 32),
+                                    WallShape.InnerCornerSE => new Rectangle(14, 32, 32, 32),
+                                    WallShape.OuterCornerSE => new Rectangle(64, 32, 32, 32),
+                                    WallShape.StraightHorizontal => new Rectangle(2, 7, 44, 30),
+                                    WallShape.StraightVertical => new Rectangle(9, 0, 30, 78),
+                                    _ => Rectangle.Empty
+                                }
                             },
                             TileType.Door => new Rectangle(1, 32, 32, 32),
-                            _ => Rectangle.Empty,
+                            _ => Rectangle.Empty
                         };
 
                         spriteBatch.Draw(
