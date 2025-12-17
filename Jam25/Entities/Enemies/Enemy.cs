@@ -66,7 +66,7 @@ namespace Jam25.Entities.Enemies
         public void TakeDamage(int amount)
         {
             Health.TakeDamage(amount);
-            if (Health.Current == 0)
+            if (Health.Current <= 0)
             {
                 CurrentState = EnemyState.Dying;
             }
@@ -96,6 +96,10 @@ namespace Jam25.Entities.Enemies
         public void Update(GameTime gameTime)
         {
             UpdatePlayerSightingTimer(gameTime);
+            if (attackBlockedUntil > 0f)
+            {
+                attackBlockedUntil -= (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+            }
 
             // When the current animation loop is completed
             if (!CurrentSprite.LoopCompleted)

@@ -145,7 +145,10 @@ namespace Jam25.Screens
 
             for (int i = 0; i < gameScene.Enemies.Count; i++)
             {
-                gameScene.Enemies[i].CurrentSprite.Draw(spriteBatch, gameScene.Enemies[i].Body.Position, whitePixelTexture, gameScene.Enemies[i].Health);
+                if (gameScene.Enemies[i].CurrentState != Enemy.EnemyState.Dead)
+                {
+                    gameScene.Enemies[i].CurrentSprite.Draw(spriteBatch, gameScene.Enemies[i].Body.Position, whitePixelTexture, gameScene.Enemies[i].Health);
+                }
             }
 
             DrawLighting();
