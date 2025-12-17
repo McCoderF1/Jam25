@@ -1,8 +1,8 @@
-﻿using Jam25.Entities.Pickups;
+﻿using System;
+using System.Collections.Generic;
+using Jam25.Entities.Pickups;
 using Jam25.Scenes;
 using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
 
 namespace Jam25.Entities
 {
@@ -168,6 +168,12 @@ namespace Jam25.Entities
         {
             player.Body.Position = Rooms[0].Center.ToVector2() * 32;
         }
+
+        public void Reset()
+        {
+            InitialiseTiles();
+        }
+
         private bool PlaceSingleSealedDoor(Tile[,] map, Rectangle[] rooms)
         {
             var candidates = GetSealedDoorCandidates(map, rooms);
