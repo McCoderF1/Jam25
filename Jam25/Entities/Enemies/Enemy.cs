@@ -25,6 +25,9 @@ namespace Jam25.Entities.Enemies
         private readonly float attackCooldown = 2000f;
         private float moveBlockedUntil;
         private readonly float stunCooldown = 3000f;
+        private float attackWindUpTimer = 0f;
+        private bool isWindingUp = false;
+        private Player windUpTarget = null;
 
         #endregion Private Members
 
@@ -52,8 +55,16 @@ namespace Jam25.Entities.Enemies
         public Health Health { get; init; }
 
 
-        public bool CanMove => (CurrentState != EnemyState.Dead) && (CurrentState != EnemyState.Dying) && (moveBlockedUntil <= 0f);
-        public bool CanAttack => (CurrentState == EnemyState.Idle || CurrentState == EnemyState.Running) && attackBlockedUntil <= 0f;
+        public bool CanMove => (CurrentState != EnemyState.Dead) 
+            && (CurrentState != EnemyState.Dying) 
+            && (CurrentState != EnemyState.Attacking || !StopsToAttack)
+            && !isWindingUp
+            && (moveBlockedUntil <= 0f);
+        public bool CanAttack => (CurrentState == EnemyState.Idle || CurrentState == EnemyState.Running) 
+            && attackBlockedUntil <= 0f
+            && !isWindingUp;
+
+        public bool IsWindingUp => isWindingUp;
 
         public Vector2 MovementDirection { get; set; } = Vector2.Zero;
 
@@ -68,6 +79,13 @@ namespace Jam25.Entities.Enemies
         public bool UseProjectiles { get; set; }
         public List<Projectile> Projectiles { get; } = [];
         public Texture2D ProjectileTexture { get; set; }
+
+
+        public bool StopsToAttack { get; set; } = false;
+
+        public float AttackWindUpMs { get; set; } = 0f;
+
+        public int AttackDamage { get; set; } = 10;
 
 
         public Enemy()
@@ -129,11 +147,46 @@ namespace Jam25.Entities.Enemies
             }
             else
             {
+                if (AttackWindUpMs > 0f && !isWindingUp)
+                {
+                    isWindingUp = true;
+                    attackWindUpTimer = AttackWindUpMs;
+                    windUpTarget = player;
+                    return;
+                }
+
                 StartCooldown();
-                player.TakeDamage(10);
                 CurrentState = Enemy.EnemyState.Attacking;
+                CurrentSprite.Reset();
+                player.TakeDamage(AttackDamage);
             }
         }
+
+        /// <summary>
+        /// Executes the actual attack after windup completes
+        /// </summary>
+        private void ExecuteAttack()
+        {
+            if (windUpTarget == null) return;
+
+            StartCooldown();
+            CurrentState = Enemy.EnemyState.Attacking;
+            CurrentSprite.Reset();
+            
+            float distFromPlayer = Vector2.Distance(Body.Position, windUpTarget.Body.Position);
+            if (distFromPlayer < AttackRange + 10)
+            {
+                windUpTarget.TakeDamage(AttackDamage);
+                AudioManager.PlaySound("HitFlesh");
+            }
+            else
+            {
+                AudioManager.PlaySound("Miss");
+            }
+
+            windUpTarget = null;
+        }
+
 
         public void RefreshPlayerSighting()
         {
@@ -157,6 +210,18 @@ namespace Jam25.Entities.Enemies
             if (moveBlockedUntil > 0f)
             {
                 moveBlockedUntil -= (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+            }
+
+            if (isWindingUp)
+            {
+                attackWindUpTimer -= (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+                if (attackWindUpTimer <= 0f)
+                {
+                    isWindingUp = false;
+                    attackWindUpTimer = 0f;
+                    ExecuteAttack();
+                }
+                return;
             }
 
             // When the current animation loop is completed

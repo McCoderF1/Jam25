@@ -55,7 +55,21 @@ namespace Jam25.Models
             }
             while (Vector2.Distance(spawnPosition, playerPosition) <= minSpawnDistanceFromPlayer);
 
-            Enemy newEnemy = (rand.NextDouble() < 0.2) ? newEnemy = enemyFactory.CreateVampireEnemy(spawnPosition) : newEnemy = enemyFactory.CreateSlimeEnemy(spawnPosition);
+            Enemy newEnemy;
+            double roll = rand.NextDouble();
+
+            if (roll < 0.2)
+            {
+                newEnemy = enemyFactory.CreateVampireEnemy(spawnPosition);
+            }
+            else if (roll < 0.8)
+            {
+                newEnemy = enemyFactory.CreateSlimeEnemy(spawnPosition);
+            }
+            else
+            {
+                newEnemy = enemyFactory.CreateLavaSlimeEnemy(spawnPosition);
+            }
 
             gameScene.Enemies.Add(newEnemy);
         }
