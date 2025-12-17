@@ -3,6 +3,7 @@ using HDT.Gaming.Models;
 using HDT.Gaming.Screens;
 using Jam25.Entities.Pickups;
 using Jam25.Graphics;
+using Jam25.Stores;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -72,6 +73,7 @@ namespace Jam25.Screens.UserInterface
             LevelPopUp = content.Load<Texture2D>("Images/UI/LevelUpPop");
             font = content.Load<SpriteFont>("Fonts/Menu");
             game.LoadSprite(SpriteID.PlayerUIIcon, "Images/UI/PlayerUIIcon", 12, 5, new Vector2(64f, 64f));
+            game.LoadSprite(SpriteID.LevelUp, "Images/UI/levelup", 12, 6, new Vector2(64f, 64f));
 
             // Try to load player icon sprite
             if (game.TryGetSprite(SpriteID.PlayerUIIcon, out AnimatedTexture animatedIcon))
@@ -122,6 +124,7 @@ namespace Jam25.Screens.UserInterface
             DrawTimer();
             DrawInformation();
             DrawCollectedItems();
+            DrawPlayerLevelUp();
         }
 
         ///<inheritdoc/>
@@ -144,7 +147,11 @@ namespace Jam25.Screens.UserInterface
 
         public void Update(GameTime gameTime)
         {
-            UpdateSprite(playerIcon, (float)gameTime.ElapsedGameTime.TotalSeconds);
+            if (playerIcon != null && levelUp != null)
+            {
+                UpdateSprite(playerIcon, (float)gameTime.ElapsedGameTime.TotalSeconds);
+                UpdateSprite(levelUp, (float)gameTime.ElapsedGameTime.TotalSeconds);
+            }
         }
 
         #region private methods
@@ -279,6 +286,31 @@ namespace Jam25.Screens.UserInterface
                     sprite.Frame %= texture.frameCount;
                     sprite.TotalElapsed -= texture.timePerFrame;
                 }
+            }
+        }
+
+        private void DrawPlayerLevelUp()
+        {
+            var XPos = (int)currentCameraPosition.X;
+            var YPos = (int)currentCameraPosition.Y;
+
+            if (PlayerTracker.PlayerStats.TotalLevel != previousPlayerLevel)
+            {
+                if (!levelSoundTriggered)
+                    audioController.PlaySound("LevelUpSound");
+
+                spriteBatch.Draw(LevelPopUp, new Rectangle(graphicsDevice.Viewport.Width / 2 - 212, graphicsDevice.Viewport.Height / 4 - 67, 424, 135), Color.White);
+                spriteBatch.DrawString(font, "Health Up", new Microsoft.Xna.Framework.Vector2(graphicsDevice.Viewport.Width / 2 - 75, graphicsDevice.Viewport.Height / 4 + 14), Color.White);
+                animatedLevelUp.DrawFrame(spriteBatch, levelUp.Frame, new Vector2((player.Body.Position.X - XPos) + 32, (player.Body.Position.Y - YPos) + 32), levelUp);
+                levelSoundTriggered = true;
+
+                if (levelUp.Frame.Equals(11))
+                    previousPlayerLevel = PlayerTracker.PlayerStats.TotalLevel;
+            }
+            else if(levelUp != null)
+            {
+                levelUp.Frame = 0;
+                levelSoundTriggered = false;
             }
         }
 

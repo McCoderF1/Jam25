@@ -1,6 +1,7 @@
 ﻿using HDT.Gaming.Models;
 using HDT.Gaming.Physics;
 using Jam25.Graphics;
+using Jam25.Stores;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -269,6 +270,7 @@ namespace Jam25
                     if (animationStage != currentTexture.cols - 1)
                     {
                         IncrementAnimation(deltaSeconds);
+                        PlayerTracker.RecordDeath();
                     }
                     break;
             }
