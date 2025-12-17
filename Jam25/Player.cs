@@ -84,11 +84,11 @@ namespace Jam25
         private Vector2 movementDirection = Vector2.Zero;
 
         private bool isAttacking;
-        
+
         // Stamina exhaustion tracking
         private bool staminaExhausted = false;
         private bool shiftWasReleased = true;
-        
+
 
         public static bool DebugInvincibleMode { get; set; } = false;
         #endregion
@@ -139,7 +139,7 @@ namespace Jam25
 
             this.spriteBatch = spriteBatch;
 
-            PlayerTracker.OnLevelUp.Subscribe(_ => LeveledUp());
+            //PlayerTracker.OnLevelUp.Subscribe(_ => LeveledUp());
         }
 
         public void Initalise(ContentManager content, GraphicsDevice graphicsDevice)
@@ -194,7 +194,7 @@ namespace Jam25
                     }
                     else if (!attackKeyDown)
                     {
-                        if(isAttacking && IsAnimationComplete())
+                        if (isAttacking && IsAnimationComplete())
                             StopAttacking();
 
                         if (!DebugInvincibleMode)

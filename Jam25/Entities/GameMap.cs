@@ -127,10 +127,13 @@ namespace Jam25.Entities
             AddWalls(mapWidth, mapHeight);
 
             ComputeWallMasks();
+        }
 
-            for (int tries = 0; tries < maxRooms; tries++)
+        public void AddDoor()
+        {
+            for (int tries = 0; tries < Rooms.Length; tries++)
             {
-                if (PlaceSingleSealedDoor(tiles, Rooms, rand))
+                if (PlaceSingleSealedDoor(tiles, Rooms))
                     break;
             }
         }
@@ -149,14 +152,14 @@ namespace Jam25.Entities
         }
 
 
-        bool PlaceSingleSealedDoor(Tile[,] map, Rectangle[] rooms, Random rng)
+        bool PlaceSingleSealedDoor(Tile[,] map, Rectangle[] rooms)
         {
             var candidates = GetSealedDoorCandidates(map, rooms);
 
             if (candidates.Count == 0)
                 return false;
 
-            var chosen = candidates[rng.Next(candidates.Count)];
+            var chosen = candidates[new Random().Next(candidates.Count)];
 
             Tile tile = map[chosen.x, chosen.y];
             tile.Type = TileType.Door;

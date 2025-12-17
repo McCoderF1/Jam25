@@ -16,7 +16,7 @@ namespace Jam25.Scenes
     /// </summary>
     public class GameScene
     {
-        public GameMap GameMap { get; }
+        public GameMap GameMap { get; set; }
 
         public Player Player { get; }
 
@@ -26,7 +26,7 @@ namespace Jam25.Scenes
 
         public PhysicsWorld PhysicsWorld { get; } = new();
 
-        public IEnemySpawner EnemySpawner { get; internal set; }
+        public IEnemySpawner EnemySpawner { get; set; }
 
         public GameScene(GameMap gameMap, Player player, IEnemySpawner enemySpawner)
         {
@@ -39,7 +39,7 @@ namespace Jam25.Scenes
 
         public void Update(GameTime gameTime)
         {
-            EnemySpawner.Update(this, gameTime);
+            EnemySpawner?.Update(this, gameTime);
 
             List<Enemy> enemiesToRemove = new();
 

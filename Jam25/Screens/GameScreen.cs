@@ -30,7 +30,7 @@ namespace Jam25.Screens
         private Texture2D wallsFloor;
         private Texture2D doorsTexture;
         private Texture2D objectSpriteSheet;
-        private GameMap gameMap;
+
         private KeyPickup key;
 
         private Player player;
@@ -106,10 +106,11 @@ namespace Jam25.Screens
 
             key = new KeyPickup(game.Content);
 
-            gameMap = new GameMap(mapWidth, mapHeight);
+            var gameMap = new GameMap(mapWidth, mapHeight);
             gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene);
             gameMap.AddKey(key);
             gameMap.AddPlayer(player);
+            gameMap.AddDoor();
 
             gameScene = new(gameMap, player, enemySpawner);
 
@@ -123,7 +124,7 @@ namespace Jam25.Screens
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
             gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player);
 
-            key.PickedUp += (_, _) => gameUI.SetKey(key);
+            key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
 
             objectSpriteSheet = game.Content.Load<Texture2D>("Images/supplies_objects");
 
@@ -172,8 +173,6 @@ namespace Jam25.Screens
 
         public void Show()
         {
-            gameScene.Pickups.Clear();
-
             for (int i = 0; i < healthPickupCount; i++)
             {
                 gameScene.Pickups.Add(new HealthPack(PointWithinWalls(), game.Content));
@@ -243,7 +242,7 @@ namespace Jam25.Screens
             {
                 pos = new Vector2(spawnRandom.Next(mapWidth), spawnRandom.Next(mapHeight));
             }
-            while (gameMap.tiles[(int)pos.X, (int)pos.Y].Type != TileType.Floor);
+            while (gameScene.GameMap.tiles[(int)pos.X, (int)pos.Y].Type != TileType.Floor);
 
             return Vector2.Multiply(pos, tileSize);
         }
@@ -289,7 +288,7 @@ namespace Jam25.Screens
             int xProj = Convert.ToInt32(Math.Round(x / tileSize, MidpointRounding.ToZero));
             int yProj = Convert.ToInt32(Math.Round(y / tileSize, MidpointRounding.ToZero));
 
-            return gameMap.tiles[xProj, yProj].Type == type;
+            return gameScene.GameMap.tiles[xProj, yProj].Type == type;
         }
 
         private void DrawDungeon()
@@ -298,7 +297,7 @@ namespace Jam25.Screens
             {
                 for (int y = 0; y < mapHeight; y++)
                 {
-                    Texture2D texture = gameMap.tiles[x, y].Type switch
+                    Texture2D texture = gameScene.GameMap.tiles[x, y].Type switch
                     {
                         TileType.Floor => wallsFloor,
                         TileType.Wall => wallsFloor,
@@ -308,10 +307,10 @@ namespace Jam25.Screens
 
                     if (texture != null)
                     {
-                        Rectangle sourceRect = gameMap.tiles[x, y].Type switch
+                        Rectangle sourceRect = gameScene.GameMap.tiles[x, y].Type switch
                         {
                             TileType.Floor => new Rectangle(8, 86, 32, 32),
-                            TileType.Wall => gameMap.tiles[x, y].WallMask switch
+                            TileType.Wall => gameScene.GameMap.tiles[x, y].WallMask switch
                             {
                                 WallMask.North => new Rectangle(8, 0, 30, 24),
                                 WallMask.South => new Rectangle(8, 14, 32, 64),
@@ -319,7 +318,7 @@ namespace Jam25.Screens
                                 WallMask.East => new Rectangle(14, 8, 32, 24),
                                 _ => Rectangle.Empty
                             },
-                            TileType.Door => new Rectangle(0, 32, 32, 32),
+                            TileType.Door => new Rectangle(1, 32, 32, 32),
                             _ => Rectangle.Empty,
                         };
 
@@ -389,7 +388,7 @@ namespace Jam25.Screens
                     if (Vector2.DistanceSquared(tileCenter, playerTile) > maxDistanceSq)
                         break;
 
-                    TileType tile = gameMap.tiles[tx, ty].Type;
+                    TileType tile = gameScene.GameMap.tiles[tx, ty].Type;
 
                     if (tile == TileType.Floor)
                         visibleTiles[tx, ty] = true;
@@ -439,7 +438,7 @@ namespace Jam25.Screens
                     if (visibleTiles[x, y])
                         continue;
 
-                    TileType tileType = gameMap.tiles[x, y].Type;
+                    TileType tileType = gameScene.GameMap.tiles[x, y].Type;
                     if (tileType == TileType.Wall || tileType == TileType.Door)
                         continue;
 
@@ -488,8 +487,12 @@ namespace Jam25.Screens
             checkPoint.AddPlayer(gameScene.Player);
             gameScene.Enemies.Clear();
             gameScene.Pickups.Clear();
+            gameScene.EnemySpawner = null;
+            gameScene.Player.MoveSpeed = 1.0f;
+            gameScene.Player.HasKey = false;
+            gameUI.CollectedItems.Clear();
 
-            gameMap = checkPoint;
+            gameScene.GameMap = checkPoint;
         }
 
         #endregion
