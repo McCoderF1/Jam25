@@ -1,4 +1,6 @@
 ﻿using HDT.Gaming;
+using Jam25.Stores;
+using System.Threading.Tasks;
 
 namespace Jam25.Screens
 {
@@ -8,7 +10,7 @@ namespace Jam25.Screens
         {
             //TODO: Screen navigation
             startScreen.Settings += (_, _) => ChangeScreen(settingsScreen);
-            startScreen.Start += (_, _) => ChangeScreen(gameScreen);
+            startScreen.Start += (_, _) => { PlayerTracker.IncrementRoundsPlayed(); ChangeScreen(gameScreen); };
             startScreen.Player += (_, _) => ChangeScreen(playerScreen);
 
             settingsScreen.BackToMainMenu += (_, _) => ChangeScreen(startScreen);

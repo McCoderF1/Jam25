@@ -1,7 +1,9 @@
 ﻿using HDT.Gaming.Audio;
+using HDT.Gaming.Models;
 using HDT.Gaming.Screens;
 using Jam25.Entities.Pickups;
 using Jam25.Graphics;
+using Jam25.Stores;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -25,6 +27,7 @@ namespace Jam25.Screens.UserInterface
         private readonly Texture2D UIBase;
         private readonly SpriteFont font;
         private readonly Texture2D whitePixel;
+        private readonly Texture2D LevelPopUp;
         private readonly RoundedRectangle roundedRectangle;
 
         private KeyPickup keyPickup;
@@ -33,7 +36,12 @@ namespace Jam25.Screens.UserInterface
         private AnimatedSprite playerIcon;
         private AnimatedTexture animatedPlayerIcon;
 
+        private AnimatedSprite levelUp;
+        private AnimatedTexture animatedLevelUp;
+
         private Vector2 currentCameraPosition = Vector2.Zero;
+        private short previousPlayerLevel = 0;
+        private bool levelSoundTriggered = false;
 
         private const int maxBarWidth = 130;
         private List<CollectedItem> collectedItems = new List<CollectedItem>();
@@ -62,13 +70,22 @@ namespace Jam25.Screens.UserInterface
             this.player = player;
 
             UIBase = content.Load<Texture2D>("Images/UI/UIBase");
+            LevelPopUp = content.Load<Texture2D>("Images/UI/LevelUpPop");
             font = content.Load<SpriteFont>("Fonts/Menu");
+            game.LoadSprite(SpriteID.PlayerUIIcon, "Images/UI/PlayerUIIcon", 12, 5, new Vector2(64f, 64f));
+            game.LoadSprite(SpriteID.LevelUp, "Images/UI/levelup", 12, 6, new Vector2(64f, 64f));
 
             // Try to load player icon sprite
-            if (game.TryGetSprite(SpriteID.PlayerLvl1, out AnimatedTexture animatedIcon))
+            if (game.TryGetSprite(SpriteID.PlayerUIIcon, out AnimatedTexture animatedIcon))
             {
                 this.animatedPlayerIcon = animatedIcon;
-                playerIcon = new AnimatedSprite() { SpriteId = SpriteID.PlayerLvl1, ScaleX = 4, ScaleY = 4 };
+                playerIcon = new AnimatedSprite() { SpriteId = SpriteID.PlayerUIIcon, ScaleX = 4, ScaleY = 4 };
+            }
+
+            if (game.TryGetSprite(SpriteID.LevelUp, out AnimatedTexture animatedLevelUp))
+            {
+                this.animatedLevelUp = animatedLevelUp;
+                levelUp = new AnimatedSprite() { SpriteId = SpriteID.LevelUp };
             }
 
             whitePixel = new Texture2D(graphics, 1, 1);
@@ -87,12 +104,17 @@ namespace Jam25.Screens.UserInterface
         public void SetKey(KeyPickup key)
         {
             this.keyPickup = key;
+            // Add key to collected items for display in bottom right slots
+            collectedItems.Add(new CollectedItem { Texture = key.Sprite.Texture, Name = "Key" });
         }
 
         ///<inheritdoc/>
         public void Draw()
         {
-            // Draw UI at fixed screen position (0,0) - static, not moving with camera
+            var XPos = (int)currentCameraPosition.X;
+            var YPos = (int)currentCameraPosition.Y;
+            animatedPlayerIcon.DrawFrame(spriteBatch, playerIcon.Frame, new Vector2(200,227), playerIcon);
+            DrawPlayerStatusBars();
             spriteBatch.Draw(UIBase,
                 new Rectangle(0, 0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
                 Color.White);
@@ -100,17 +122,9 @@ namespace Jam25.Screens.UserInterface
             DrawPlayerStatusBars();
             DrawTorchBar();
             DrawTimer();
-
-            if (keyPickup != null)
-            {
-                //var testKey = new KeyPickup(content);
-                spriteBatch.Draw(keyPickup.Sprite.Texture,
-                    new Rectangle(maxBarWidth - 20, 125, 32, 32),
-                    null,
-                    Color.White);
-            }
             DrawInformation();
             DrawCollectedItems();
+            DrawPlayerLevelUp();
         }
 
         ///<inheritdoc/>
@@ -133,15 +147,15 @@ namespace Jam25.Screens.UserInterface
 
         public void Update(GameTime gameTime)
         {
-            if (playerIcon != null)
+            if (playerIcon != null && levelUp != null)
+            {
                 UpdateSprite(playerIcon, (float)gameTime.ElapsedGameTime.TotalSeconds);
+                UpdateSprite(levelUp, (float)gameTime.ElapsedGameTime.TotalSeconds);
+            }
         }
 
         #region private methods
 
-        /// <summary>
-        /// Displays the player status bars (health, stamina)
-        /// </summary>
         private void DrawPlayerStatusBars()
         {
             const int barHeight = 15;
@@ -272,6 +286,31 @@ namespace Jam25.Screens.UserInterface
                     sprite.Frame %= texture.frameCount;
                     sprite.TotalElapsed -= texture.timePerFrame;
                 }
+            }
+        }
+
+        private void DrawPlayerLevelUp()
+        {
+            var XPos = (int)currentCameraPosition.X;
+            var YPos = (int)currentCameraPosition.Y;
+
+            if (PlayerTracker.PlayerStats.TotalLevel != previousPlayerLevel)
+            {
+                if (!levelSoundTriggered)
+                    audioController.PlaySound("LevelUpSound");
+
+                spriteBatch.Draw(LevelPopUp, new Rectangle(graphicsDevice.Viewport.Width / 2 - 212, graphicsDevice.Viewport.Height / 4 - 67, 424, 135), Color.White);
+                spriteBatch.DrawString(font, "Health Up", new Microsoft.Xna.Framework.Vector2(graphicsDevice.Viewport.Width / 2 - 75, graphicsDevice.Viewport.Height / 4 + 14), Color.White);
+                animatedLevelUp.DrawFrame(spriteBatch, levelUp.Frame, new Vector2((player.Body.Position.X - XPos) + 32, (player.Body.Position.Y - YPos) + 32), levelUp);
+                levelSoundTriggered = true;
+
+                if (levelUp.Frame.Equals(11))
+                    previousPlayerLevel = PlayerTracker.PlayerStats.TotalLevel;
+            }
+            else if(levelUp != null)
+            {
+                levelUp.Frame = 0;
+                levelSoundTriggered = false;
             }
         }
 

@@ -53,10 +53,13 @@ namespace Jam25.Scenes
 
             foreach (var enemy in Enemies)
             {
+                if (enemy.CanMove
+                    && Player.LastState != Player.PlayerState.Dying)
+                {
+                    MoveEnemy(enemy, gameTime);
+                }
                 enemy.EnemyController?.Update(this, enemy, gameTime.ElapsedGameTime);
-                MoveEnemy(enemy, gameTime);
                 enemy.CurrentSprite.Update(GetDirection(enemy), gameTime);
-                enemy.CurrentSprite.Update(Direction.Down, gameTime);
 
                 float distFromPlayer = Vector2.Distance(enemy.Body.Position, Player.Body.Position);
 
@@ -64,7 +67,7 @@ namespace Jam25.Scenes
                 {
                     if (distFromPlayer < 50)
                     {
-                        enemy.TakeDamage(2);
+                        enemy.TakeDamage(4);
                         AudioManager.PlaySound("MetalHit");
                     }
                     else
@@ -72,8 +75,7 @@ namespace Jam25.Scenes
                         AudioManager.PlaySound("Miss");
                     }
                 }
-
-                if (distFromPlayer < 30 && enemy.CanAttack && Player.LastState != Player.PlayerState.Dying)
+                else if (distFromPlayer < 30 && enemy.CanAttack && Player.LastState != Player.PlayerState.Dying)
                 {
                     enemy.StartCooldown();
                     //Player.TakeDamage(20);
