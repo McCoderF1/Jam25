@@ -17,13 +17,6 @@ namespace Jam25.Screens
             settingsScreen.BackToMainMenu += (_, _) => ChangeScreen(startScreen);
             playerScreen.BackToMainMenu += (_, _) => ChangeScreen(startScreen);
 
-
-            //transitions.TransitionRandom();
-            gameScreen.LevelCompleted += (_, _) =>
-            {
-                Task.Delay(1000).ContinueWith((x) => ChangeScreen(startScreen));
-            };
-
             ChangeScreen(startScreen);
         }
 

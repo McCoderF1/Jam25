@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using HDT.Gaming.Audio;
+﻿using HDT.Gaming.Audio;
 using HDT.Gaming.Physics;
 using Jam25.Entities;
 using Jam25.Entities.Enemies;
+using Jam25.Entities.Pickups;
 using Jam25.Graphics;
 using Jam25.Models;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 
 namespace Jam25.Scenes
@@ -16,15 +16,17 @@ namespace Jam25.Scenes
     /// </summary>
     public class GameScene
     {
-        public GameMap GameMap { get; }
+        public GameMap GameMap { get; set; }
 
         public Player Player { get; }
 
         public List<Enemy> Enemies { get; } = [];
 
+        public List<IPickup> Pickups { get; } = [];
+
         public PhysicsWorld PhysicsWorld { get; } = new();
 
-        public IEnemySpawner EnemySpawner { get; internal set; }
+        public IEnemySpawner EnemySpawner { get; set; }
 
         public GameScene(GameMap gameMap, Player player, IEnemySpawner enemySpawner)
         {
@@ -37,11 +39,12 @@ namespace Jam25.Scenes
 
         public void Update(GameTime gameTime)
         {
-            EnemySpawner.Update(this, gameTime);
+            EnemySpawner?.Update(this, gameTime);
 
             List<Enemy> enemiesToRemove = new();
 
             bool attacking = false;
+            bool hitSomething = false;
             if (Player.IsAttacking != playerAttackState)
             {
                 playerAttackState = Player.IsAttacking;
@@ -66,19 +69,12 @@ namespace Jam25.Scenes
                     if (distFromPlayer < 50)
                     {
                         enemy.TakeDamage(4);
-                        AudioManager.PlaySound("MetalHit");
-                    }
-                    else
-                    {
-                        AudioManager.PlaySound("Miss");
+                        hitSomething = true;
                     }
                 }
-                else if (distFromPlayer < 30 && enemy.CanAttack && Player.LastState != Player.PlayerState.Dying)
+                else if (distFromPlayer < enemy.AttackRange && enemy.CanAttack && Player.LastState != Player.PlayerState.Dying)
                 {
-                    enemy.StartCooldown();
-                    Player.TakeDamage(10);
-                    enemy.CurrentState = Enemy.EnemyState.Attacking;
-                    AudioManager.PlaySound("MetalHit");
+                    enemy.Attack(Player);
                 }
 
                 if (enemy.CurrentState == Enemy.EnemyState.Dead)
@@ -87,6 +83,14 @@ namespace Jam25.Scenes
                 }
 
                 enemy.Update(gameTime);
+            }
+
+            if (attacking)
+            {
+                if (hitSomething)
+                    AudioManager.PlaySound("MetalHit");
+                else
+                    AudioManager.PlaySound("Miss");
             }
 
             foreach (var enemy in enemiesToRemove)

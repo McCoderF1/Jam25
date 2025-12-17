@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using HDT.Gaming.Audio;
+﻿using HDT.Gaming.Audio;
 using Jam25.Entities.Enemies.Controllers;
 using Jam25.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
 
 namespace Jam25.Entities.Enemies
 {
@@ -30,6 +30,13 @@ namespace Jam25.Entities.Enemies
         private readonly Texture2D slimeWalkTexture;
         private readonly Texture2D slimeRunTexture;
 
+        private readonly Texture2D vampireAttackTexture;
+        private readonly Texture2D vampireDeathTexture;
+        private readonly Texture2D vampireHurtTexture;
+        private readonly Texture2D vampireIdleTexture;
+        private readonly Texture2D vampireWalkTexture;
+        private readonly Texture2D vampireRunTexture;
+
         #endregion Private Members
 
         public EnemyFactory(ContentManager content, AudioController audioController)
@@ -45,6 +52,13 @@ namespace Jam25.Entities.Enemies
             slimeIdleTexture = content.Load<Texture2D>("EnemySprite/Slime/Slime2_Idle_with_shadow");
             slimeWalkTexture = content.Load<Texture2D>("EnemySprite/Slime/Slime2_Walk_with_shadow");
             slimeRunTexture = content.Load<Texture2D>("EnemySprite/Slime/Slime2_Run_with_shadow");
+
+            vampireAttackTexture = content.Load<Texture2D>("EnemySprite/Vampire/Vampires2_Attack_with_shadow");
+            vampireDeathTexture = content.Load<Texture2D>("EnemySprite/Vampire/Vampires2_Death_with_shadow");
+            vampireHurtTexture = content.Load<Texture2D>("EnemySprite/Vampire/Vampires2_Hurt_with_shadow");
+            vampireIdleTexture = content.Load<Texture2D>("EnemySprite/Vampire/Vampires2_Idle_with_shadow");
+            vampireWalkTexture = content.Load<Texture2D>("EnemySprite/Vampire/Vampires2_Walk_with_shadow");
+            vampireRunTexture = content.Load<Texture2D>("EnemySprite/Vampire/Vampires2_Run_with_shadow");
         }
 
         public Enemy CreateSlimeEnemy(Vector2 position)
@@ -71,6 +85,37 @@ namespace Jam25.Entities.Enemies
                 ChaseMemoryDuration = TimeSpan.FromSeconds(3),
                 SightRange = 250,
                 EnemyController = enemyController,
+                AttackRange = 30,
+                UseProjectiles = false
+            };
+        }
+
+        public Enemy CreateVampireEnemy(Vector2 position)
+        {
+            return new Enemy()
+            {
+                Sprites = new Dictionary<Enemy.EnemyState, AnimatedDirectionalSprite>
+                {
+                    {Enemy.EnemyState.Idle, new AnimatedDirectionalSprite(vampireIdleTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Attacking, new AnimatedDirectionalSprite(vampireAttackTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Hurt, new AnimatedDirectionalSprite(vampireHurtTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Dying, new AnimatedDirectionalSprite(vampireDeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Running, new AnimatedDirectionalSprite(vampireRunTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Dead, new AnimatedDirectionalSprite(vampireDeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                },
+                Body =
+                {
+                    Position = position,
+                    LocalBounds = new (0, 0, FRAME_WIDTH, FRAME_WIDTH),
+                    PositionOffset = new Vector2(FRAME_WIDTH * 0.5f, FRAME_WIDTH)
+                },
+                Health = new HDT.Gaming.Models.Health(20),
+                MovementSpeed = 10,
+                ChaseMemoryDuration = TimeSpan.FromSeconds(3),
+                SightRange = 250,
+                EnemyController = enemyController,
+                AttackRange = 200,
+                UseProjectiles = true
             };
         }
     }

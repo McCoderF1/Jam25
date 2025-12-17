@@ -14,7 +14,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
-using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Jam25.Screens
 {
@@ -30,7 +30,7 @@ namespace Jam25.Screens
         private Texture2D wallsFloor;
         private Texture2D doorsTexture;
         private Texture2D objectSpriteSheet;
-        private GameMap gameMap;
+
         private KeyPickup key;
 
         private Player player;
@@ -65,7 +65,6 @@ namespace Jam25.Screens
         private int rayCount = 360;
         private float rayStep = 8f;
 
-        public List<IPickup> pickups;
         private GameUserInterface gameUI;
         private readonly Random spawnRandom = new Random();
         private Texture2D whitePixelTexture;
@@ -73,6 +72,7 @@ namespace Jam25.Screens
         // Camera
         private Vector2 CameraPosition;
         private Rectangle WorldBounds => new Rectangle(0, 0, mapWidth * tileSize, mapHeight * tileSize);
+        private bool draw = true;
 
         #endregion
 
@@ -91,8 +91,13 @@ namespace Jam25.Screens
             this.audioController = audioController;
             this.game = game;
 
-            pickups = new();
+            EnemyFactory enemyFactory = new(game.Content, audioController);
 
+            EnemySpawner enemySpawner = new(
+                maxEnemies: 50,
+                minSpawnDistanceFromPlayer: 200,
+                PointWithinWalls,
+                enemyFactory);
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
             doorsTexture = game.Content.Load<Texture2D>("Images/doors_lever_chest_animation");
             whitePixelTexture = game.Content.Load<Texture2D>("Textures/WhiteRectangle");
@@ -101,28 +106,26 @@ namespace Jam25.Screens
             player.Initalise(content, graphicsDevice);
 
             key = new KeyPickup(game.Content);
-            pickups.Add(key);
 
-            gameMap = new GameMap(mapWidth, mapHeight);
-
-            EnemyFactory enemyFactory = new(game.Content, audioController);
-
-            EnemySpawner enemySpawner = new(
-                maxEnemies: 50,
-                minSpawnDistanceFromPlayer: 200,
-                PointWithinWalls,
-                enemyFactory);
+            var gameMap = new GameMap(mapWidth, mapHeight);
+            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene);
+            gameMap.AddKey(key);
+            gameMap.AddPlayer(player);
+            gameMap.AddDoor();
 
             gameScene = new(gameMap, player, enemySpawner);
 
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
+            wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
+            whitePixelTexture = game.Content.Load<Texture2D>("Textures/WhiteRectangle");
+
+            gameScene.Pickups.Add(key);
 
             visibleTiles = new bool[mapWidth, mapHeight];
 
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
             gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player);
 
-            key.PickedUp += (_, _) => gameUI.SetKey(key);
+            key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
 
             objectSpriteSheet = game.Content.Load<Texture2D>("Images/supplies_objects");
 
@@ -130,16 +133,21 @@ namespace Jam25.Screens
             tileShadowMask = LightMaskFactory.CreateTileShadowMask(graphicsDevice, 64);
 
             gameScene.Enemies.Add(enemyFactory.CreateSlimeEnemy(new(200, 200)));
+
+            this.LevelCompleted += (_, _) => Task.Delay(1000).ContinueWith(_ => Transition());
         }
 
         public void Draw()
         {
+            if (!draw)
+                return;
+
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, Matrix.CreateTranslation(new Vector3(-CameraPosition, 0f)));
 
             DrawDungeon();
 
-            foreach (IPickup pickup in pickups)
+            foreach (IPickup pickup in gameScene.Pickups)
             {
                 pickup.Draw(spriteBatch, tileSize);
             }
@@ -169,13 +177,9 @@ namespace Jam25.Screens
 
         public void Show()
         {
-            pickups.Clear();
-
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
-
             for (int i = 0; i < healthPickupCount; i++)
             {
-                pickups.Add(new HealthPack(PointWithinWalls(), game.Content));
+                gameScene.Pickups.Add(new HealthPack(PointWithinWalls(), game.Content));
             }
 
             game.Torch = new Torch(maxEnergy: 100f, drainPerSecond: 0.1f, maxRadius: 250f, minRadius: 60f);
@@ -190,10 +194,8 @@ namespace Jam25.Screens
                 CoalSize size = (CoalSize)spawnRandom.Next(0, 4);
                 var coal = new CoalPickup(PointWithinWalls(), size, game.Content);
                 coal.TargetTorch = game.Torch;
-                pickups.Add(coal);
+                gameScene.Pickups.Add(coal);
             }
-
-            pickups.Add(key);
 
             gameUI?.Show();
         }
@@ -203,16 +205,11 @@ namespace Jam25.Screens
             KeyboardInput.GetInput();
             game.Torch.Update(gameTime);
 
-            // Debug: Toggle lighting with P
+            // Debug: P (unlimited stamina, health, one shot enemies, no lighting feature)
             if (KeyboardInput.HasBeenPressed(Keys.P))
             {
-                debugLightingDisabled = !debugLightingDisabled;
-            }
-
-            // Debug: Toggle unlimited stamina with M
-            if (KeyboardInput.HasBeenPressed(Keys.M))
-            {
-                Player.DebugUnlimitedStamina = !Player.DebugUnlimitedStamina;
+                Player.DebugInvincibleMode = !Player.DebugInvincibleMode;
+                debugLightingDisabled = Player.DebugInvincibleMode;
             }
 
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -249,7 +246,7 @@ namespace Jam25.Screens
             {
                 pos = new Vector2(spawnRandom.Next(mapWidth), spawnRandom.Next(mapHeight));
             }
-            while (gameMap.tiles[(int)pos.X, (int)pos.Y].Type != TileType.Floor);
+            while (gameScene.GameMap.tiles[(int)pos.X, (int)pos.Y].Type != TileType.Floor);
 
             return Vector2.Multiply(pos, tileSize);
         }
@@ -279,7 +276,7 @@ namespace Jam25.Screens
                         LevelCompleted?.Invoke(this, EventArgs.Empty);
                     }
 
-                    foreach (IPickup pickup in pickups)
+                    foreach (IPickup pickup in gameScene.Pickups)
                     {
                         if (Vector2.Distance(pickup.Sprite.Position, Vector2.Subtract(player.Body.Position, new Vector2(tileSize / 2, tileSize / 2))) < tileSize)
                         {
@@ -295,7 +292,7 @@ namespace Jam25.Screens
             int xProj = Convert.ToInt32(Math.Round(x / tileSize, MidpointRounding.ToZero));
             int yProj = Convert.ToInt32(Math.Round(y / tileSize, MidpointRounding.ToZero));
 
-            return gameMap.tiles[xProj, yProj].Type == type;
+            return gameScene.GameMap.tiles[xProj, yProj].Type == type;
         }
 
         private void DrawDungeon()
@@ -304,7 +301,7 @@ namespace Jam25.Screens
             {
                 for (int y = 0; y < mapHeight; y++)
                 {
-                    Texture2D texture = gameMap.tiles[x, y].Type switch
+                    Texture2D texture = gameScene.GameMap.tiles[x, y].Type switch
                     {
                         TileType.Floor => wallsFloor,
                         TileType.Wall => wallsFloor,
@@ -314,10 +311,10 @@ namespace Jam25.Screens
 
                     if (texture != null)
                     {
-                        Rectangle sourceRect = gameMap.tiles[x, y].Type switch
+                        Rectangle sourceRect = gameScene.GameMap.tiles[x, y].Type switch
                         {
                             TileType.Floor => new Rectangle(8, 86, 32, 32),
-                            TileType.Wall => gameMap.tiles[x, y].WallMask switch
+                            TileType.Wall => gameScene.GameMap.tiles[x, y].WallMask switch
                             {
                                 WallMask.North => new Rectangle(8, 0, 30, 24),
                                 WallMask.South => new Rectangle(8, 14, 32, 64),
@@ -325,7 +322,7 @@ namespace Jam25.Screens
                                 WallMask.East => new Rectangle(14, 8, 32, 24),
                                 _ => Rectangle.Empty
                             },
-                            TileType.Door => new Rectangle(0, 32, 32, 32),
+                            TileType.Door => new Rectangle(1, 32, 32, 32),
                             _ => Rectangle.Empty,
                         };
 
@@ -395,7 +392,7 @@ namespace Jam25.Screens
                     if (Vector2.DistanceSquared(tileCenter, playerTile) > maxDistanceSq)
                         break;
 
-                    TileType tile = gameMap.tiles[tx, ty].Type;
+                    TileType tile = gameScene.GameMap.tiles[tx, ty].Type;
 
                     if (tile == TileType.Floor)
                         visibleTiles[tx, ty] = true;
@@ -445,7 +442,7 @@ namespace Jam25.Screens
                     if (visibleTiles[x, y])
                         continue;
 
-                    TileType tileType = gameMap.tiles[x, y].Type;
+                    TileType tileType = gameScene.GameMap.tiles[x, y].Type;
                     if (tileType == TileType.Wall || tileType == TileType.Door)
                         continue;
 
@@ -485,6 +482,23 @@ namespace Jam25.Screens
                 return false;
 
             return true;
+        }
+
+        private void Transition()
+        {
+            GameMap checkPoint = new GameMap(mapWidth, mapHeight);
+            checkPoint.MakeMap(1, 10, 10, mapWidth, mapHeight, gameScene);
+            checkPoint.AddPlayer(gameScene.Player);
+            gameScene.Enemies.Clear();
+            gameScene.Pickups.Clear();
+            gameScene.EnemySpawner = null;
+            gameScene.Player.MoveSpeed = 1.0f;
+            gameScene.Player.HasKey = false;
+            gameUI.CollectedItems.Clear();
+
+            gameScene.GameMap = checkPoint;
+            draw = false;
+            Task.Delay(1000).ContinueWith(_ => draw = true);
         }
 
         #endregion

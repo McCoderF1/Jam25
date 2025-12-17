@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using HDT.Gaming.Audio;
 using HDT.Gaming.Models;
 using HDT.Gaming.Physics;
 using Jam25.Entities.Enemies.Controllers;
 using Jam25.Graphics;
 using Jam25.Stores;
 using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
 
 namespace Jam25.Entities.Enemies
 {
@@ -60,6 +61,9 @@ namespace Jam25.Entities.Enemies
 
         public bool HasRecentPlayerSighting => playerSightMemoryTimerMs > 0f;
 
+        public int AttackRange { get; set; }
+
+        public bool UseProjectiles { get; set; }
 
 
         public Enemy()
@@ -71,6 +75,14 @@ namespace Jam25.Entities.Enemies
 
         public void TakeDamage(int amount)
         {
+            if (Player.DebugInvincibleMode)
+            {
+                Health.TakeDamage(Health.Current);
+                CurrentState = EnemyState.Dying;
+                PlayerTracker.RecordKill();
+                return;
+            }
+
             Health.TakeDamage(amount);
             if (Health.Current <= 0)
             {
@@ -93,6 +105,26 @@ namespace Jam25.Entities.Enemies
         public void StartStun()
         {
             moveBlockedUntil = stunCooldown;
+        }
+
+        public void Attack(Player player)
+        {
+            if (UseProjectiles)
+            {
+                StartCooldown();
+                //AudioManager.PlaySound("ShootProj");
+
+                //player.TakeDamage(10);
+                //CurrentState = Enemy.EnemyState.Attacking;
+                //AudioManager.PlaySound("HitFlesh");
+            }
+            else
+            {
+                StartCooldown();
+                player.TakeDamage(10);
+                CurrentState = Enemy.EnemyState.Attacking;
+                AudioManager.PlaySound("HitFlesh");
+            }
         }
 
 
