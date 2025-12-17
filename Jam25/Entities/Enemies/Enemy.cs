@@ -79,7 +79,7 @@ namespace Jam25.Entities.Enemies
         public bool UseProjectiles { get; set; }
         public List<Projectile> Projectiles { get; } = [];
         public Texture2D ProjectileTexture { get; set; }
-
+        public List<Texture2D> ExplosionTextures { get; set; }
 
         public bool StopsToAttack { get; set; } = false;
 
@@ -141,6 +141,7 @@ namespace Jam25.Entities.Enemies
                     Direction = Math.Atan2(player.Body.Position.Y - Body.Position.Y, player.Body.Position.X - Body.Position.X),
                     Velocity = 300,
                     Texture = ProjectileTexture,
+                    ExplosionTextures = this.ExplosionTextures,
                     Damage = 5,
                     Lifespan = 1000  // ms before removed
                 });
