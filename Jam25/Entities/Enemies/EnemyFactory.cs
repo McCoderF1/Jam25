@@ -76,7 +76,7 @@ namespace Jam25.Entities.Enemies
             vampireWalkTexture = content.Load<Texture2D>("EnemySprite/Vampire/Vampires2_Walk_with_shadow");
             vampireRunTexture = content.Load<Texture2D>("EnemySprite/Vampire/Vampires2_Run_with_shadow");
 
-            projectileTexture = content.Load<Texture2D>("Images/key32");
+            projectileTexture = content.Load<Texture2D>("Images/projectile");
         }
 
         public Enemy CreateSlimeEnemy(Vector2 position)

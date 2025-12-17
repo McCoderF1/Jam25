@@ -133,6 +133,7 @@ namespace Jam25.Entities.Enemies
         {
             if (UseProjectiles)
             {
+                // Shoot projectile
                 StartCooldown();
                 Projectiles.Add(new Projectile()
                 {
@@ -141,12 +142,13 @@ namespace Jam25.Entities.Enemies
                     Velocity = 300,
                     Texture = ProjectileTexture,
                     Damage = 5,
-                    Lifespan = 200
+                    Lifespan = 1000  // ms before removed
                 });
                 CurrentState = Enemy.EnemyState.Attacking;
             }
             else
             {
+                // Meele attack the player
                 if (AttackWindUpMs > 0f && !isWindingUp)
                 {
                     isWindingUp = true;
