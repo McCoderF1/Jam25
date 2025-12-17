@@ -74,10 +74,10 @@ namespace Jam25.Screens.UserInterface
             game.LoadSprite(SpriteID.PlayerUIIcon, "Images/UI/PlayerUIIcon", 12, 5, new Vector2(64f, 64f));
 
             // Try to load player icon sprite
-            if (game.TryGetSprite(SpriteID.PlayerLvl1, out AnimatedTexture animatedIcon))
+            if (game.TryGetSprite(SpriteID.PlayerUIIcon, out AnimatedTexture animatedIcon))
             {
                 this.animatedPlayerIcon = animatedIcon;
-                playerIcon = new AnimatedSprite() { SpriteId = SpriteID.PlayerLvl1, ScaleX = 4, ScaleY = 4 };
+                playerIcon = new AnimatedSprite() { SpriteId = SpriteID.PlayerUIIcon, ScaleX = 4, ScaleY = 4 };
             }
 
             if (game.TryGetSprite(SpriteID.LevelUp, out AnimatedTexture animatedLevelUp))
@@ -109,7 +109,7 @@ namespace Jam25.Screens.UserInterface
         {
             var XPos = (int)currentCameraPosition.X;
             var YPos = (int)currentCameraPosition.Y;
-            animatedPlayerIcon.DrawFrame(spriteBatch, playerIcon.Frame, new Vector2(XPos + 200, YPos + 227), playerIcon);
+            animatedPlayerIcon.DrawFrame(spriteBatch, playerIcon.Frame, new Vector2(200,227), playerIcon);
             DrawPlayerStatusBars();
             spriteBatch.Draw(UIBase,
                 new Rectangle(0, 0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
