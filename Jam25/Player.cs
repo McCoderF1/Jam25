@@ -136,7 +136,10 @@ namespace Jam25
             {
                 Owner = this
             };
+
             this.spriteBatch = spriteBatch;
+
+            PlayerTracker.OnLevelUp.Subscribe(_ => LeveledUp());
         }
 
         public void Initalise(ContentManager content, GraphicsDevice graphicsDevice)
@@ -518,6 +521,16 @@ namespace Jam25
             }
 
             return runRequest && Stamina.Current > 0;
+        }
+
+        private void LeveledUp()
+        {
+            Health.Max = 100 + (PlayerTracker.PlayerStats.HealthLevel * 50);
+            Stamina.Max = 100 + (PlayerTracker.PlayerStats.SpeedLevel * 20);
+
+
+            Health.Heal(Health.Max);
+            Stamina.Restore(Stamina.Max);
         }
 
         #endregion
