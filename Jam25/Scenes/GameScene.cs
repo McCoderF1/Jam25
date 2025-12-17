@@ -65,7 +65,7 @@ namespace Jam25.Scenes
                 {
                     if (distFromPlayer < 50)
                     {
-                        enemy.TakeDamage(3);
+                        enemy.TakeDamage(6);
                         AudioManager.PlaySound("MetalHit");
                     }
                     else

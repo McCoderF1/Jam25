@@ -130,12 +130,6 @@ namespace Jam25.Graphics
                     var fillColor = Color.Lerp(Color.Red, Color.Green, healthPercent);
                     spriteBatch.Draw(whitePixel, fillRect, fillColor);
                 }
-
-                var borderColor = Color.Black * 0.9f;
-                spriteBatch.Draw(whitePixel, new Rectangle(barX, barY, 1, barHeight), borderColor);
-                spriteBatch.Draw(whitePixel, new Rectangle(barX + barWidth - 1, barY, 1, barHeight), borderColor);
-                spriteBatch.Draw(whitePixel, new Rectangle(barX, barY, barWidth, 1), borderColor);
-                spriteBatch.Draw(whitePixel, new Rectangle(barX, barY + barHeight - 1, barWidth, 1), borderColor);
             }
         }
     }
