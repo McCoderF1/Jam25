@@ -1,5 +1,4 @@
 ﻿using Jam25.Graphics;
-using Jam25.Screens.UserInterface;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -34,8 +33,6 @@ namespace Jam25.Entities.Pickups
             PickedUp.Invoke(this, EventArgs.Empty);
 
             Console.WriteLine("Collected Key!");
-
-            GameUI?.AddKey();
         }
 
         public void Draw(SpriteBatch spriteBatch, int tileSize)

@@ -36,6 +36,7 @@ namespace Jam25.Screens.UserInterface
         private Vector2 currentCameraPosition = Vector2.Zero;
 
         private const int maxBarWidth = 130;
+        private List<CollectedItem> collectedItems = new List<CollectedItem>();
 
         #endregion
 
@@ -62,7 +63,6 @@ namespace Jam25.Screens.UserInterface
 
             UIBase = content.Load<Texture2D>("Images/UI/UIBase");
             font = content.Load<SpriteFont>("Fonts/Menu");
-            keyTexture = content.Load<Texture2D>("Images/key32");
 
             // Try to load player icon sprite
             if (game.TryGetSprite(SpriteID.PlayerLvl1, out AnimatedTexture animatedIcon))
@@ -122,7 +122,6 @@ namespace Jam25.Screens.UserInterface
         ///<inheritdoc/>
         public void Show()
         {
-            ClearItems();
         }
 
         ///<inheritdoc/>
@@ -235,7 +234,7 @@ namespace Jam25.Screens.UserInterface
         {
             const int slotSize = 35;
             const int slotSpacing = 2;
-            const int margin =11;
+            const int margin = 11;
             const int maxSlots = 4;
 
             int startX = graphicsDevice.Viewport.Width - margin - (slotSize * maxSlots) - (slotSpacing * (maxSlots - 1));
