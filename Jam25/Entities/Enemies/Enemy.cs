@@ -45,6 +45,8 @@ namespace Jam25.Entities.Enemies
 
         public bool CanAttack => (CurrentState == EnemyState.Idle || CurrentState == EnemyState.Running) && attackBlockedUntil <= 0f;
 
+        public Vector2 MovementDirection { get; set; } = Vector2.Zero;
+
         public Enemy()
         {
             Body.Owner = this;
