@@ -26,17 +26,6 @@ namespace Jam25
             }
         }
 
-        [Flags]
-        private enum PlayerState
-        {
-            Idle = 0x01,
-            Running = 0x02,
-            Attacking = 0x04,
-            Hurt = 0x08,
-            Dying = 0x10,
-            Walking = 0x20,
-        }
-
         #endregion 
 
         #region Private consts
@@ -52,14 +41,12 @@ namespace Jam25
         private enum Direction { Up, Right, Down, Left }
         private Direction lastDir;
 
-        private PlayerState lastState;
-
         private Dictionary<PlayerState, PlayerTexture>[] textures;
         private PlayerTexture currentTexture
         {
             get
             {
-                var state = lastState;
+                var state = LastState;
 
                 // Normalize unsupported combinations to known keys.
                 // If Idle + Attacking, just use Attacking.
@@ -80,6 +67,10 @@ namespace Jam25
             }
         }
 
+        // These need to be split into public/private
+        private Vector2 spritePosition;
+        public Vector2 Position => spritePosition;
+        private int vel;
         private int cellSize;
         private int animationStage;
         private int textureScale;
@@ -93,7 +84,20 @@ namespace Jam25
 
         private bool isAttacking;
 
-        #endregion 
+        #endregion
+
+        [Flags]
+        public enum PlayerState
+        {
+            Idle = 0x01,
+            Running = 0x02,
+            Attacking = 0x04,
+            Hurt = 0x08,
+            Dying = 0x10,
+            Walking = 0x20,
+        }
+
+        public PlayerState LastState;
 
         public Sprite Sprite { get; set; }
 
@@ -107,6 +111,8 @@ namespace Jam25
 
         public int Level { get; set; }
 
+        public bool IsAttacking => ((LastState & Player.PlayerState.Attacking) != 0);
+
         public Player(SpriteBatch spriteBatch)
         {
             lastDir = Direction.Down;
@@ -114,7 +120,7 @@ namespace Jam25
             Health = new(100);
             Stamina = new Stamina(100);
             Level = 1;  // NOTE: level is from 1-3, while level index in texture array is 0-2.
-            textureScale = 5;
+            textureScale = 1;
             textures = new Dictionary<PlayerState, PlayerTexture>[3];
 
             Body = new Body()
@@ -143,7 +149,7 @@ namespace Jam25
 
             animationStage = 0;
             animationTime = 0f;
-            lastState = PlayerState.Idle;
+            LastState = PlayerState.Idle;
         }
 
         public Vector2? Update(GameTime gameTime, KeyboardState keyboardState)
@@ -155,7 +161,7 @@ namespace Jam25
 
             // ... debug T/L
 
-            switch (lastState)
+            switch (LastState)
             {
                 case PlayerState.Idle:
                     IncrementAnimation(deltaSeconds);
@@ -171,11 +177,15 @@ namespace Jam25
                     {
                         isAttacking = true;
                         ResetAnimation();
-                        lastState = PlayerState.Attacking;
+                        LastState = PlayerState.Attacking;
+
+                        Stamina.TakeStamina(3);
                     }
                     else if (!attackKeyDown)
                     {
                         isAttacking = false;
+
+                        Stamina.Restore(5);
                     }
                     break;
 
@@ -194,14 +204,17 @@ namespace Jam25
                     {
                         isAttacking = true;
                         ResetAnimation();
-                        lastState |= PlayerState.Attacking;   // becomes Running | Attacking
+                        LastState |= PlayerState.Attacking;   // becomes Running | Attacking
+                        Stamina.TakeStamina(7);
                     }
                     else if (!attackKeyDown && isAttacking && animationStage == currentTexture.cols - 1)
                     {
                         isAttacking = false;
                         ResetAnimation();
-                        lastState &= ~PlayerState.Attacking;  // back to Running
+                        LastState &= ~PlayerState.Attacking;  // back to Running
                     }
+
+                    Stamina.TakeStamina(1); // running stamina drain
 
                     return MovePlayer(deltaSeconds, 2.0f);
 
@@ -220,13 +233,19 @@ namespace Jam25
                     {
                         isAttacking = true;
                         ResetAnimation();
-                        lastState |= PlayerState.Attacking;   // Walking | Attacking
+                        LastState |= PlayerState.Attacking;   // Walking | Attacking
+                        Stamina.TakeStamina(5);
                     }
                     else if (!attackKeyDown && isAttacking && animationStage == currentTexture.cols - 1)
                     {
                         isAttacking = false;
                         ResetAnimation();
-                        lastState &= ~PlayerState.Attacking;  // back to Walking
+                        LastState &= ~PlayerState.Attacking;  // back to Walking
+                    }
+
+                    if(!isAttacking)
+                    {
+                        Stamina.Restore(1);
                     }
 
                     return MovePlayer(deltaSeconds, 1.0f);
@@ -239,12 +258,26 @@ namespace Jam25
                     {
                         // End of idle attack anim
                         isAttacking = false;
-                        lastState = PlayerState.Idle;
+                        LastState = PlayerState.Idle;
                         ResetAnimation();
                     }
                     break;
 
-                    // Hurt/Dying unchanged
+                // Hurt/Dying unchanged
+
+                case PlayerState.Hurt:
+                    IncrementAnimation(deltaSeconds);
+                    if (animationStage == currentTexture.cols - 1)
+                    {
+                        LastState = PlayerState.Idle;
+                    }
+                    break;
+                case PlayerState.Dying:
+                    if (animationStage != currentTexture.cols - 1)
+                    {
+                        IncrementAnimation(deltaSeconds);
+                    }
+                    break;
             }
 
             return null;
@@ -252,13 +285,13 @@ namespace Jam25
 
         public void TakeDamage(int damage)
         {
-            if (lastState != PlayerState.Hurt && lastState != PlayerState.Dying)
+            if (LastState != PlayerState.Hurt && LastState != PlayerState.Dying)
             {
                 Health.TakeDamage(damage);
                 animationStage = 0;
                 animationTime = 0f;
 
-                lastState = (Health.Current == 0) ? PlayerState.Dying : PlayerState.Hurt;
+                LastState = (Health.Current == 0) ? PlayerState.Dying : PlayerState.Hurt;
             }
         }
 
@@ -365,11 +398,11 @@ namespace Jam25
             }
 
             // Preserve non-movement flags (e.g. Attacking)
-            var nonMovementFlags = lastState & ~MovementMask;
+            var nonMovementFlags = LastState & ~MovementMask;
 
             if (movementDirection == Vector2.Zero)
             {
-                lastState = PlayerState.Idle | nonMovementFlags;
+                LastState = PlayerState.Idle | nonMovementFlags;
                 return;
             }
 
@@ -383,9 +416,39 @@ namespace Jam25
                 lastDir = movementDirection.Y < 0 ? Direction.Up : Direction.Down;
             }
 
-            var movementState = run ? PlayerState.Running : PlayerState.Walking;
-            lastState = movementState | nonMovementFlags;
+            var movementState = IsRunning(run) ? PlayerState.Running : PlayerState.Walking;
+            LastState = movementState | nonMovementFlags;
         }
+
+        public void SetPosition(Vector2 position)
+        {
+            spritePosition = position;
+        }
+
+        public Vector2 GetFrameMovement()
+        {
+            Vector2 movement = Vector2.Zero;
+
+            switch (lastDir)
+            {
+                case Direction.Up:
+                    movement.Y -= vel;
+                    break;
+                case Direction.Down:
+                    movement.Y += vel;
+                    break;
+                case Direction.Left:
+                    movement.X -= vel;
+                    break;
+                case Direction.Right:
+                    movement.X += vel;
+                    break;
+            }
+
+            return movement;
+        }
+        private bool IsRunning(bool runRequest)
+            { return runRequest && Stamina.Current > 0; }
 
         #endregion 
     }

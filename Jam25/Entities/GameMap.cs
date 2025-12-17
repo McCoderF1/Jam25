@@ -2,6 +2,7 @@
 using Jam25.Scenes;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 
 namespace Jam25.Entities
 {
@@ -19,13 +20,22 @@ namespace Jam25.Entities
     {
         Empty,
         Floor,
-        Wall
+        Wall,
+        Door
+    }
+
+    public enum DoorOrientation
+    {
+        Horizontal,
+        Vertical
     }
 
     public class Tile(TileType type)
     {
         public TileType Type = type;
         public WallMask WallMask;
+
+        public DoorOrientation? DoorOrientation;
     }
 
     public class GameMap
@@ -60,8 +70,8 @@ namespace Jam25.Entities
                 int height = rand.Next(minRoomSize, maxRoomSize);
 
                 // random position of room without going out of bounds of map
-                int x = rand.Next(0, mapWidth - width - 1);
-                int y = rand.Next(0, mapHeight - height - 1);
+                int x = rand.Next(1, mapWidth - width - 1);
+                int y = rand.Next(1, mapHeight - height - 1);
 
                 // Rectangle
                 Rectangle newRoom = new Rectangle(x, y, width, height);
@@ -78,7 +88,6 @@ namespace Jam25.Entities
                         CreateRoom(newRoom);
 
                         // Centre coordinates of new room
-
                         var newX = newRoom.Center.X;
                         var newY = newRoom.Center.Y;
 
@@ -98,7 +107,7 @@ namespace Jam25.Entities
                             if (i == keyRoom)
                             {
                                 // This is the room to place the key
-                                key.Sprite.Position = new Vector2(newX, newY);
+                                key.Sprite.Position = new Vector2(newX * 32, newY * 32);
                             }
                             // Flip a coin
                             if (rand.Next(0, 1) == 0)
@@ -106,7 +115,6 @@ namespace Jam25.Entities
                                 // Horizontal then vertical
                                 CreateHTunnel(prevX, newX, prevY);
                                 CreateVTunnel(prevY, newY, newX);
-
                             }
                             else
                             {
@@ -126,8 +134,85 @@ namespace Jam25.Entities
             // Add walls around floors
             AddWalls(mapWidth, mapHeight);
 
-
             ComputeWallMasks();
+
+            for (int tries = 0; tries < maxRooms; tries++)
+            {
+                if (PlaceSingleSealedDoor(tiles, rooms, rand))
+                    break;
+            }
+        }
+
+        bool PlaceSingleSealedDoor(Tile[,] map, Rectangle[] rooms, Random rng)
+        {
+            var candidates = GetSealedDoorCandidates(map, rooms);
+
+            if (candidates.Count == 0)
+                return false;
+
+            var chosen = candidates[rng.Next(candidates.Count)];
+
+            Tile tile = map[chosen.x, chosen.y];
+            tile.Type = TileType.Door;
+            tile.DoorOrientation = chosen.orientation;
+
+            return true;
+        }
+
+        List<(int x, int y, DoorOrientation orientation)> GetSealedDoorCandidates(Tile[,] map, Rectangle[] rooms)
+        {
+            var candidates = new List<(int, int, DoorOrientation)>();
+
+            foreach (var room in rooms)
+            {
+                int left = room.Left - 1;
+                int right = room.Right;
+                int top = room.Top - 1;
+                int bottom = room.Bottom;
+
+                // Vertical walls
+                // JM: We don't have vertical door graphics at this time
+                //for (int y = room.Top; y < room.Bottom; y++)
+                //{
+                //    if (IsSealedVerticalDoorCandidate(map, left, y))
+                //        candidates.Add((left, y, DoorOrientation.Vertical));
+
+                //    if (IsSealedVerticalDoorCandidate(map, right, y))
+                //        candidates.Add((right, y, DoorOrientation.Vertical));
+                //}
+
+                // Horizontal walls
+                for (int x = room.Left + 1; x < room.Right - 1; x++) // Avoid corners
+                {
+                    if (IsSealedHorizontalDoorCandidate(map, x, top))
+                        candidates.Add((x, top, DoorOrientation.Horizontal));
+
+                    if (IsSealedHorizontalDoorCandidate(map, x, bottom))
+                        candidates.Add((x, bottom, DoorOrientation.Horizontal));
+                }
+            }
+
+            return candidates;
+        }
+
+        bool IsSealedVerticalDoorCandidate(Tile[,] map, int x, int y)
+        {
+            bool northFloor = map[x, y - 1].Type == TileType.Floor;
+            bool southFloor = map[x, y + 1].Type == TileType.Floor;
+
+            // Exactly one side touches the room interior
+            if (northFloor == southFloor)
+                return false;
+
+            return map[x, y].Type == TileType.Wall;
+        }
+
+        bool IsSealedHorizontalDoorCandidate(Tile[,] map, int x, int y)
+        {
+            bool westFloor = map[x - 1, y].Type == TileType.Floor;
+            bool eastFloor = map[x + 1, y].Type == TileType.Floor;
+
+            return map[x, y].Type == TileType.Wall && !westFloor && !eastFloor;
         }
 
         void ComputeWallMasks()
@@ -151,6 +236,7 @@ namespace Jam25.Entities
                     tiles[x, y].WallMask = mask;
                 }
         }
+
         private void AddWalls(int mapWidth, int mapHeight)
         {
             for (int x = 1; x < mapWidth - 1; x++)

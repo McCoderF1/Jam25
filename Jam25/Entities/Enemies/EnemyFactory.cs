@@ -57,7 +57,8 @@ namespace Jam25.Entities.Enemies
                     {Enemy.EnemyState.Attacking, new AnimatedDirectionalSprite(slimeAttackTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
                     {Enemy.EnemyState.Hurt, new AnimatedDirectionalSprite(slimeHurtTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
                     {Enemy.EnemyState.Dying, new AnimatedDirectionalSprite(slimeDeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
-                    {Enemy.EnemyState.Running, new AnimatedDirectionalSprite(slimeRunTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)}
+                    {Enemy.EnemyState.Running, new AnimatedDirectionalSprite(slimeRunTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Dead, new AnimatedDirectionalSprite(slimeDeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
                 },
                 Body =
                 {
