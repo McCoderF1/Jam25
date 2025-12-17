@@ -16,6 +16,7 @@ namespace Jam25.Models
         private readonly int minSpawnDistanceFromPlayer;
         private readonly Func<Vector2> getSpawnPosition;
         private readonly EnemyFactory enemyFactory;
+        private Random rand;
 
         #endregion Private Members
 
@@ -25,6 +26,7 @@ namespace Jam25.Models
             this.minSpawnDistanceFromPlayer = minSpawnDistanceFromPlayer;
             this.getSpawnPosition = getSpawnPosition;
             this.enemyFactory = enemyFactory;
+            rand = new Random();
         }
 
         /// <summary>
@@ -53,7 +55,8 @@ namespace Jam25.Models
             }
             while (Vector2.Distance(spawnPosition, playerPosition) <= minSpawnDistanceFromPlayer);
 
-            Enemy newEnemy = enemyFactory.CreateSlimeEnemy(spawnPosition);
+            Enemy newEnemy = (rand.NextDouble() < 0.2) ? newEnemy = enemyFactory.CreateVampireEnemy(spawnPosition) : newEnemy = enemyFactory.CreateSlimeEnemy(spawnPosition);
+
             gameScene.Enemies.Add(newEnemy);
         }
 

@@ -85,6 +85,78 @@
 /processorParam:TextureFormat=Color
 /build:EnemySprite/Slime/Slime2_Walk_with_shadow.png
 
+#begin EnemySprite/Vampire/Vampires2_Attack_with_shadow.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:EnemySprite/Vampire/Vampires2_Attack_with_shadow.png
+
+#begin EnemySprite/Vampire/Vampires2_Death_with_shadow.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:EnemySprite/Vampire/Vampires2_Death_with_shadow.png
+
+#begin EnemySprite/Vampire/Vampires2_Hurt_with_shadow.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:EnemySprite/Vampire/Vampires2_Hurt_with_shadow.png
+
+#begin EnemySprite/Vampire/Vampires2_Idle_with_shadow.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:EnemySprite/Vampire/Vampires2_Idle_with_shadow.png
+
+#begin EnemySprite/Vampire/Vampires2_Run_with_shadow.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:EnemySprite/Vampire/Vampires2_Run_with_shadow.png
+
+#begin EnemySprite/Vampire/Vampires2_Walk_with_shadow.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:EnemySprite/Vampire/Vampires2_Walk_with_shadow.png
+
 #begin Fonts/GameState.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
@@ -593,6 +665,12 @@
 /processorParam:TextureFormat=Color
 /build:PlayerSprite/lvl3/Swordsman_lvl3_Walk_with_shadow.png
 
+#begin Sound/Effect/LevelUpSound.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sound/Effect/LevelUpSound.wav
+
 #begin Sound/Effects/AppClick.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
@@ -622,12 +700,6 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Sound/Effects/WhooshMiss.wav
-
-#begin Sound/Effect/LevelUpSound.wav
-/importer:WavImporter
-/processor:SoundEffectProcessor
-/processorParam:Quality=Best
-/build:Sound/Effect/LevelUpSound.wav
 
 #begin Sound/Music/The Flickering Flame.mp3
 /importer:Mp3Importer
