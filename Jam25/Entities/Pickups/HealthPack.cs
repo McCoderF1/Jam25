@@ -1,7 +1,10 @@
-﻿using Jam25.Graphics;
+﻿using HDT.Gaming.Audio;
+using Jam25.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Diagnostics;
 
 namespace Jam25.Entities.Pickups
 {
@@ -30,8 +33,13 @@ namespace Jam25.Entities.Pickups
 
         public void Collect(Player player)
         {
-            player.Health.Heal(100);
-            Consumed = true;
+            if (!Consumed)
+            {
+                Debug.WriteLine("Health Pack Collected!");
+                player.Health.Heal(100);
+                AudioManager.PlaySound("TakeItem");
+                Consumed = true;
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch, int tileSize)

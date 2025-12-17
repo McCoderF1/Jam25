@@ -677,11 +677,23 @@
 /processorParam:Quality=Best
 /build:Sound/Effects/AppClick.wav
 
+#begin Sound/Effects/GetKey.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sound/Effects/GetKey.wav
+
 #begin Sound/Effects/HitFlesh.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Sound/Effects/HitFlesh.wav
+
+#begin Sound/Effects/LevelUp.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sound/Effects/LevelUp.wav
 
 #begin Sound/Effects/MetalHit.wav
 /importer:WavImporter
@@ -694,6 +706,12 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Sound/Effects/RetroClick.wav
+
+#begin Sound/Effects/TakeItem.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sound/Effects/TakeItem.wav
 
 #begin Sound/Effects/WhooshMiss.wav
 /importer:WavImporter

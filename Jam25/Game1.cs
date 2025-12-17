@@ -77,6 +77,9 @@ namespace Jam25
             audioController.InstallEffect("Miss", Content.Load<SoundEffect>("Sound/Effects/WhooshMiss"));
             audioController.InstallEffect("HitFlesh", Content.Load<SoundEffect>("Sound/Effects/HitFlesh"));
             audioController.InstallEffect("LevelUpSound", Content.Load<SoundEffect>("Sound/Effect/LevelUpSound"));
+            audioController.InstallEffect("LevelUp", Content.Load<SoundEffect>("Sound/Effects/LevelUp"));
+            audioController.InstallEffect("GetKey", Content.Load<SoundEffect>("Sound/Effects/GetKey"));
+            audioController.InstallEffect("TakeItem", Content.Load<SoundEffect>("Sound/Effects/TakeItem"));
             //add audio here
             // - ok
 
