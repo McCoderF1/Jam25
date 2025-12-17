@@ -117,7 +117,7 @@ namespace Jam25.Screens.UserInterface
 
             DrawPlayerStatusBars();
             DrawTorchBar();
-            DrawInformation(XPos, YPos);
+            DrawInformation();
         }
 
         ///<inheritdoc/>
