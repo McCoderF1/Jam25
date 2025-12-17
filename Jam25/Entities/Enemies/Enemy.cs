@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using HDT.Gaming.Models;
+﻿using HDT.Gaming.Models;
 using HDT.Gaming.Physics;
 using Jam25.Entities.Enemies.Controllers;
 using Jam25.Graphics;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Jam25.Entities.Enemies
 {
@@ -15,6 +16,7 @@ namespace Jam25.Entities.Enemies
         #region Private Members
 
         private EnemyState currentState = EnemyState.Idle;
+        private float attackBlockedUntil;
 
         #endregion Private Members
 
@@ -42,13 +44,14 @@ namespace Jam25.Entities.Enemies
         public Health Health { get; init; }
 
 
-        public bool CanAttack => (CurrentState == EnemyState.Idle || CurrentState == EnemyState.Running);
+        public bool CanAttack => (CurrentState == EnemyState.Idle || CurrentState == EnemyState.Running) && attackBlockedUntil <= 0f;
 
         public Vector2 MovementDirection { get; set; } = Vector2.Zero;
 
         public Enemy()
         {
             Body.Owner = this;
+            Health = new Health(50);
             //StartAttackCooldown();
         }
 
@@ -65,6 +68,11 @@ namespace Jam25.Entities.Enemies
             }
         }
 
+        public void StartCooldown()
+        {
+            attackBlockedUntil = 1000f;
+        }
+
         /// <summary>
         /// Updates the enemy's state based on the current game time.
         /// </summary>
@@ -73,9 +81,15 @@ namespace Jam25.Entities.Enemies
         /// <param name="gameTime">The current game time, used to determine state transitions and animation progress.</param>
         public void Update(GameTime gameTime)
         {
+            // When the current animation loop is completed
             if (!CurrentSprite.LoopCompleted)
             {
                 return;
+            }
+
+            if(attackBlockedUntil > 0f)
+            {
+                attackBlockedUntil -= (float)gameTime.ElapsedGameTime.TotalMilliseconds;
             }
 
             switch (CurrentState)
@@ -88,8 +102,6 @@ namespace Jam25.Entities.Enemies
                     CurrentState = EnemyState.Dead;
                     break;
             }
-
-
         }
     }
 }

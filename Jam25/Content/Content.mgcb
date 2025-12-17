@@ -569,6 +569,36 @@
 /processorParam:TextureFormat=Color
 /build:PlayerSprite/lvl3/Swordsman_lvl3_Walk_with_shadow.png
 
+#begin Sound/Effects/AppClick.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sound/Effects/AppClick.wav
+
+#begin Sound/Effects/HitFlesh.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sound/Effects/HitFlesh.wav
+
+#begin Sound/Effects/MetalHit.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sound/Effects/MetalHit.wav
+
+#begin Sound/Effects/RetroClick.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sound/Effects/RetroClick.wav
+
+#begin Sound/Effects/WhooshMiss.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sound/Effects/WhooshMiss.wav
+
 #begin Sound/Music/The Flickering Flame.mp3
 /importer:Mp3Importer
 /processor:SongProcessor

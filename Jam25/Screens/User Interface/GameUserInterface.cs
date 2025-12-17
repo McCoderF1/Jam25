@@ -5,6 +5,7 @@ using Jam25.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 
 namespace Jam25.Screens.UserInterface
 {
@@ -39,6 +40,15 @@ namespace Jam25.Screens.UserInterface
         #endregion
 
         /// <summary>
+        /// Item collected by the player for UI display
+        /// </summary>
+        private struct CollectedItem
+        {
+            public Texture2D Texture;
+            public string Name;
+        }
+
+        /// <summary>
         /// Game User Interface constructor
         /// </summary>
         public GameUserInterface(SpriteBatch spriteBatch, GraphicsDevice graphics, GameContent game, ContentManager content, AudioController audioController, Player player)
@@ -52,6 +62,7 @@ namespace Jam25.Screens.UserInterface
 
             UIBase = content.Load<Texture2D>("Images/UI/UIBase");
             font = content.Load<SpriteFont>("Fonts/Menu");
+            keyTexture = content.Load<Texture2D>("Images/key32");
 
             // Try to load player icon sprite
             if (game.TryGetSprite(SpriteID.PlayerLvl1, out AnimatedTexture animatedIcon))
@@ -99,6 +110,7 @@ namespace Jam25.Screens.UserInterface
                     Color.White);
             }
             DrawInformation();
+            DrawCollectedItems();
         }
 
         ///<inheritdoc/>
@@ -110,7 +122,7 @@ namespace Jam25.Screens.UserInterface
         ///<inheritdoc/>
         public void Show()
         {
-
+            ClearItems();
         }
 
         ///<inheritdoc/>
@@ -128,6 +140,9 @@ namespace Jam25.Screens.UserInterface
 
         #region private methods
 
+        /// <summary>
+        /// Displays the player status bars (health, stamina)
+        /// </summary>
         private void DrawPlayerStatusBars()
         {
             const int barHeight = 15;
@@ -176,6 +191,9 @@ namespace Jam25.Screens.UserInterface
             }
         }
 
+        /// <summary>
+        /// Displays the torch energy bar
+        /// </summary>
         private void DrawTorchBar()
         {
             if (torch == null) return;
@@ -208,6 +226,36 @@ namespace Jam25.Screens.UserInterface
         private void DrawInformation()
         {
             spriteBatch.DrawString(font, "Floor 1", new Vector2(1127, 60), Color.White);
+        }
+
+        /// <summary>
+        /// Draws collected items in the UI
+        /// </summary>
+        private void DrawCollectedItems()
+        {
+            const int slotSize = 35;
+            const int slotSpacing = 2;
+            const int margin =11;
+            const int maxSlots = 4;
+
+            int startX = graphicsDevice.Viewport.Width - margin - (slotSize * maxSlots) - (slotSpacing * (maxSlots - 1));
+            int y = graphicsDevice.Viewport.Height - margin - slotSize;
+
+            for (int i = 0; i < maxSlots; i++)
+            {
+                int slotX = startX + (i * (slotSize + slotSpacing));
+
+                var slotRect = new Rectangle(slotX, y, slotSize, slotSize);
+                roundedRectangle.Draw(slotRect, 4, Color.Black * 0.5f);
+
+                if (i < collectedItems.Count)
+                {
+                    var item = collectedItems[i];
+                    int itemSize = slotSize - 8;
+                    var itemRect = new Rectangle(slotX + 4, y + 4, itemSize, itemSize);
+                    spriteBatch.Draw(item.Texture, itemRect, Color.White);
+                }
+            }
         }
 
         private void UpdateSprite(AnimatedSprite sprite, float elapsed)

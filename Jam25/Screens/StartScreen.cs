@@ -106,6 +106,7 @@ namespace Jam25.Screens
 
             if (KeyboardInput.HasBeenPressed(Keys.Space) || KeyboardInput.HasBeenPressed(Keys.Enter))
             {
+                AudioManager.PlaySound("AppClick");
                 if (currentSelection == MenuSelection.Quit)
                     game.Exit();
 
@@ -125,10 +126,12 @@ namespace Jam25.Screens
             else if (KeyboardInput.HasBeenPressed(Keys.Down))
             {
                 currentSelection = (MenuSelection)(((int)currentSelection + 1) % 4);
+                AudioManager.PlaySound("RetroClick");
             }
             else if (KeyboardInput.HasBeenPressed(Keys.Up))
             {
                 currentSelection = (MenuSelection)(((int)currentSelection + 3) % 4);
+                AudioManager.PlaySound("RetroClick");
             }
         }
 

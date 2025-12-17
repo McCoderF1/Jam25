@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using HDT.Gaming.Audio;
 using HDT.Gaming.Physics;
 using Jam25.Entities;
 using Jam25.Entities.Enemies;
 using Jam25.Graphics;
 using Jam25.Models;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace Jam25.Scenes
 {
@@ -31,11 +33,22 @@ namespace Jam25.Scenes
             EnemySpawner = enemySpawner;
         }
 
+        private int playerAttackState = 0;
+
         public void Update(GameTime gameTime)
         {
             EnemySpawner.Update(this, gameTime);
 
             List<Enemy> enemiesToRemove = new();
+
+            bool attacking = false;
+            if (Player.IsAttacking != playerAttackState)
+            {
+                playerAttackState = Player.IsAttacking;
+
+                attacking = playerAttackState > 0;
+            }
+
             foreach (var enemy in Enemies)
             {
                 enemy.EnemyController?.Update(this, enemy, gameTime.ElapsedGameTime);
@@ -45,15 +58,25 @@ namespace Jam25.Scenes
 
                 float distFromPlayer = Vector2.Distance(enemy.Body.Position, Player.Body.Position);
 
-                if (distFromPlayer < 50 && Player.IsAttacking)
+                if (attacking)
                 {
-                    enemy.TakeDamage(2);
-
+                    if (distFromPlayer < 50)
+                    {
+                        enemy.TakeDamage(2);
+                        AudioManager.PlaySound("MetalHit");
+                    }
+                    else
+                    {
+                        AudioManager.PlaySound("Miss");
+                    }
                 }
-                if (distFromPlayer < 30 && enemy.CanAttack)
+
+                if (distFromPlayer < 30 && enemy.CanAttack && Player.LastState != Player.PlayerState.Dying)
                 {
+                    enemy.StartCooldown();
                     Player.TakeDamage(20);
                     enemy.CurrentState = Enemy.EnemyState.Attacking;
+                    AudioManager.PlaySound("MetalHit");
                 }
 
                 if (enemy.CurrentState == Enemy.EnemyState.Dead)
