@@ -16,6 +16,7 @@ namespace Jam25.Entities.Enemies
         #region Private Members
 
         private EnemyState currentState = EnemyState.Idle;
+        private float attackBlockedUntil;
 
         #endregion Private Members
 
@@ -43,7 +44,9 @@ namespace Jam25.Entities.Enemies
         public Health Health { get; init; }
 
 
-        public bool CanAttack => (CurrentState == EnemyState.Idle || CurrentState == EnemyState.Running);
+        public bool CanAttack => (CurrentState == EnemyState.Idle || CurrentState == EnemyState.Running) && attackBlockedUntil <= 0f;
+
+        public Vector2 MovementDirection { get; set; } = Vector2.Zero;
 
         public Enemy()
         {
@@ -65,6 +68,11 @@ namespace Jam25.Entities.Enemies
             }
         }
 
+        public void StartCooldown()
+        {
+            attackBlockedUntil = 1000f;
+        }
+
         /// <summary>
         /// Updates the enemy's state based on the current game time.
         /// </summary>
@@ -78,6 +86,12 @@ namespace Jam25.Entities.Enemies
             {
                 return;
             }
+
+            if(attackBlockedUntil > 0f)
+            {
+                attackBlockedUntil -= (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+            }
+
             switch (CurrentState)
             {
                 case EnemyState.Hurt:

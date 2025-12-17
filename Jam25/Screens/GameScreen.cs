@@ -101,7 +101,7 @@ namespace Jam25.Screens
             EnemyFactory enemyFactory = new(game.Content, audioController);
 
             EnemySpawner enemySpawner = new(
-                maxEnemies: 10,
+                maxEnemies: 50,
                 minSpawnDistanceFromPlayer: 200,
                 PointWithinWalls,
                 enemyFactory);
@@ -112,6 +112,7 @@ namespace Jam25.Screens
 
             visibleTiles = new bool[mapWidth, mapHeight];
 
+            wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
             gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player);
             objectSpriteSheet = game.Content.Load<Texture2D>("Images/supplies_objects");
 
@@ -157,7 +158,6 @@ namespace Jam25.Screens
         {
             pickups.Clear();
             
-            gameMap = new GameMap(mapWidth, mapHeight);
             gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene, key);
 
             for (int i = 0; i < healthPickupCount; i++)
@@ -170,6 +170,9 @@ namespace Jam25.Screens
             if (gameUI is GameUserInterface gui)
             {
                 gui.SetTorch(game.Torch);
+                
+                // Set UI reference on key so it can display when collected
+                key.GameUI = gui;
             }
 
             for (int i = 0; i < coalPickupCount; i++)

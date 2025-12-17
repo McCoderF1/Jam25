@@ -1,13 +1,14 @@
-﻿using System;
-using HDT.Gaming.Audio;
+﻿using HDT.Gaming.Audio;
 using Jam25.Graphics;
 using Jam25.Screens;
 using Jam25.Screens.UserInterface;
 using Jam25.Stores;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System;
 
 namespace Jam25
 {
@@ -69,7 +70,13 @@ namespace Jam25
 
             audioController = new AudioController();
             audioController.InstallMusic("The Flickering Flame", Content.Load<Song>("Sound/Music/The Flickering Flame"));
+            audioController.InstallEffect("MetalHit", Content.Load<SoundEffect>("Sound/Effects/MetalHit"));
+            audioController.InstallEffect("RetroClick", Content.Load<SoundEffect>("Sound/Effects/RetroClick"));
+            audioController.InstallEffect("AppClick", Content.Load<SoundEffect>("Sound/Effects/AppClick"));
+            audioController.InstallEffect("Miss", Content.Load<SoundEffect>("Sound/Effects/WhooshMiss"));
+            audioController.InstallEffect("HitFlesh", Content.Load<SoundEffect>("Sound/Effects/HitFlesh"));
             //add audio here
+            // - ok
 
             AudioManager.InstallController(audioController);
 

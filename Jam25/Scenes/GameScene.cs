@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using HDT.Gaming.Audio;
 using HDT.Gaming.Physics;
 using Jam25.Entities;
 using Jam25.Entities.Enemies;
 using Jam25.Graphics;
 using Jam25.Models;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace Jam25.Scenes
 {
@@ -30,26 +33,50 @@ namespace Jam25.Scenes
             EnemySpawner = enemySpawner;
         }
 
+        private int playerAttackState = 0;
+
         public void Update(GameTime gameTime)
         {
             EnemySpawner.Update(this, gameTime);
 
             List<Enemy> enemiesToRemove = new();
+
+            bool attacking = false;
+            if (Player.IsAttacking != playerAttackState)
+            {
+                playerAttackState = Player.IsAttacking;
+
+                attacking = playerAttackState > 0;
+            }
+
             foreach (var enemy in Enemies)
             {
                 enemy.EnemyController?.Update(this, enemy, gameTime.ElapsedGameTime);
+                MoveEnemy(enemy, gameTime);
+                enemy.CurrentSprite.Update(GetDirection(enemy), gameTime);
                 enemy.CurrentSprite.Update(Direction.Down, gameTime);
 
                 float distFromPlayer = Vector2.Distance(enemy.Body.Position, Player.Body.Position);
 
-                if (distFromPlayer < 50 && Player.IsAttacking)
+                if (attacking)
                 {
-                    enemy.TakeDamage(2);
+                    if (distFromPlayer < 50)
+                    {
+                        enemy.TakeDamage(2);
+                        AudioManager.PlaySound("MetalHit");
+                    }
+                    else
+                    {
+                        AudioManager.PlaySound("Miss");
+                    }
                 }
-                if (distFromPlayer < 30 && enemy.CanAttack)
+
+                if (distFromPlayer < 30 && enemy.CanAttack && Player.LastState != Player.PlayerState.Dying)
                 {
+                    enemy.StartCooldown();
                     Player.TakeDamage(20);
                     enemy.CurrentState = Enemy.EnemyState.Attacking;
+                    AudioManager.PlaySound("MetalHit");
                 }
 
                 if (enemy.CurrentState == Enemy.EnemyState.Dead)
@@ -67,6 +94,33 @@ namespace Jam25.Scenes
             }
 
             PhysicsWorld.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
+        }
+
+        private Direction GetDirection(Enemy enemy)
+        {
+            Vector2 dir = enemy.MovementDirection;
+            if (dir.Length() < 0.0001f)
+            {
+                return Direction.Down;
+            }
+
+            dir.Normalize();
+
+            if (Math.Abs(dir.X) <= Math.Abs(dir.Y))
+            {
+                return dir.Y > 0 ? Direction.Down : Direction.Up;
+            }
+            else
+            {
+                return dir.X > 0 ? Direction.Right : Direction.Left;
+            }
+        }
+
+        private void MoveEnemy(Enemy enemy, GameTime gameTime)
+        {
+            float speed = enemy.MovementSpeed;
+            Vector2 movement = enemy.MovementDirection * speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            enemy.Body.Position += movement;
         }
     }
 }
