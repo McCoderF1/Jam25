@@ -81,15 +81,15 @@ namespace Jam25.Entities.Enemies
         /// <param name="gameTime">The current game time, used to determine state transitions and animation progress.</param>
         public void Update(GameTime gameTime)
         {
+            if (attackBlockedUntil > 0f)
+            {
+                attackBlockedUntil -= (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+            }
+
             // When the current animation loop is completed
             if (!CurrentSprite.LoopCompleted)
             {
                 return;
-            }
-
-            if(attackBlockedUntil > 0f)
-            {
-                attackBlockedUntil -= (float)gameTime.ElapsedGameTime.TotalMilliseconds;
             }
 
             switch (CurrentState)

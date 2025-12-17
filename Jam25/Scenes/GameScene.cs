@@ -59,7 +59,6 @@ namespace Jam25.Scenes
                 }
                 enemy.EnemyController?.Update(this, enemy, gameTime.ElapsedGameTime);
                 enemy.CurrentSprite.Update(GetDirection(enemy), gameTime);
-                enemy.CurrentSprite.Update(Direction.Down, gameTime);
 
                 float distFromPlayer = Vector2.Distance(enemy.Body.Position, Player.Body.Position);
 
@@ -75,8 +74,7 @@ namespace Jam25.Scenes
                         AudioManager.PlaySound("Miss");
                     }
                 }
-
-                if (distFromPlayer < 30 && enemy.CanAttack && Player.LastState != Player.PlayerState.Dying)
+                else if (distFromPlayer < 30 && enemy.CanAttack && Player.LastState != Player.PlayerState.Dying)
                 {
                     enemy.StartCooldown();
                     Player.TakeDamage(20);

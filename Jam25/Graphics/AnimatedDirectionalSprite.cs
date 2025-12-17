@@ -81,6 +81,11 @@ namespace Jam25.Graphics
                 hasCompleted = true;
         }
 
+        public void ResetFrame()
+        {
+            currentFrame = 0;
+        }
+
         public void Draw(SpriteBatch spriteBatch, Vector2 position, Texture2D? whitePixel = null, Health? health = null)
         {
             if (spriteBatch == null)
