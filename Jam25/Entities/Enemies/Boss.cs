@@ -16,7 +16,13 @@ namespace Jam25.Entities.Enemies
 {
     public class Boss
     {
-        int phase;
+        public enum Stage
+        {
+            Phase1,
+            Phase2,
+            Dead
+        }
+        public Stage CurrentStage;
 
         public Health Health;
         Texture2D Texture;
@@ -27,7 +33,12 @@ namespace Jam25.Entities.Enemies
         private readonly Texture2D whitePixel;
         float attackBlockedUntil = 0f;
         float attackCooldown = 500f;
-        public bool Alive = true;
+        float moveBlockedUntil = 0f;
+        float moveCooldown = 2000f;
+
+        float vel = 10f;
+        float dir;
+
         Random rand = new Random();
 
 
@@ -51,13 +62,21 @@ namespace Jam25.Entities.Enemies
             Health.TakeDamage(amount);
             if (Health.Current <= 0)
             {
-                Alive = false;
+                if (CurrentStage == Stage.Phase1)
+                {
+                    Health.Current = Health.Max;
+                    CurrentStage = Stage.Phase2;
+                }
+                else
+                {
+                    CurrentStage = Stage.Dead;
+                }
             }
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            if (!Alive)
+            if (CurrentStage == Stage.Dead)
             {
                 return;
             }
@@ -65,9 +84,13 @@ namespace Jam25.Entities.Enemies
             spriteBatch.Draw(Texture, Position, null, Color.White, 0, origin, 0.2f, SpriteEffects.None, 0f);
         }
 
-        private void StartCooldown()
+        private void StartAttackCooldown()
         {
             attackBlockedUntil = attackCooldown;
+        }
+        private void StartMoveCooldown()
+        {
+            moveBlockedUntil = moveCooldown;
         }
 
         public void DrawHealthBar(SpriteBatch spriteBatch, int screenWidth)
@@ -90,13 +113,19 @@ namespace Jam25.Entities.Enemies
             spriteBatch.Draw(whitePixel, fillRect, fillColor);
         }
 
-        public void Update(GameTime gameTime, Vector2 playerPos)
+        public void Update(GameTime gameTime, Player player)
         {
+            Vector2 playerPos = player.Body.Position;
+            float distFromPlayer = Vector2.Distance(Position, playerPos);
 
-            if (!Alive)
+
+            if (CurrentStage == Stage.Phase1)
             {
-                return;
+                Position = new Vector2(
+                    (float)(Position.X + Math.Min(vel, distFromPlayer) * Math.Cos(dir) / gameTime.ElapsedGameTime.TotalMilliseconds),
+                    (float)(Position.Y + Math.Min(vel, distFromPlayer) * Math.Sin(dir) / gameTime.ElapsedGameTime.TotalMilliseconds));
             }
+            vel = Math.Max(vel * 0.95f, 5);
 
 
             if (attackBlockedUntil > 0f)
@@ -106,49 +135,82 @@ namespace Jam25.Entities.Enemies
             }
 
 
-            float distFromPlayer = Vector2.Distance(Position, playerPos);
 
-            if (distFromPlayer < 100)
+
+            switch (CurrentStage)
             {
-                attackCooldown = 1000;
-                for (double dTheta = -Math.PI ; dTheta < Math.PI; dTheta += Math.PI / 24)
-                {
-                    StartCooldown();
-                    Projectiles.Add(new Projectile()
+                case Stage.Dead:
+                    return;
+
+                // meele phase
+                case Stage.Phase1:
+
+                    if (moveBlockedUntil > 0f)
                     {
-                        Position = Position,
-                        Direction = Math.Atan2(playerPos.Y - Position.Y, playerPos.X - Position.X) + dTheta,
-                        Velocity = 100,
-                        Texture = ProjectileTexture,
-                        ExplosionTextures = this.ExplosionTextures,
-                        Damage = 5,
-                        Lifespan = 1000  // ms before removed
-                    });
-                }
-            }
-            else
-            {
-                attackCooldown = 2000;
-                for (double dTheta = -Math.PI / 6; dTheta < Math.PI / 6; dTheta += Math.PI / 24)
-                {
-                    StartCooldown();
-                    if (rand.Next(2) == 0)
-                    {
-                        Projectiles.Add(new Projectile()
-                        {
-                            Position = Position,
-                            Direction = Math.Atan2(playerPos.Y - Position.Y, playerPos.X - Position.X) + dTheta,
-                            Velocity = 100,
-                            Texture = ProjectileTexture,
-                            ExplosionTextures = this.ExplosionTextures,
-                            Damage = 5,
-                            Lifespan = 10000  // ms before removed
-                        });
+                        moveBlockedUntil -= (float)gameTime.ElapsedGameTime.TotalMilliseconds;
                     }
-                }
+                    else
+                    {
+                        StartMoveCooldown();
+                        // jump towards player
+
+                        dir = (float)Math.Atan2(playerPos.Y - Position.Y, playerPos.X - Position.X);
+                        vel = 100f;
+                    }
+
+                    
+                    if (distFromPlayer < 100)
+                    {
+                        attackCooldown = 1500;
+                        StartAttackCooldown();
+                        player.TakeDamage(5);
+                    }
+                    break;
+
+                // Projectile phase
+                case Stage.Phase2:
+                    if (distFromPlayer < 50)
+                    {
+                        attackCooldown = 1000;
+                        for (double dTheta = -Math.PI; dTheta < Math.PI; dTheta += Math.PI / 24)
+                        {
+                            StartAttackCooldown();
+                            Projectiles.Add(new Projectile()
+                            {
+                                Position = Position,
+                                Direction = Math.Atan2(playerPos.Y - Position.Y, playerPos.X - Position.X) + dTheta,
+                                Velocity = 100,
+                                Texture = ProjectileTexture,
+                                ExplosionTextures = this.ExplosionTextures,
+                                Damage = 5,
+                                Lifespan = 1000  // ms before removed
+                            });
+                        }
+                    }
+                    else
+                    {
+                        attackCooldown = 2000;
+                        for (double dTheta = -Math.PI / 6; dTheta < Math.PI / 6; dTheta += Math.PI / 24)
+                        {
+                            StartAttackCooldown();
+                            if (rand.Next(2) == 0)
+                            {
+                                Projectiles.Add(new Projectile()
+                                {
+                                    Position = Position,
+                                    Direction = Math.Atan2(playerPos.Y - Position.Y, playerPos.X - Position.X) + dTheta,
+                                    Velocity = 100,
+                                    Texture = ProjectileTexture,
+                                    ExplosionTextures = this.ExplosionTextures,
+                                    Damage = 5,
+                                    Lifespan = 10000  // ms before removed
+                                });
+                            }
+                        }
+                    }
+                    break;
+
             }
-
-
         }
     }
 }

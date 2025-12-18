@@ -116,7 +116,7 @@ namespace Jam25.Screens
 
         private Dictionary<int, EnemySpawner> enemySpawners;
 
-        private LevelType CurrentLevelType = LevelType.Dungeon;
+        private LevelType CurrentLevelType = LevelType.Lava;
 
         #endregion
 
@@ -438,17 +438,17 @@ namespace Jam25.Screens
 
             if (CurrentLevelType == LevelType.Lava)
             {
-                boss.Update(gameTime, player.Body.Position);
+                boss.Update(gameTime, player);
 
 
-                if (!boss.Alive)
+                if (boss.CurrentStage == Boss.Stage.Dead)
                 {
                     WinScreenTransition?.Invoke(this, EventArgs.Empty);
                 }
 
 
 
-                if (Vector2.Distance(boss.Position, player.Body.Position) < 200 && player.IsAttacking != playerAttackState)
+                if (Vector2.Distance(boss.Position, player.Body.Position) < 150 && player.IsAttacking != playerAttackState)
                 {
                     playerAttackState = player.IsAttacking;
 
