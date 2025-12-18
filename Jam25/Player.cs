@@ -92,9 +92,11 @@ namespace Jam25
         private bool staminaExhausted = false;
         private bool shiftWasReleased = true;
 
+        private PlayerState lastMovementState;
+
+        #endregion
 
         public static bool DebugInvincibleMode { get; set; } = false;
-        #endregion
 
         [Flags]
         public enum PlayerState
@@ -164,7 +166,7 @@ namespace Jam25
 
             animationStage = 0;
             animationTime = 0f;
-            LastState = PlayerState.Idle;
+            lastMovementState = LastState = PlayerState.Idle;
         }
 
         public Vector2? Update(GameTime gameTime, KeyboardState keyboardState)
@@ -441,7 +443,16 @@ namespace Jam25
 
             if (movementDirection == Vector2.Zero)
             {
-                LastState = PlayerState.Idle | nonMovementFlags;
+                var newMovementState = PlayerState.Idle;
+
+                // If movement state changed (e.g., Walking → Idle), reset anim
+                if (newMovementState != lastMovementState)
+                {
+                    ResetAnimation();
+                    lastMovementState = newMovementState;
+                }
+
+                LastState = newMovementState | nonMovementFlags;
                 return;
             }
 
@@ -456,6 +467,14 @@ namespace Jam25
             }
 
             var movementState = IsRunning(run) ? PlayerState.Running : PlayerState.Walking;
+
+            // If movement state changed (Idle → Walking / Walking → Running, etc.), reset anim
+            if (movementState != lastMovementState)
+            {
+                ResetAnimation();
+                lastMovementState = movementState;
+            }
+
             LastState = movementState | nonMovementFlags;
         }
 
