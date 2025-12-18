@@ -16,8 +16,12 @@ namespace Jam25
     {
         public const string TITLE = "Last Ember";
 
+        public const int STANDARD_WINDOW_WIDTH = 1280;
+        public const int STANDARD_WINDOW_HEIGHT = 720;
+
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
+        private RenderTarget2D renderTarget;
 
         private AudioController audioController;
         private ScreenManager screenManager;
@@ -32,8 +36,8 @@ namespace Jam25
             graphics = new GraphicsDeviceManager(this);
 
             //TODO: use saved settings <see cref="SettingsScreen"/>
-            graphics.PreferredBackBufferWidth = 1280;
-            graphics.PreferredBackBufferHeight = 720;
+            graphics.PreferredBackBufferWidth = STANDARD_WINDOW_WIDTH;
+            graphics.PreferredBackBufferHeight = STANDARD_WINDOW_HEIGHT;
 
             content = new GameContent(Content);
 
@@ -45,6 +49,7 @@ namespace Jam25
         {
             base.Initialize();
             Window.Title = TITLE;
+            Window.AllowUserResizing = true;
 
             Torch = new Torch(
                 maxEnergy: 100f,
@@ -75,7 +80,7 @@ namespace Jam25
             audioController.InstallMusic("Game2", Content.Load<Song>("Sound/Music/Shadows Rise2"));
             audioController.InstallMusic("Game3", Content.Load<Song>("Sound/Music/Shadows and Smoke1"));
             audioController.InstallMusic("Game4", Content.Load<Song>("Sound/Music/Shadows and Smoke2"));
-            audioController.InstallMusic("Death", Content.Load<Song>("Sound/Music/Shadows of the heart"));
+            audioController.InstallMusic("Death", Content.Load<Song>("Sound/Music/Shadows of the Heart"));
             audioController.InstallEffect("MetalHit", Content.Load<SoundEffect>("Sound/Effects/MetalHit"));
             audioController.InstallEffect("RetroClick", Content.Load<SoundEffect>("Sound/Effects/RetroClick"));
             audioController.InstallEffect("AppClick", Content.Load<SoundEffect>("Sound/Effects/AppClick"));
@@ -121,12 +126,34 @@ namespace Jam25
 
         protected override void Draw(GameTime gameTime)
         {
+            // Update render target based on window size
+            float scale = Math.Min(
+                (float)Window.ClientBounds.Width / STANDARD_WINDOW_WIDTH,
+                (float)Window.ClientBounds.Height / STANDARD_WINDOW_HEIGHT);
+            int renderWidth = (int)Math.Ceiling((float)Window.ClientBounds.Width / scale);
+            int renderHeight = (int)Math.Ceiling((float)Window.ClientBounds.Height / scale);
+            if (renderTarget == null || renderTarget.Width != renderWidth || renderTarget.Height != renderHeight) {
+                renderTarget?.Dispose();
+                renderTarget = new(GraphicsDevice, renderWidth, renderHeight);
+            }
+
+            // Draw to render target
+            GraphicsDevice.SetRenderTarget(renderTarget);
             GraphicsDevice.Clear(GameSettings.BackgroundColor);
 
             spriteBatch.Begin(samplerState: SamplerState.PointClamp);
             screenManager.Draw();
 
             spriteBatch.End();
+
+            // Draw upscaled render target to window
+            GraphicsDevice.SetRenderTarget(null);
+            spriteBatch.Begin(samplerState: SamplerState.PointClamp);
+            spriteBatch.Draw(renderTarget, new Rectangle(0, 0, Window.ClientBounds.Width, Window.ClientBounds.Height), Color.White);
+            spriteBatch.End();
+
+            // Allow correct viewport to be used in update loop
+            GraphicsDevice.Viewport = new(0, 0, renderWidth, renderHeight);
 
             base.Draw(gameTime);
         }

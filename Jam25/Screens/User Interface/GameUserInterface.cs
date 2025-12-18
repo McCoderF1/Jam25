@@ -35,7 +35,9 @@ namespace Jam25.Screens.UserInterface
         private readonly AudioController audioController;
         private readonly Player player;
         private readonly GameScene gameScene;
-        private readonly Texture2D UIBase;
+        private readonly Texture2D UIStatus;
+        private readonly Texture2D UIArea;
+        private readonly Texture2D UIItems;
         private readonly SpriteFont font;
         private readonly Texture2D whitePixel;
         private readonly Texture2D LevelPopUp;
@@ -80,7 +82,9 @@ namespace Jam25.Screens.UserInterface
             this.audioController = audioController;
             this.player = player;
             this.gameScene = gameScene;
-            UIBase = content.Load<Texture2D>("Images/UI/UIBase");
+            UIStatus = content.Load<Texture2D>("Images/UI/UIStatus");
+            UIArea = content.Load<Texture2D>("Images/UI/UIArea");
+            UIItems = content.Load<Texture2D>("Images/UI/UIItems");
             LevelPopUp = content.Load<Texture2D>("Images/UI/LevelUpPop");
             font = content.Load<SpriteFont>("Fonts/Menu");
             abilityOptions = content.Load<Texture2D>("Images/UI/abilityOptions");
@@ -124,9 +128,9 @@ namespace Jam25.Screens.UserInterface
             var YPos = (int)currentCameraPosition.Y;
             animatedPlayerIcon.DrawFrame(spriteBatch, playerIcon.Frame, new Vector2(200, 227), playerIcon);
             DrawPlayerStatusBars();
-            spriteBatch.Draw(UIBase,
-                new Rectangle(0, 0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
-                Color.White);
+            spriteBatch.Draw(UIStatus, Vector2.Zero, Color.White);
+            spriteBatch.Draw(UIArea, new Vector2(graphicsDevice.Viewport.Width - 192f, 0f), Color.White);
+            spriteBatch.Draw(UIItems, new Vector2(graphicsDevice.Viewport.Width - 181f, graphicsDevice.Viewport.Height - 58f), Color.White);
 
             DrawPlayerStatusBars();
             DrawTorchBar();
