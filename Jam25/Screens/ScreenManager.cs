@@ -7,14 +7,16 @@ namespace Jam25.Screens
 {
     public class ScreenManager : BasicScreenManager
     {
-        public ScreenManager(StartScreen startScreen, SettingsScreen settingsScreen, GameScreen gameScreen, PlayerScreen playerScreen, TransitionHandler transitions, DeathScreen deathScreen)
+        public ScreenManager(StartScreen startScreen, SettingsScreen settingsScreen, GameScreen gameScreen, PlayerScreen playerScreen, TransitionHandler transitions, DeathScreen deathScreen, CasinoScreen casinoScreen)
         {
             //TODO: Screen navigation
             startScreen.Settings += (_, _) => ChangeScreen(settingsScreen);
             startScreen.Start += (_, _) => { PlayerTracker.IncrementRoundsPlayed(); ChangeScreen(gameScreen); };
             startScreen.Player += (_, _) => ChangeScreen(playerScreen);
+            startScreen.Casino += (_, _) => ChangeScreen(casinoScreen);
 
             settingsScreen.BackToMainMenu += (_, _) => ChangeScreen(startScreen);
+            casinoScreen.BackToMainMenu += (_, _) => ChangeScreen(startScreen);
             playerScreen.BackToMainMenu += (_, _) => ChangeScreen(startScreen);
 
             gameScreen.PlayerDied += (_, _) => ChangeScreen(deathScreen);

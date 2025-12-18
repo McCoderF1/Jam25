@@ -519,20 +519,54 @@ namespace Jam25.Screens
 
             if (probableTargetPosition is not null)
             {
-                Vector2 targetPosition = (Vector2)probableTargetPosition;
+                Vector2 currentPos = player.Body.Position;
+                Vector2 targetPos = probableTargetPosition.Value;
+                Vector2 delta = targetPos - currentPos;
 
-                // Build player collider at proposed position (centered on Body.Position)
-                Rectangle playerRect = new Rectangle(
-                    (int)(targetPosition.X - PlayerColliderHalfWidth),
-                    (int)(targetPosition.Y - PlayerColliderHalfHeight),
-                    PlayerColliderHalfWidth * 2,
-                    PlayerColliderHalfHeight * 2);
-
-                bool canMove = CanMoveTo(playerRect);
-
-                if (canMove)
+                // 1) Try move along X
+                if (delta.X != 0f)
                 {
-                    player.Body.Position = targetPosition;
+                    Vector2 testPosX = currentPos + new Vector2(delta.X, 0f);
+
+                    Rectangle rectX = new Rectangle(
+                        (int)(testPosX.X - PlayerColliderHalfWidth),
+                        (int)(testPosX.Y - PlayerColliderHalfHeight),
+                        PlayerColliderHalfWidth * 2,
+                        PlayerColliderHalfHeight * 2);
+
+                    if (CanMoveTo(rectX))
+                    {
+                        currentPos = testPosX;
+                    }
+                }
+
+                // 2) Then try move along Y from updated X position
+                if (delta.Y != 0f)
+                {
+                    Vector2 testPosY = currentPos + new Vector2(0f, delta.Y);
+
+                    Rectangle rectY = new Rectangle(
+                        (int)(testPosY.X - PlayerColliderHalfWidth),
+                        (int)(testPosY.Y - PlayerColliderHalfHeight),
+                        PlayerColliderHalfWidth * 2,
+                        PlayerColliderHalfHeight * 2);
+
+                    if (CanMoveTo(rectY))
+                    {
+                        currentPos = testPosY;
+                    }
+                }
+
+                // After axis-resolved movement, did we move at all?
+                if (currentPos != player.Body.Position)
+                {
+                    player.Body.Position = currentPos;
+
+                    Rectangle playerRect = new Rectangle(
+                        (int)(currentPos.X - PlayerColliderHalfWidth),
+                        (int)(currentPos.Y - PlayerColliderHalfHeight),
+                        PlayerColliderHalfWidth * 2,
+                        PlayerColliderHalfHeight * 2);
 
                     CollectedItem key = gameUI.CollectedItems.Where(item => item.Name == "Key").FirstOrDefault();
 
