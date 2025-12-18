@@ -13,4 +13,6 @@ u8 SpriteID
 	PlayerUIIcon: 8
 	FireBig: 9
 	LevelUp: 10
+	PlayerLvl2: 11
+	PlayerLvl3: 12
 }
