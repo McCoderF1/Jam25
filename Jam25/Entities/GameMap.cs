@@ -53,10 +53,19 @@ namespace Jam25.Entities
         Lava
     }
 
-    public class Tile(TileType type, TileTheme theme = TileTheme.Dungeon)
+    public class TileColors(Color wallTint, Color floorTint)
+    {
+        public static TileColors Default { get; } = new(Color.White, Color.White);
+
+        public Color WallTint = wallTint;
+        public Color FloorTint = floorTint;
+    }
+
+    public class Tile(TileType type, TileTheme theme = TileTheme.Dungeon, TileColors colors = null)
     {
         public TileType Type = type;
         public TileTheme Theme = theme;
+        public TileColors Colors = colors ?? TileColors.Default;
         public DirectionMask DirectionMask;
         public TileShape TileShape;
 
@@ -73,12 +82,12 @@ namespace Jam25.Entities
         private int mapHeight;
         public Rectangle[] Rooms { get; private set; }
 
-        public GameMap(int width, int height, TileTheme theme = TileTheme.Dungeon)
+        public GameMap(int width, int height, TileTheme theme = TileTheme.Dungeon, TileColors tileColors = null)
         {
             this.width = width;
             this.height = height;
 
-            InitialiseTiles(theme);
+            InitialiseTiles(theme, tileColors);
         }
 
         public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight)
@@ -458,7 +467,7 @@ namespace Jam25.Entities
             }
         }
 
-        private void InitialiseTiles(TileTheme theme)
+        private void InitialiseTiles(TileTheme theme, TileColors colors = null)
         {
             tiles = new Tile[width, height];
 
@@ -466,7 +475,7 @@ namespace Jam25.Entities
             {
                 for (int y = 0; y < height; y++)
                 {
-                    tiles[x, y] = new Tile(TileType.Empty, theme);
+                    tiles[x, y] = new Tile(TileType.Empty, theme, colors);
                 }
             }
         }
