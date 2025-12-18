@@ -18,9 +18,12 @@ namespace Jam25.Screens
             playerScreen.BackToMainMenu += (_, _) => ChangeScreen(startScreen);
 
             gameScreen.PlayerDied += (_, _) => ChangeScreen(deathScreen);
+            gameScreen.TransitionScreen += (toWhere, _) => ChangeScreen(transitions.TransitionTo(toWhere as string));
 
             deathScreen.Retry += (_, _) => { PlayerTracker.IncrementRoundsPlayed(); ChangeScreen(gameScreen); };
             deathScreen.BackToMenu += (_, _) => ChangeScreen(startScreen);
+
+            transitions.MovePassTransition += (_, _) => ChangeScreen(gameScreen);
 
             ChangeScreen(startScreen);
         }

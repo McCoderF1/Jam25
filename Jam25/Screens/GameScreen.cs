@@ -96,6 +96,7 @@ namespace Jam25.Screens
 
         public EventHandler LevelCompleted { get; set; }
         public EventHandler PlayerDied { get; set; }
+        public EventHandler TransitionScreen { get; set; }
 
         public GameScreen(
             GraphicsDevice gfxDevice,
@@ -232,6 +233,7 @@ namespace Jam25.Screens
             {
                 gameScene.GameLevel++;
                 currentLevelCompleted = false;
+                TransitionScreen?.Invoke("nextlevel", EventArgs.Empty);
                 Transition();
                 gameUI.SkillsAndAbilitiesTrigger();
                 return;
