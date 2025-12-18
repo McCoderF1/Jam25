@@ -52,7 +52,7 @@ namespace Jam25.Screens.UserInterface
         private AnimatedTexture animatedLevelUp;
 
         private Vector2 currentCameraPosition = Vector2.Zero;
-        private short previousPlayerLevel = 1;
+        private short previousPlayerLevel = 0;
         private bool levelSoundTriggered = false;
         private int indexSelection = 0;
         private bool abilitySelection = false;
@@ -175,6 +175,9 @@ namespace Jam25.Screens.UserInterface
                     {
                         abilitySelection = false;
                         //update player
+
+                        //Check level up
+                        Task.Delay(1000).ContinueWith(_ => { if (PlayerTracker.PlayerStats.TotalLevel > previousPlayerLevel) { skillSelection = true; } });
                     }
                 }
 
@@ -226,8 +229,7 @@ namespace Jam25.Screens.UserInterface
 
         public void SkillsAndAbilitiesTrigger()
         {
-            //abilitySelection = true;
-            skillSelection = true;
+            abilitySelection = true;
         }
 
         #region private methods

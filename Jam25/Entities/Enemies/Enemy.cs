@@ -101,6 +101,7 @@ namespace Jam25.Entities.Enemies
             {
                 Health.TakeDamage(Health.Current);
                 CurrentState = EnemyState.Dying;
+                PlayerTracker.CollectEmber();
                 PlayerTracker.RecordKill();
                 return;
             }
