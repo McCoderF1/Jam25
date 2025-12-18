@@ -33,7 +33,15 @@ namespace Jam25.Screens
 
         private const float SHADOW_ALPHA_CHANGE_SPEED = 5f;
 
-        private const float SHADOW_CULL_RADIUS_PADDING = 1f;
+        private const float SHADOW_CULL_RADIUS_PADDING = 64f;
+
+        private static readonly TileColors[] levelTileColors = new TileColors[]
+        {
+            TileColors.Default,
+            new(new Color(160, 255, 180, 255), new Color(130, 200, 210, 255)),
+            new(new Color(220, 140, 230, 255), new Color(240, 130, 160, 255)),
+            new(new Color(240, 40, 20), new Color(240, 100, 30)),
+        };
 
         private readonly GraphicsDevice graphicsDevice;
         private readonly SpriteBatch spriteBatch;
@@ -116,7 +124,7 @@ namespace Jam25.Screens
 
         private Dictionary<int, EnemySpawner> enemySpawners;
 
-        private LevelType CurrentLevelType = LevelType.Dungeon;
+        private LevelType CurrentLevelType = LevelType.Lava;
 
         // Mini-map
         private bool[,] visitedTiles;
@@ -348,6 +356,8 @@ namespace Jam25.Screens
 
             BuildWorld(CurrentLevelType);
 
+            debugLightingDisabled = (CurrentLevelType == LevelType.Lava);
+
             if (gameUI is GameUserInterface gui)
             {
                 gui.SetTorch(game.Torch);
@@ -452,17 +462,17 @@ namespace Jam25.Screens
 
             if (CurrentLevelType == LevelType.Lava)
             {
-                boss.Update(gameTime, player.Body.Position);
+                boss.Update(gameTime, player);
 
 
-                if (!boss.Alive)
+                if (boss.CurrentStage == Boss.Stage.Dead)
                 {
                     WinScreenTransition?.Invoke(this, EventArgs.Empty);
                 }
 
 
 
-                if (Vector2.Distance(boss.Position, player.Body.Position) < 200 && player.IsAttacking != playerAttackState)
+                if (Vector2.Distance(boss.Position, player.Body.Position) < 150 && player.IsAttacking != playerAttackState)
                 {
                     playerAttackState = player.IsAttacking;
 
@@ -1015,7 +1025,8 @@ namespace Jam25.Screens
             {
                 for (int y = 0; y < mapHeight; y++)
                 {
-                    TileType tileType = gameScene.GameMap.tiles[x, y].Type;
+                    var tile = gameScene.GameMap.tiles[x, y];
+                    TileType tileType = tile.Type;
 
                     // Floors and doors should be drawn fully in the background pass only
                     if (tileType == TileType.Floor)
@@ -1036,9 +1047,9 @@ namespace Jam25.Screens
                         continue;
                     }
 
-                    Texture2D texture = gameScene.GameMap.tiles[x, y].Theme switch
+                    Texture2D texture = tile.Theme switch
                     {
-                        TileTheme.Dungeon => gameScene.GameMap.tiles[x, y].Type switch
+                        TileTheme.Dungeon => tile.Type switch
                         {
                             TileType.Floor => wallsFloor,
                             TileType.Wall1 => wallsFloor,
@@ -1134,7 +1145,7 @@ namespace Jam25.Screens
                                     texture,
                                     destRect,
                                     fullSourceRect,
-                                    Color.White,
+                                    tile.Colors.WallTint,
                                     0f,
                                     Vector2.Zero,
                                     SpriteEffects.None,
@@ -1163,7 +1174,7 @@ namespace Jam25.Screens
                                 texture,
                                 upperDest,
                                 upperSource,
-                                Color.White,
+                                tile.Colors.WallTint,
                                 0f,
                                 Vector2.Zero,
                                 SpriteEffects.None,
@@ -1188,7 +1199,7 @@ namespace Jam25.Screens
                                 texture,
                                 lowerDest,
                                 lowerSource,
-                                Color.White,
+                                tile.Colors.WallTint,
                                 0f,
                                 Vector2.Zero,
                                 SpriteEffects.None,
@@ -1205,7 +1216,7 @@ namespace Jam25.Screens
                             texture,
                             destRect,
                             fullSourceRect,
-                            Color.White,
+                            tile.Colors.FloorTint,
                             0f,
                             Vector2.Zero,
                             SpriteEffects.None,
@@ -1249,7 +1260,23 @@ namespace Jam25.Screens
                     TileType tile = gameScene.GameMap.tiles[tx, ty].Type;
 
                     if (tile == TileType.Floor)
+                    {
                         visibleTiles[tx, ty] = true;
+
+                        // Check tiles around floor for walls/doors to mark as visible.
+                        for (int ox = -1; ox <= 1; ox++)
+                        {
+                            for (int oy = -1; oy <= 1; oy++)
+                            {
+                                int checkX = tx + ox;
+                                int checkY = ty + oy;
+                                if (checkX < 0 || checkX >= mapWidth || checkY < 0 || checkY >= mapHeight)
+                                    continue;
+                                TileType adjacentTile = gameScene.GameMap.tiles[checkX, checkY].Type;
+                                visibleTiles[checkX, checkY] = true;
+                            }
+                        }
+                    }
 
                     if (tile == TileType.Wall1 || tile == TileType.Door)
                     {
@@ -1345,8 +1372,8 @@ namespace Jam25.Screens
                         continue;
 
                     TileType tileType = gameScene.GameMap.tiles[x, y].Type;
-                    if (tileType == TileType.Wall1 || tileType == TileType.Door)
-                        continue;
+                    //if (tileType == TileType.Wall1 || tileType == TileType.Door)
+                    //    continue;
 
                     Vector2 tileCenterWorld = new Vector2(x * tileSize + tileSize / 2f, y * tileSize + tileSize / 2f);
                     float distToLight = Vector2.Distance(tileCenterWorld, lightCenter);
@@ -1397,6 +1424,8 @@ namespace Jam25.Screens
             ResetWorld();
             BuildWorld(levelType);
 
+            debugLightingDisabled = (levelType == LevelType.Lava);
+
             return;
         }
 
@@ -1430,7 +1459,14 @@ namespace Jam25.Screens
         {
             if (levelType == LevelType.Dungeon)
             {
-                var bossLevel = new Dungeon(mapWidth, mapHeight, player, key);
+                var tileColors = TileColors.Default;
+                int levelIndex = gameScene.GameLevel - 1;
+                if (levelIndex >= 0 && levelIndex < levelTileColors.Length)
+                {
+                    tileColors = levelTileColors[levelIndex];
+                }
+
+                var bossLevel = new Dungeon(mapWidth, mapHeight, player, key, tileColors: tileColors);
                 gameScene.GameMap = bossLevel.Map;
 
                 InitialiseHealthPickups();
