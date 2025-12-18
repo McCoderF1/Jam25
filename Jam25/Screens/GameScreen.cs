@@ -223,23 +223,29 @@ namespace Jam25.Screens
 
             player.Draw();
 
-            var sortedEnemies = gameScene.Enemies.OrderBy(enemy => enemy.Body.Position.Y).ToList();
+            var sortedEnemies = gameScene.Enemies
+                .Where(enemy => enemy.CurrentState != Enemy.EnemyState.Dead)
+                .OrderBy(enemy => enemy.Body.Position.Y)
+                .ToList();
             for (int i = 0; i < sortedEnemies.Count; i++)
             {
-                if (sortedEnemies[i].CurrentState != Enemy.EnemyState.Dead)
-                {
-                    sortedEnemies[i].CurrentSprite.Draw(spriteBatch, sortedEnemies[i].Body.Position, whitePixelTexture, sortedEnemies[i].Health);
+                sortedEnemies[i].CurrentSprite.Draw(spriteBatch, sortedEnemies[i].Body.Position);
 
-                    foreach (Projectile p in sortedEnemies[i].Projectiles)
-                    {
-                        p.Draw(spriteBatch);
-                    }
+                foreach (Projectile p in sortedEnemies[i].Projectiles)
+                {
+                    p.Draw(spriteBatch);
                 }
             }
 
 
             //DrawLighting();
             DrawDungeon(backgroundOnly: false);
+
+            // Draw enemy health bars
+            for (int i = 0; i < sortedEnemies.Count; i++)
+            {
+                sortedEnemies[i].CurrentSprite.DrawHealthBar(spriteBatch, sortedEnemies[i].Body.Position, whitePixelTexture, sortedEnemies[i].Health);
+            }
 
             DrawDebugCollision();
 
