@@ -181,7 +181,6 @@ namespace Jam25.Screens
 
             gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player, gameScene);
 
-
             lightMask = LightMaskFactory.CreateRadialMask(graphicsDevice, lightMaskSize);
             tileShadowMask = LightMaskFactory.CreateTileShadowMask(graphicsDevice, 64);
 
@@ -237,7 +236,6 @@ namespace Jam25.Screens
                     }
                 }
             }
-
 
 
             //DrawLighting();
@@ -615,7 +613,7 @@ namespace Jam25.Screens
                     TileType type = gameScene.GameMap.tiles[tx, ty].Type;
 
                     // Block movement on walls always
-                    if (type == TileType.Wall1)
+                    if (type == TileType.Wall1 || type == TileType.Empty)
                     {
                         return false;
                     }
