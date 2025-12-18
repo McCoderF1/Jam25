@@ -1,4 +1,6 @@
-﻿using HDT.Gaming.Audio;
+﻿using System;
+using System.Threading.Tasks;
+using HDT.Gaming.Audio;
 using HDT.Gaming.Input;
 using HDT.Gaming.Physics;
 using HDT.Gaming.Screens;
@@ -13,10 +15,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Jam25.Screens
 {
@@ -79,10 +77,31 @@ namespace Jam25.Screens
         private const float DeathFadeDuration = 1.5f;
         private float deathTorchEnergyAtDeath = 0f;
 
+        // Safe room campfire
+        private Campfire campfire;
+        private bool isInSafeRoom = false;
+        
+        private bool safeRoomTransitioning = false;
+        private float safeRoomFadeTimer = 0f;
+        private const float SafeRoomFadeInDuration = 2f;
+        private float safeRoomFadeOpacity = 1f;
+        private bool pendingTransition = false;
+        private float transitionDelayTimer = 0f;
+        private const float TransitionDelay = 1f;
+
         // Camera
         private Vector2 CameraPosition;
         private Rectangle WorldBounds => new Rectangle(0, 0, mapWidth * tileSize, mapHeight * tileSize);
         private bool draw = true;
+
+        private bool currentLevelCompleted = false;
+
+        private readonly Texture2D debugPixel;
+        private readonly bool debugDrawCollision = false;
+
+        private const int PlayerColliderHalfWidth = 9;
+        private const int PlayerColliderHalfHeight = 1;
+        private const int WallOverlapHeight = 8;
 
         #endregion
 
@@ -119,17 +138,11 @@ namespace Jam25.Screens
             key = new KeyPickup(game.Content);
 
             var gameMap = new GameMap(mapWidth, mapHeight);
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene);
-            gameMap.AddKey(key);
-            gameMap.AddPlayer(player);
-            gameMap.AddDoor();
 
             gameScene = new(gameMap, player, enemySpawner);
 
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
             whitePixelTexture = game.Content.Load<Texture2D>("Textures/WhiteRectangle");
-
-            gameScene.Pickups.Add(key);
 
             visibleTiles = new bool[mapWidth, mapHeight];
 
@@ -145,7 +158,19 @@ namespace Jam25.Screens
 
             gameScene.Enemies.Add(enemyFactory.CreateSlimeEnemy(new(200, 200)));
 
-            this.LevelCompleted += (_, _) => Task.Delay(1000).ContinueWith(_ => Transition());
+            //this.LevelCompleted += (_, _) => currentLevelCompleted = true;
+
+            //debugPixel = new Texture2D(game.GraphicsDevice, 1, 1);
+            //debugPixel.SetData(new[] { Color.White });
+
+            this.LevelCompleted += (_, _) => StartPendingTransition();
+        }
+        
+        private void StartPendingTransition()
+        {
+            pendingTransition = true;
+            transitionDelayTimer = 0f;
+            draw = false;
         }
 
         public void Draw()
@@ -154,9 +179,22 @@ namespace Jam25.Screens
                 return;
 
             spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, Matrix.CreateTranslation(new Vector3(-CameraPosition, 0f)));
+            spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                null,
+                null,
+                null,
+                Matrix.CreateTranslation(new Vector3(-CameraPosition, 0f)));
 
-            DrawDungeon();
+            DrawDungeon(backgroundOnly: true);
+
+
+            if (isInSafeRoom && campfire != null)
+            {
+                campfire.Draw(spriteBatch);
+            }
 
             foreach (IPickup pickup in gameScene.Pickups)
             {
@@ -178,6 +216,29 @@ namespace Jam25.Screens
                 }
             }
 
+            DrawDungeon(backgroundOnly: false);
+
+            DrawDebugCollision();
+
+            DrawLighting();
+            if (!isInSafeRoom)
+            {
+                DrawLighting();
+            }
+
+            if (safeRoomTransitioning || (isInSafeRoom && safeRoomFadeOpacity > 0f))
+            {
+                var screenInWorld = new Rectangle(
+                    (int)CameraPosition.X,
+                    (int)CameraPosition.Y,
+                    graphicsDevice.Viewport.Width,
+                    graphicsDevice.Viewport.Height);
+                spriteBatch.Draw(game.UiWhitePixel, screenInWorld, Color.Black * safeRoomFadeOpacity);
+            }
+            DrawDungeon(backgroundOnly: false);
+
+            DrawDebugCollision();
+
             DrawLighting();
 
             spriteBatch.End();
@@ -193,12 +254,22 @@ namespace Jam25.Screens
 
         public void Show()
         {
-            gameScene.Pickups.Clear();
+            ResetWorld();
+            BuildWorld();
 
             // Reset death state
             playerDied = false;
             deathTimer = 0f;
             deathTorchEnergyAtDeath = 0f;
+
+            // Reset safe room state
+            isInSafeRoom = false;
+            campfire = null;
+            safeRoomTransitioning = false;
+            safeRoomFadeTimer = 0f;
+            safeRoomFadeOpacity = 0f;
+            pendingTransition = false;
+            transitionDelayTimer = 0f;
 
             // Reset player state
             player.Health.Heal(player.Health.Max);
@@ -222,22 +293,57 @@ namespace Jam25.Screens
                 gui.SetTorch(game.Torch);
             }
 
-            for (int i = 0; i < coalPickupCount; i++)
-            {
-                CoalSize size = (CoalSize)spawnRandom.Next(0, 4);
-                var coal = new CoalPickup(PointWithinWalls(), size, game.Content);
-                coal.TargetTorch = game.Torch;
-                gameScene.Pickups.Add(coal);
-            }
-
-            gameScene.Pickups.Add(key);
-
             gameUI?.Show();
         }
 
         public void Update(GameTime gameTime)
         {
+            if (currentLevelCompleted)
+            {
+                currentLevelCompleted = false;
+                gameUI.SkillsAndAbilitiesTrigger();
+                return;
+            }
+
             KeyboardInput.GetInput();
+
+            if (pendingTransition)
+            {
+                transitionDelayTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                if (transitionDelayTimer >= TransitionDelay)
+                {
+                    pendingTransition = false;
+                    ExecuteTransition();
+                }
+                return;
+            }
+
+            if (safeRoomTransitioning)
+            {
+                safeRoomFadeTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                safeRoomFadeOpacity = MathHelper.Clamp(1f - (safeRoomFadeTimer / SafeRoomFadeInDuration), 0f, 1f);
+                if (safeRoomFadeTimer >= SafeRoomFadeInDuration)
+                {
+                    safeRoomTransitioning = false;
+                    safeRoomFadeOpacity = 0f;
+                    player.MoveSpeed = 1.0f; // Allow movement again in safe room
+                }
+                if (campfire != null)
+                {
+                    campfire.Update(gameTime);
+                }
+                return;
+            }
+
+            if (isInSafeRoom)
+            {
+                if (campfire != null)
+                {
+                    campfire.Update(gameTime);
+                }
+                // Optionally, add logic here to leave the safe room and start next level
+                return;
+            }
 
             if (player.LastState == Player.PlayerState.Dying && !playerDied)
             {
@@ -250,7 +356,7 @@ namespace Jam25.Screens
             if (playerDied)
             {
                 deathTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
-                
+
                 if (deathTimer < DeathShrinkDuration)
                 {
                     float shrinkProgress = deathTimer / DeathShrinkDuration;
@@ -267,7 +373,7 @@ namespace Jam25.Screens
                 {
                     game.Torch.SetEmpty();
                 }
-                
+
                 if (deathTimer >= DeathDelay)
                 {
                     PlayerDied?.Invoke(this, EventArgs.Empty);
@@ -290,6 +396,11 @@ namespace Jam25.Screens
             MovePlayer(gameTime);
             gameScene.Update(gameTime);
             
+            if (isInSafeRoom && campfire != null)
+            {
+                campfire.Update(gameTime);
+            }
+            
             Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
 
             float cameraMinX = WorldBounds.X;
@@ -310,6 +421,70 @@ namespace Jam25.Screens
         }
 
         #region private methods
+
+        private void DrawDebugRect(Rectangle rect, Color color, float thickness = 1f)
+        {
+            // Left
+            spriteBatch.Draw(debugPixel, new Rectangle(rect.X, rect.Y, (int)thickness, rect.Height), color);
+            // Right
+            spriteBatch.Draw(debugPixel, new Rectangle(rect.Right, rect.Y, (int)thickness, rect.Height), color);
+            // Top
+            spriteBatch.Draw(debugPixel, new Rectangle(rect.X, rect.Y, rect.Width, (int)thickness), color);
+            // Bottom
+            spriteBatch.Draw(debugPixel, new Rectangle(rect.X, rect.Bottom, rect.Width, (int)thickness), color);
+        }
+
+        private void DrawDebugCollision()
+        {
+            if (!debugDrawCollision)
+            {
+                return;
+            }
+
+            // 1) Draw tile grid (optional)
+            for (int x = 0; x < mapWidth; x++)
+            {
+                for (int y = 0; y < mapHeight; y++)
+                {
+                    Rectangle tileRect = new Rectangle(x * tileSize, y * tileSize, tileSize, tileSize);
+
+                    // Thin gray grid
+                    DrawDebugRect(tileRect, new Color(80, 80, 80, 120), 1f);
+
+                    // 2) Highlight collidable tiles (walls, doors)
+                    var tile = gameScene.GameMap.tiles[x, y];
+                    if (tile.Type == TileType.Wall)
+                    {
+                        DrawDebugRect(tileRect, Color.Red, 2f);
+                    }
+                    else if (tile.Type == TileType.Door)
+                    {
+                        DrawDebugRect(tileRect, Color.Orange, 2f);
+                    }
+                }
+            }
+
+            // 3) Draw player body (assuming Body.Position is center and radius-like AABB)
+            const int playerHalfSize = 16; // adjust to your actual collider
+            var playerRect = new Rectangle(
+                (int)(player.Body.Position.X - playerHalfSize),
+                (int)(player.Body.Position.Y - playerHalfSize),
+                playerHalfSize * 2,
+                playerHalfSize * 2);
+            DrawDebugRect(playerRect, Color.Lime, 2f);
+
+            // 4) Draw enemies' bodies similarly
+            foreach (var enemy in gameScene.Enemies)
+            {
+                const int enemyHalfSize = 16; // adjust to actual
+                var enemyRect = new Rectangle(
+                    (int)(enemy.Body.Position.X - enemyHalfSize),
+                    (int)(enemy.Body.Position.Y - enemyHalfSize),
+                    enemyHalfSize * 2,
+                    enemyHalfSize * 2);
+                DrawDebugRect(enemyRect, Color.Cyan, 2f);
+            }
+        }
 
         private Vector2 PointWithinWalls()
         {
@@ -332,20 +507,34 @@ namespace Jam25.Screens
             if (probableTargetPosition is not null)
             {
                 Vector2 targetPosition = (Vector2)probableTargetPosition;
-                float buffer = 8;
 
-                bool canMove = IsTileType(TileType.Floor, targetPosition.X - buffer, targetPosition.Y)
-                    || (player.HasKey && (IsTileType(TileType.Door, targetPosition.X, targetPosition.Y)));
+                // Build player collider at proposed position (centered on Body.Position)
+                Rectangle playerRect = new Rectangle(
+                    (int)(targetPosition.X - PlayerColliderHalfWidth),
+                    (int)(targetPosition.Y - PlayerColliderHalfHeight),
+                    PlayerColliderHalfWidth * 2,
+                    PlayerColliderHalfHeight * 2);
+
+                bool canMove = CanMoveTo(playerRect);
+
+                if (isInSafeRoom && campfire != null)
+                {
+                    float campfireRadius = campfire.DrawSize * 0.4f;
+                    if (Vector2.Distance(targetPosition, campfire.Position) < campfireRadius)
+                    {
+                        canMove = false;
+                    }
+                }
 
                 if (canMove)
                 {
                     player.Body.Position = targetPosition;
 
-                    if (IsTileType(TileType.Door, targetPosition.X, targetPosition.Y))
+                    if (IsOverDoor(playerRect) && player.HasKey && !isInSafeRoom)
                     {
                         player.MoveSpeed = 0f;
-
-                        LevelCompleted?.Invoke(this, EventArgs.Empty);
+                        EnterSafeRoom();
+                        return;
                     }
 
                     foreach (IPickup pickup in gameScene.Pickups)
@@ -359,21 +548,104 @@ namespace Jam25.Screens
             }
         }
 
-        private bool IsTileType(TileType type, float x, float y)
+        private void EnterSafeRoom()
         {
-            int xProj = Convert.ToInt32(Math.Round(x / tileSize, MidpointRounding.ToZero));
-            int yProj = Convert.ToInt32(Math.Round(y / tileSize, MidpointRounding.ToZero));
-
-            return gameScene.GameMap.tiles[xProj, yProj].Type == type;
+            isInSafeRoom = true;
+            safeRoomTransitioning = true;
+            safeRoomFadeTimer = 0f;
+            safeRoomFadeOpacity = 1f;
+            // Place campfire at center of first room (safe room)
+            var safeRoom = gameScene.GameMap.Rooms != null && gameScene.GameMap.Rooms.Length > 0 ? gameScene.GameMap.Rooms[0] : new Rectangle(mapWidth/2, mapHeight/2, 1, 1);
+            Vector2 campfirePos = new Vector2(safeRoom.Center.X * tileSize, safeRoom.Center.Y * tileSize);
+            campfire = new Campfire(
+                content: gameUI.Content,
+                graphicsDevice: graphicsDevice,
+                position: campfirePos
+            )
+            {
+                DrawSize = 96
+            };
         }
 
-        private void DrawDungeon()
+        private bool CanMoveTo(Rectangle playerRect)
+        {
+            // Convert world rect to tile indices
+            int minTileX = Math.Max(0, playerRect.Left / tileSize);
+            int maxTileX = Math.Min(mapWidth - 1, playerRect.Right / tileSize);
+            int minTileY = Math.Max(0, playerRect.Top / tileSize);
+            int maxTileY = Math.Min(mapHeight - 1, playerRect.Bottom / tileSize);
+
+            for (int tx = minTileX; tx <= maxTileX; tx++)
+            {
+                for (int ty = minTileY; ty <= maxTileY; ty++)
+                {
+                    TileType type = gameScene.GameMap.tiles[tx, ty].Type;
+
+                    // Block movement on walls always
+                    if (type == TileType.Wall)
+                    {
+                        return false;
+                    }
+
+                    // Doors only block if you don't have the key; allow floor always
+                    if (type == TileType.Door && !player.HasKey)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private bool IsOverDoor(Rectangle playerRect)
+        {
+            int minTileX = Math.Max(0, playerRect.Left / tileSize);
+            int maxTileX = Math.Min(mapWidth - 1, playerRect.Right / tileSize);
+            int minTileY = Math.Max(0, playerRect.Top / tileSize);
+            int maxTileY = Math.Min(mapHeight - 1, playerRect.Bottom / tileSize);
+
+            for (int tx = minTileX; tx <= maxTileX; tx++)
+            {
+                for (int ty = minTileY; ty <= maxTileY; ty++)
+                {
+                    if (gameScene.GameMap.tiles[tx, ty].Type == TileType.Door)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        
+        private void DrawDungeon(bool backgroundOnly)
         {
             for (int x = 0; x < mapWidth; x++)
             {
                 for (int y = 0; y < mapHeight; y++)
                 {
-                    Texture2D texture = gameScene.GameMap.tiles[x, y].Type switch
+                    TileType tileType = gameScene.GameMap.tiles[x, y].Type;
+
+                    // Floors and doors should be drawn fully in the background pass only
+                    if (tileType == TileType.Floor || tileType == TileType.Door)
+                    {
+                        if (!backgroundOnly)
+                        {
+                            continue;
+                        }
+                    }
+                    else if (tileType == TileType.Wall)
+                    {
+                        // Walls are split: upper in background pass, lower in foreground pass
+                        // so in background pass we draw the wall minus a bottom strip
+                        // in foreground pass we draw only that bottom strip.
+                    }
+                    else
+                    {
+                        continue;
+                    }
+
+                    Texture2D texture = tileType switch
                     {
                         TileType.Floor => wallsFloor,
                         TileType.Wall => wallsFloor,
@@ -381,29 +653,134 @@ namespace Jam25.Screens
                         _ => null,
                     };
 
-                    if (texture != null)
+                    if (texture == null)
                     {
-                        Rectangle sourceRect = gameScene.GameMap.tiles[x, y].Type switch
-                        {
-                            TileType.Floor => new Rectangle(8, 86, 32, 32),
-                            TileType.Wall => gameScene.GameMap.tiles[x, y].WallMask switch
-                            {
-                                WallMask.North => new Rectangle(8, 0, 30, 24),
-                                WallMask.South => new Rectangle(8, 14, 32, 64),
-                                WallMask.West => new Rectangle(2, 8, 32, 24),
-                                WallMask.East => new Rectangle(14, 8, 32, 24),
-                                _ => Rectangle.Empty
-                            },
-                            TileType.Door => new Rectangle(1, 32, 32, 32),
-                            _ => Rectangle.Empty,
-                        };
+                        continue;
+                    }
 
+                    Rectangle fullSourceRect = tileType switch
+                    {
+                        TileType.Floor => new Rectangle(8, 86, 32, 32),
+                        TileType.Wall => gameScene.GameMap.tiles[x, y].WallMask switch
+                        {
+                            WallMask.North => new Rectangle(8, 0, 30, 24),
+                            WallMask.South => new Rectangle(8, 32, 32, 32),
+                            WallMask.West => new Rectangle(2, 8, 32, 24),
+                            WallMask.East => new Rectangle(14, 8, 32, 24),
+                            _ => gameScene.GameMap.tiles[x, y].WallShape switch
+                            {
+                                WallShape.InnerCornerNW => new Rectangle(2, 0, 32, 32),
+                                WallShape.InnerCornerNE => new Rectangle(16, 0, 30, 32),
+                                WallShape.InnerCornerSW => new Rectangle(2, 32, 32, 32),
+                                WallShape.InnerCornerSE => new Rectangle(14, 32, 32, 32),
+                                WallShape.OuterCornerSE => new Rectangle(64, 32, 32, 32),
+                                WallShape.StraightHorizontal => new Rectangle(2, 7, 44, 30),
+                                WallShape.StraightVertical => new Rectangle(9, 0, 30, 78),
+                                _ => Rectangle.Empty,
+                            },
+                        },
+                        TileType.Door => new Rectangle(1, 32, 32, 32),
+                        _ => Rectangle.Empty,
+                    };
+
+                    if (fullSourceRect == Rectangle.Empty)
+                    {
+                        continue;
+                    }
+
+                    Rectangle destRect = new Rectangle(x * tileSize, y * tileSize, tileSize, tileSize);
+
+                    if (tileType == TileType.Wall)
+                    {
+                        // Map “world” overlap height into texture space
+                        int overlapWorld = WallOverlapHeight;
+                        int overlapSource = (int)(overlapWorld * (fullSourceRect.Height / (float)tileSize));
+
+                        if (overlapSource <= 0 || overlapSource >= fullSourceRect.Height)
+                        {
+                            // Fallback: draw full wall in background
+                            if (backgroundOnly)
+                            {
+                                spriteBatch.Draw(
+                                    texture,
+                                    destRect,
+                                    fullSourceRect,
+                                    Color.White,
+                                    0f,
+                                    Vector2.Zero,
+                                    SpriteEffects.None,
+                                    0f);
+                            }
+
+                            continue;
+                        }
+
+                        if (!backgroundOnly)
+                        {
+                            // Upper part: full wall minus bottom overlap strip
+                            Rectangle upperSource = new Rectangle(
+                                fullSourceRect.X,
+                                fullSourceRect.Y,
+                                fullSourceRect.Width,
+                                fullSourceRect.Height - overlapSource);
+
+                            Rectangle upperDest = new Rectangle(
+                                destRect.X,
+                                destRect.Y,
+                                destRect.Width,
+                                destRect.Height - overlapWorld);
+
+                            spriteBatch.Draw(
+                                texture,
+                                upperDest,
+                                upperSource,
+                                Color.White,
+                                0f,
+                                Vector2.Zero,
+                                SpriteEffects.None,
+                                0f);
+                        }
+                        else
+                        {
+                            // Foreground strip: only the bottom overlap strip
+                            Rectangle lowerSource = new Rectangle(
+                                fullSourceRect.X,
+                                fullSourceRect.Bottom - overlapSource,
+                                fullSourceRect.Width,
+                                overlapSource);
+
+                            Rectangle lowerDest = new Rectangle(
+                                destRect.X,
+                                destRect.Bottom - overlapWorld,
+                                destRect.Width,
+                                overlapWorld);
+
+                            spriteBatch.Draw(
+                                texture,
+                                lowerDest,
+                                lowerSource,
+                                Color.White,
+                                0f,
+                                Vector2.Zero,
+                                SpriteEffects.None,
+                                0f);
+                        }
+
+                        continue;
+                    }
+
+                    // Floors and doors: draw once in background pass
+                    if (backgroundOnly)
+                    {
                         spriteBatch.Draw(
                             texture,
-                            new Rectangle(x * tileSize, y * tileSize, tileSize, tileSize),
-                            sourceRect,
+                            destRect,
+                            fullSourceRect,
                             Color.White,
-                            0f, Vector2.Zero, SpriteEffects.None, 0f);
+                            0f,
+                            Vector2.Zero,
+                            SpriteEffects.None,
+                            0f);
                     }
                 }
             }
@@ -556,21 +933,50 @@ namespace Jam25.Screens
             return true;
         }
 
-        private void Transition()
+        private void ExecuteTransition()
         {
-            GameMap checkPoint = new GameMap(mapWidth, mapHeight);
-            checkPoint.MakeMap(1, 10, 10, mapWidth, mapHeight, gameScene);
-            checkPoint.AddPlayer(gameScene.Player);
-            gameScene.Enemies.Clear();
-            gameScene.Pickups.Clear();
-            gameScene.EnemySpawner = null;
-            gameScene.Player.MoveSpeed = 1.0f;
-            gameScene.Player.HasKey = false;
-            gameUI.CollectedItems.Clear();
+            ResetWorld();
+            BuildWorld();
+        }
 
-            gameScene.GameMap = checkPoint;
-            draw = false;
-            Task.Delay(1000).ContinueWith(_ => draw = true);
+        private void ResetWorld()
+        {
+            gameScene.Reset();
+
+            // Reset death state
+            playerDied = false;
+            deathTimer = 0f;
+            deathTorchEnergyAtDeath = 0f;
+
+            // Reset player state
+            player.Health.Heal(player.Health.Max);
+            player.LastState = Player.PlayerState.Idle;
+            player.HasKey = false;
+            player.MoveSpeed = 1.0f;
+        }
+
+        private void BuildWorld()
+        {
+            gameScene.GameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene);
+            gameScene.GameMap.AddKey(key);
+            gameScene.GameMap.AddPlayer(player);
+            gameScene.GameMap.AddDoor();
+
+            for (int i = 0; i < healthPickupCount; i++)
+            {
+                gameScene.Pickups.Add(new HealthPack(PointWithinWalls(), game.Content));
+            }
+
+            for (int i = 0; i < coalPickupCount; i++)
+            {
+                CoalSize size = (CoalSize)spawnRandom.Next(0, 4);
+                var coal = new CoalPickup(PointWithinWalls(), size, game.Content);
+                coal.TargetTorch = game.Torch;
+                gameScene.Pickups.Add(coal);
+            }
+
+            key.Reset();
+            gameScene.Pickups.Add(key);
         }
 
         #endregion

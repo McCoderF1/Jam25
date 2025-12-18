@@ -1,8 +1,8 @@
-﻿using Jam25.Entities.Pickups;
+﻿using System;
+using System.Collections.Generic;
+using Jam25.Entities.Pickups;
 using Jam25.Scenes;
 using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
 
 namespace Jam25.Entities
 {
@@ -14,6 +14,23 @@ namespace Jam25.Entities
         South = 2,
         West = 4,
         East = 8
+    }
+
+    public enum WallShape
+    {
+        None,
+        StraightHorizontal,
+        StraightVertical,
+        InnerCornerNE,
+        InnerCornerNW,
+        InnerCornerSE,
+        InnerCornerSW,
+        OuterCornerNE,
+        OuterCornerNW,
+        OuterCornerSE,
+        OuterCornerSW,
+        End,
+        Pillar
     }
 
     public enum TileType
@@ -34,6 +51,7 @@ namespace Jam25.Entities
     {
         public TileType Type = type;
         public WallMask WallMask;
+        public WallShape WallShape;
 
         public DoorOrientation? DoorOrientation;
     }
@@ -126,7 +144,7 @@ namespace Jam25.Entities
             // Add walls around floors
             AddWalls(mapWidth, mapHeight);
 
-            ComputeWallMasks();
+            ComputeWalls();
         }
 
         public void AddDoor()
@@ -151,8 +169,12 @@ namespace Jam25.Entities
             player.Body.Position = Rooms[0].Center.ToVector2() * 32;
         }
 
+        public void Reset()
+        {
+            InitialiseTiles();
+        }
 
-        bool PlaceSingleSealedDoor(Tile[,] map, Rectangle[] rooms)
+        private bool PlaceSingleSealedDoor(Tile[,] map, Rectangle[] rooms)
         {
             var candidates = GetSealedDoorCandidates(map, rooms);
 
@@ -168,7 +190,7 @@ namespace Jam25.Entities
             return true;
         }
 
-        List<(int x, int y, DoorOrientation orientation)> GetSealedDoorCandidates(Tile[,] map, Rectangle[] rooms)
+        private List<(int x, int y, DoorOrientation orientation)> GetSealedDoorCandidates(Tile[,] map, Rectangle[] rooms)
         {
             var candidates = new List<(int, int, DoorOrientation)>();
 
@@ -204,7 +226,7 @@ namespace Jam25.Entities
             return candidates;
         }
 
-        bool IsSealedVerticalDoorCandidate(Tile[,] map, int x, int y)
+        private bool IsSealedVerticalDoorCandidate(Tile[,] map, int x, int y)
         {
             bool northFloor = map[x, y - 1].Type == TileType.Floor;
             bool southFloor = map[x, y + 1].Type == TileType.Floor;
@@ -216,7 +238,7 @@ namespace Jam25.Entities
             return map[x, y].Type == TileType.Wall;
         }
 
-        bool IsSealedHorizontalDoorCandidate(Tile[,] map, int x, int y)
+        private bool IsSealedHorizontalDoorCandidate(Tile[,] map, int x, int y)
         {
             bool westFloor = map[x - 1, y].Type == TileType.Floor;
             bool eastFloor = map[x + 1, y].Type == TileType.Floor;
@@ -224,7 +246,8 @@ namespace Jam25.Entities
             return map[x, y].Type == TileType.Wall && !westFloor && !eastFloor;
         }
 
-        void ComputeWallMasks()
+
+        private void ComputeWalls()
         {
             int w = tiles.GetLength(0);
             int h = tiles.GetLength(1);
@@ -243,6 +266,7 @@ namespace Jam25.Entities
                     if (tiles[x + 1, y].Type == TileType.Floor) mask |= WallMask.East;
 
                     tiles[x, y].WallMask = mask;
+                    tiles[x, y].WallShape = DetermineWallShape(mask);
                 }
         }
 
@@ -263,7 +287,49 @@ namespace Jam25.Entities
             }
         }
 
-        public void CreateRoom(Rectangle room)
+        private WallShape DetermineWallShape(WallMask mask)
+        {
+            bool n = mask.HasFlag(WallMask.North);
+            bool s = mask.HasFlag(WallMask.South);
+            bool w = mask.HasFlag(WallMask.West);
+            bool e = mask.HasFlag(WallMask.East);
+
+            int count = (n ? 1 : 0) + (s ? 1 : 0) + (w ? 1 : 0) + (e ? 1 : 0);
+
+            // Pillar (isolated wall)
+            if (count == 0)
+                return WallShape.Pillar;
+
+            // Ends
+            if (count == 1)
+                return WallShape.End;
+
+            // Straight walls
+            if (n && s && !e && !w)
+                return WallShape.StraightVertical;
+
+            if (e && w && !n && !s)
+                return WallShape.StraightHorizontal;
+
+            // Inner corners (touching floors)
+            if (n && e) return WallShape.InnerCornerNE;
+            if (n && w) return WallShape.InnerCornerNW;
+            if (s && e) return WallShape.InnerCornerSE;
+            if (s && w) return WallShape.InnerCornerSW;
+
+            // Outer corners (missing diagonal floor)
+            if (count == 3)
+            {
+                if (!n) return WallShape.OuterCornerNE;
+                if (!s) return WallShape.OuterCornerSE;
+                if (!w) return WallShape.OuterCornerNW;
+                if (!e) return WallShape.OuterCornerSW;
+            }
+
+            return WallShape.None;
+        }
+
+        private void CreateRoom(Rectangle room)
         {
             for (int x = room.Left + 1; x < room.Right; x++)
             {
@@ -275,7 +341,7 @@ namespace Jam25.Entities
             }
         }
 
-        public void CreateHTunnel(int x1, int x2, int y)
+        private void CreateHTunnel(int x1, int x2, int y)
         {
             for (int x = Math.Min(x1, x2); x <= Math.Max(x1, x2); x++)
             {
@@ -283,7 +349,7 @@ namespace Jam25.Entities
             }
         }
 
-        public void CreateVTunnel(int y1, int y2, int x)
+        private void CreateVTunnel(int y1, int y2, int x)
         {
             for (int y = Math.Min(y1, y2); y <= Math.Max(y1, y2); y++)
             {
@@ -291,7 +357,7 @@ namespace Jam25.Entities
             }
         }
 
-        public void InitialiseTiles()
+        private void InitialiseTiles()
         {
             tiles = new Tile[width, height];
 

@@ -1,4 +1,3 @@
-using HDT.Gaming.Audio;
 using Jam25.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -20,8 +19,6 @@ namespace Jam25.Entities.Pickups
         public bool Consumed { get; set; }
         public CoalSize Size { get; }
         public float EnergyAmount { get; }
-        
-        // Store torch reference to add energy on collect
         public Torch TargetTorch { get; set; }
 
         private readonly Texture2D spriteSheet;
@@ -53,14 +50,20 @@ namespace Jam25.Entities.Pickups
         {
             if (Consumed) return;
 
-            // Add energy to torch if it's been set
             if (TargetTorch != null)
             {
                 TargetTorch.AddEnergy(EnergyAmount);
             }
-
+            
             Consumed = true;
-            AudioManager.PlaySound("TakeItem");
+        }
+
+        public void CollectWithTorch(Torch torch)
+        {
+            if (Consumed) return;
+
+            torch.AddEnergy(EnergyAmount);
+            Consumed = true;
         }
 
         public void Draw(SpriteBatch spriteBatch, int tileSize)
