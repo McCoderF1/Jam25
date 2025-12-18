@@ -242,11 +242,6 @@ namespace Jam25.Screens
             }
 
 
-            boss.Draw(spriteBatch);
-            foreach (Projectile p in boss.Projectiles)
-            {
-                p.Draw(spriteBatch);
-            }
 
             //DrawLighting();
             DrawDungeon(backgroundOnly: false);
@@ -265,6 +260,8 @@ namespace Jam25.Screens
 
             spriteBatch.End();
             spriteBatch.Begin(samplerState: SamplerState.PointClamp);
+
+            boss.DrawHealthBar(spriteBatch, game.GraphicsDevice.Viewport.Width);
 
             gameUI?.Draw();
 
@@ -419,6 +416,13 @@ namespace Jam25.Screens
 
             // temporary
             boss.Update(gameTime, player.Body.Position);
+
+
+            if (Vector2.Distance(boss.Position, player.Body.Position) < 150)
+            {
+                boss.TakeDamage(1);
+            }
+
             List<Projectile> toRemove = new();
             foreach (Projectile p in boss.Projectiles)
             {
