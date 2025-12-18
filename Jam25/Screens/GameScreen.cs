@@ -333,6 +333,8 @@ namespace Jam25.Screens
 
             BuildWorld(CurrentLevelType);
 
+            debugLightingDisabled = (CurrentLevelType == LevelType.Lava);
+
             if (gameUI is GameUserInterface gui)
             {
                 gui.SetTorch(game.Torch);
@@ -1139,6 +1141,8 @@ namespace Jam25.Screens
         {
             ResetWorld();
             BuildWorld(levelType);
+
+            debugLightingDisabled = (levelType == LevelType.Lava);
 
             return;
         }

@@ -305,6 +305,18 @@
 /processorParam:TextureFormat=Color
 /build:Images/Casino/Bell.png
 
+#begin Images/Casino/BigWin.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/Casino/BigWin.png
+
 #begin Images/Casino/Cherry.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -341,6 +353,18 @@
 /processorParam:TextureFormat=Color
 /build:Images/Casino/HandleUp.png
 
+#begin Images/Casino/MegaWin.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/Casino/MegaWin.png
+
 #begin Images/Casino/Seven.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -364,6 +388,30 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Images/Casino/SlotMachine.png
+
+#begin Images/Casino/SuperWin.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/Casino/SuperWin.png
+
+#begin Images/Casino/WIN.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/Casino/WIN.png
 
 #begin Images/DeathScreen.png
 /importer:TextureImporter
