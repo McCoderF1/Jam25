@@ -92,6 +92,8 @@ namespace Jam25.Screens
         private const int PlayerColliderHalfHeight = 1;
         private const int WallOverlapHeight = 8;
 
+        private Boss boss;
+
         #endregion
 
         public EventHandler LevelCompleted { get; set; }
@@ -151,6 +153,11 @@ namespace Jam25.Screens
 
             debugPixel = new Texture2D(game.GraphicsDevice, 1, 1);
             debugPixel.SetData(new[] { Color.White });
+            key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
+            this.LevelCompleted += (_, _) => Task.Delay(1000).ContinueWith(_ => Transition());
+
+
+            boss = new Boss(content);
         }
 
         public void Draw()
@@ -175,6 +182,8 @@ namespace Jam25.Screens
                 pickup.Draw(spriteBatch, tileSize);
             }
 
+
+
             player.Draw();
 
             var sortedEnemies = gameScene.Enemies.OrderBy(enemy => enemy.Body.Position.Y).ToList();
@@ -191,6 +200,14 @@ namespace Jam25.Screens
                 }
             }
 
+
+            boss.Draw(spriteBatch);
+            foreach (Projectile p in boss.Projectiles)
+            {
+                p.Draw(spriteBatch); 
+            }
+
+            //DrawLighting();
             DrawDungeon(backgroundOnly: false);
 
             DrawDebugCollision();
@@ -201,6 +218,8 @@ namespace Jam25.Screens
             spriteBatch.Begin(samplerState: SamplerState.PointClamp);
 
             gameUI?.Draw();
+
+            
         }
 
         public void Hide()
@@ -217,6 +236,8 @@ namespace Jam25.Screens
             {
                 gui.SetTorch(game.Torch);
             }
+
+            boss.Position = player.Body.Position;
 
             gameUI?.Show();
         }
@@ -284,6 +305,11 @@ namespace Jam25.Screens
 
             MovePlayer(gameTime);
             gameScene.Update(gameTime);
+
+
+            boss.Update(gameTime, player.Body.Position);
+            // Update projectiles
+
 
             Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
 
