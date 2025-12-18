@@ -248,17 +248,22 @@ namespace Jam25.Screens
             DrawLighting();
 
 
-            // temporary
-            boss.Draw(spriteBatch);
-            foreach (Projectile p in boss.Projectiles)
+            if (CurrentLevelType == LevelType.Lava)
             {
-                p.Draw(spriteBatch);
+                boss.Draw(spriteBatch);
+                foreach (Projectile p in boss.Projectiles)
+                {
+                    p.Draw(spriteBatch);
+                }
             }
 
             spriteBatch.End();
             spriteBatch.Begin(samplerState: SamplerState.PointClamp);
 
-            boss.DrawHealthBar(spriteBatch, game.GraphicsDevice.Viewport.Width);
+            if (CurrentLevelType == LevelType.Lava)
+            {
+                boss.DrawHealthBar(spriteBatch, game.GraphicsDevice.Viewport.Width);
+            }
 
             gameUI?.Draw();
         }
@@ -295,8 +300,10 @@ namespace Jam25.Screens
                 gui.SetTorch(game.Torch);
             }
 
-            // temporary
-            boss.Position = PointWithinWalls();
+            if (CurrentLevelType == LevelType.Lava)
+            {
+                boss.Position = PointWithinWalls();
+            }
 
             gameUI?.Show();
         }
@@ -370,10 +377,6 @@ namespace Jam25.Screens
             gameScene.Update(gameTime);
 
 
-            boss.Update(gameTime, player.Body.Position);
-            // Update projectiles
-
-
             Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
 
             float cameraMinX = WorldBounds.X;
@@ -396,34 +399,36 @@ namespace Jam25.Screens
 
 
             // temporary
-            boss.Update(gameTime, player.Body.Position);
-
-
-            if (Vector2.Distance(boss.Position, player.Body.Position) < 150)
+            if (CurrentLevelType == LevelType.Lava)
             {
-                boss.TakeDamage(1);
-            }
+                boss.Update(gameTime, player.Body.Position);
 
-            List<Projectile> toRemove = new();
-            foreach (Projectile p in boss.Projectiles)
-            {
-                p.Update(gameTime.ElapsedGameTime.Milliseconds);
-                if (Vector2.Distance(p.Position, player.Body.Position) < 20 && p.CurrentState == Projectile.ProjectileState.Alive)
-                {
-                    p.HitSomething();
-                    player.TakeDamage(p.Damage);
-                }
-                if (gameScene.GameMap.tiles[(int)p.Position.X / 32, (int)p.Position.Y / 32].Type != TileType.Floor)
-                {
-                    p.HitSomething();
-                }
-                if (p.CurrentState == Projectile.ProjectileState.Dead)
-                {
-                    toRemove.Add(p);
-                }
-            }
-            boss.Projectiles.RemoveAll(i => toRemove.Contains(i));
 
+                if (Vector2.Distance(boss.Position, player.Body.Position) < 150)
+                {
+                    boss.TakeDamage(1);
+                }
+
+                List<Projectile> toRemove = new();
+                foreach (Projectile p in boss.Projectiles)
+                {
+                    p.Update(gameTime.ElapsedGameTime.Milliseconds);
+                    if (Vector2.Distance(p.Position, player.Body.Position) < 20 && p.CurrentState == Projectile.ProjectileState.Alive)
+                    {
+                        p.HitSomething();
+                        player.TakeDamage(p.Damage);
+                    }
+                    if (gameScene.GameMap.tiles[(int)p.Position.X / 32, (int)p.Position.Y / 32].Type != TileType.Floor)
+                    {
+                        p.HitSomething();
+                    }
+                    if (p.CurrentState == Projectile.ProjectileState.Dead)
+                    {
+                        toRemove.Add(p);
+                    }
+                }
+                boss.Projectiles.RemoveAll(i => toRemove.Contains(i));
+            }
 
 
 
