@@ -28,6 +28,7 @@ namespace Jam25.Entities.Enemies
         float attackBlockedUntil = 0f;
         float attackCooldown = 500f;
         bool Alive = true;
+        Random rand = new Random();
 
 
         public Boss(ContentManager content)
@@ -109,38 +110,41 @@ namespace Jam25.Entities.Enemies
 
             if (distFromPlayer < 100)
             {
-                attackCooldown = 500;
-                for (double dTheta = -Math.PI / 4; dTheta < Math.PI / 4; dTheta += Math.PI / 24)
+                attackCooldown = 1000;
+                for (double dTheta = -Math.PI ; dTheta < Math.PI; dTheta += Math.PI / 24)
                 {
                     StartCooldown();
                     Projectiles.Add(new Projectile()
                     {
                         Position = Position,
                         Direction = Math.Atan2(playerPos.Y - Position.Y, playerPos.X - Position.X) + dTheta,
-                        Velocity = 500,
+                        Velocity = 100,
                         Texture = ProjectileTexture,
                         ExplosionTextures = this.ExplosionTextures,
                         Damage = 5,
-                        Lifespan = 2000  // ms before removed
+                        Lifespan = 1000  // ms before removed
                     });
                 }
             }
             else
             {
-                attackCooldown = 1000;
-                for (double dTheta = -Math.PI / 6; dTheta < Math.PI / 6; dTheta += Math.PI / 16)
+                attackCooldown = 2000;
+                for (double dTheta = -Math.PI / 6; dTheta < Math.PI / 6; dTheta += Math.PI / 24)
                 {
                     StartCooldown();
-                    Projectiles.Add(new Projectile()
+                    if (rand.Next(2) == 0)
                     {
-                        Position = Position,
-                        Direction = Math.Atan2(playerPos.Y - Position.Y, playerPos.X - Position.X) + dTheta,
-                        Velocity = 500,
-                        Texture = ProjectileTexture,
-                        ExplosionTextures = this.ExplosionTextures,
-                        Damage = 5,
-                        Lifespan = 2000  // ms before removed
-                    });
+                        Projectiles.Add(new Projectile()
+                        {
+                            Position = Position,
+                            Direction = Math.Atan2(playerPos.Y - Position.Y, playerPos.X - Position.X) + dTheta,
+                            Velocity = 100,
+                            Texture = ProjectileTexture,
+                            ExplosionTextures = this.ExplosionTextures,
+                            Damage = 5,
+                            Lifespan = 10000  // ms before removed
+                        });
+                    }
                 }
             }
 
