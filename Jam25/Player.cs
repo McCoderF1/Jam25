@@ -2,6 +2,7 @@
 using HDT.Gaming.Models;
 using HDT.Gaming.Physics;
 using Jam25.Graphics;
+using Jam25.Scenes;
 using Jam25.Stores;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -9,6 +10,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Jam25
 {

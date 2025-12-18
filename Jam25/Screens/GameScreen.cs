@@ -1,4 +1,7 @@
-﻿using HDT.Gaming.Audio;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using HDT.Gaming.Audio;
 using HDT.Gaming.Input;
 using HDT.Gaming.Physics;
 using HDT.Gaming.Screens;
@@ -14,9 +17,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Jam25.Screens
 {
@@ -33,7 +33,7 @@ namespace Jam25.Screens
 
         private const float SHADOW_ALPHA_CHANGE_SPEED = 5f;
 
-        private const float SHADOW_CULL_RADIUS_PADDING = 1f; 
+        private const float SHADOW_CULL_RADIUS_PADDING = 64f;
 
         private readonly GraphicsDevice graphicsDevice;
         private readonly SpriteBatch spriteBatch;
@@ -74,6 +74,7 @@ namespace Jam25.Screens
         private int maxRoomSize = 10;
         private int minRoomSize = 6;
 
+        private int playerAttackState = 0;
         private int healthPickupCount = 20;
         private int coalPickupCount = 15;
 
@@ -123,6 +124,8 @@ namespace Jam25.Screens
         public EventHandler PlayerDied { get; set; }
         public EventHandler TransitionScreen { get; set; }
 
+        public event EventHandler WinScreenTransition;
+
         public GameScreen(
             GraphicsDevice gfxDevice,
             SpriteBatch spriteBatch,
@@ -141,7 +144,7 @@ namespace Jam25.Screens
             enemySpawners = new Dictionary<int, EnemySpawner>
             {
                 [1] = new(
-                    maxEnemies: 50,
+                    maxEnemies: 15,
                     minSpawnDistanceFromPlayer: 200,
                     PointWithinWalls,
                     [
@@ -150,7 +153,7 @@ namespace Jam25.Screens
                         (_ => enemyFactory.CreateVampireEnemy(_), 0.2),
                     ]),
                 [2] = new(
-                    maxEnemies: 50,
+                    maxEnemies: 25,
                     minSpawnDistanceFromPlayer: 200,
                     PointWithinWalls,
                     [
@@ -159,7 +162,7 @@ namespace Jam25.Screens
                         (_ => enemyFactory.CreateVampireEnemy(_), 0.3),
                     ]),
                 [3] = new(
-                    maxEnemies: 50,
+                    maxEnemies: 30,
                     minSpawnDistanceFromPlayer: 200,
                     PointWithinWalls,
                     [
@@ -167,6 +170,15 @@ namespace Jam25.Screens
                         (_ => enemyFactory.CreateLavaSlimeEnemy(_), 0.4),
                         (_ => enemyFactory.CreateVampireEnemy(_), 0.4),
                     ]),
+                [4] = new(
+                    maxEnemies: 50,
+                    minSpawnDistanceFromPlayer: 200,
+                    PointWithinWalls,
+                    [
+                        (_ => enemyFactory.CreateSlimeEnemy(_), 0.2),
+                        (_ => enemyFactory.CreateLavaSlimeEnemy(_), 0.4),
+                        (_ => enemyFactory.CreateVampireEnemy(_), 0.4),
+                    ])
             };
 
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
@@ -180,7 +192,7 @@ namespace Jam25.Screens
             player.Initalise(content, graphicsDevice);
 
             visibleTiles = new bool[mapWidth, mapHeight];
-            tileShadowTransparency = new float[mapWidth, mapHeight]; 
+            tileShadowTransparency = new float[mapWidth, mapHeight];
 
             key = new KeyPickup(keyTexture);
             key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
@@ -304,6 +316,8 @@ namespace Jam25.Screens
 
         public void Show()
         {
+            ResetWorld();
+
             // Reset death state
             playerDied = false;
             deathTimer = 0f;
@@ -314,12 +328,9 @@ namespace Jam25.Screens
             player.LastState = Player.PlayerState.Idle;
             player.MoveSpeed = 1.0f;
 
-            InitialiseHealthPickups();
-            InitialiseCoalPickups();
             Random r = new Random();
             AudioManager.PlayMusic($"Game{r.Next(1, 4)}");
 
-            ResetWorld();
             BuildWorld(CurrentLevelType);
 
             if (gameUI is GameUserInterface gui)
@@ -424,16 +435,26 @@ namespace Jam25.Screens
 
 
 
-
-            // temporary
             if (CurrentLevelType == LevelType.Lava)
             {
                 boss.Update(gameTime, player.Body.Position);
 
 
-                if (Vector2.Distance(boss.Position, player.Body.Position) < 150)
+                if (!boss.Alive)
                 {
-                    boss.TakeDamage(1);
+                    WinScreenTransition?.Invoke(this, EventArgs.Empty);
+                }
+
+
+
+                if (Vector2.Distance(boss.Position, player.Body.Position) < 200 && player.IsAttacking != playerAttackState)
+                {
+                    playerAttackState = player.IsAttacking;
+
+                    if (playerAttackState > 0)
+                    {
+                        boss.TakeDamage(20);
+                    }
                 }
 
                 List<Projectile> toRemove = new();
@@ -596,30 +617,36 @@ namespace Jam25.Screens
                 // After axis-resolved movement, did we move at all?
                 if (currentPos != player.Body.Position)
                 {
-                    player.Body.Position = currentPos;
-
-                    Rectangle playerRect = new Rectangle(
-                        (int)(currentPos.X - PlayerColliderHalfWidth),
-                        (int)(currentPos.Y - PlayerColliderHalfHeight),
-                        PlayerColliderHalfWidth * 2,
-                        PlayerColliderHalfHeight * 2);
-
-                    CollectedItem key = gameUI.CollectedItems.Where(item => item.Name == "Key").FirstOrDefault();
-
-                    if (IsOverDoor(playerRect) && key.Name != null)
+                    // After axis-resolved movement, did we move at all?
+                    if (currentPos != player.Body.Position)
                     {
-                        if (gameUI.CollectedItems.Contains(key))
-                            gameUI.CollectedItems.Remove(key);
+                        // First resolve soft collisions with enemies
+                        Vector2 resolvedPos = ResolvePlayerEnemyCollisions(currentPos);
+                        player.Body.Position = resolvedPos;
 
-                        player.MoveSpeed = 0f;
-                        LevelCompleted?.Invoke(this, EventArgs.Empty);
-                    }
+                        Rectangle playerRect = new Rectangle(
+                            (int)(resolvedPos.X - PlayerColliderHalfWidth),
+                            (int)(resolvedPos.Y - PlayerColliderHalfHeight),
+                            PlayerColliderHalfWidth * 2,
+                            PlayerColliderHalfHeight * 2);
 
-                    foreach (IPickup pickup in gameScene.Pickups)
-                    {
-                        if (Vector2.Distance(pickup.Sprite.Position, Vector2.Subtract(player.Body.Position, new Vector2(tileSize / 2, tileSize / 2))) < tileSize)
+                        CollectedItem key = gameUI.CollectedItems.Where(item => item.Name == "Key").FirstOrDefault();
+
+                        if (IsOverDoor(playerRect) && key.Name != null)
                         {
-                            pickup.Collect(player);
+                            if (gameUI.CollectedItems.Contains(key))
+                                gameUI.CollectedItems.Remove(key);
+
+                            player.MoveSpeed = 0f;
+                            LevelCompleted?.Invoke(this, EventArgs.Empty);
+                        }
+
+                        foreach (IPickup pickup in gameScene.Pickups)
+                        {
+                            if (Vector2.Distance(pickup.Sprite.Position, Vector2.Subtract(player.Body.Position, new Vector2(tileSize / 2, tileSize / 2))) < tileSize)
+                            {
+                                pickup.Collect(player);
+                            }
                         }
                     }
                 }
@@ -661,6 +688,44 @@ namespace Jam25.Screens
 
             return true;
         }
+
+
+        private const int EnemyColliderHalfWidth = 8;
+        private const int EnemyColliderHalfHeight = 8;
+
+        /// <summary>
+        /// Resolves collisions between the player and enemies without pushing:
+        /// - If the desired position would overlap an enemy, the move is rejected.
+        /// - Enemies are never moved.
+        /// </summary>
+        private Vector2 ResolvePlayerEnemyCollisions(Vector2 desiredPlayerPos)
+        {
+            // Rectangle at the desired position
+            Rectangle desiredPlayerRect = new Rectangle(
+                (int)(desiredPlayerPos.X - PlayerColliderHalfWidth),
+                (int)(desiredPlayerPos.Y - PlayerColliderHalfHeight),
+                PlayerColliderHalfWidth * 2,
+                PlayerColliderHalfHeight * 2);
+
+            foreach (var enemy in gameScene.Enemies)
+            {
+                Rectangle enemyRect = new Rectangle(
+                    (int)(enemy.Body.Position.X - EnemyColliderHalfWidth),
+                    (int)(enemy.Body.Position.Y - EnemyColliderHalfHeight),
+                    EnemyColliderHalfWidth * 2,
+                    EnemyColliderHalfHeight * 2);
+
+                if (desiredPlayerRect.Intersects(enemyRect))
+                {
+                    // Reject movement into enemy: stay at current position
+                    return player.Body.Position;
+                }
+            }
+
+            // No enemy collision: accept desired position
+            return desiredPlayerPos;
+        }
+
 
         private bool IsOverDoor(Rectangle playerRect)
         {
@@ -1064,6 +1129,9 @@ namespace Jam25.Screens
 
         private void ResetWorld()
         {
+            if (playerDied)
+                gameScene.GameLevel = 1;
+
             gameScene.Reset();
             key.Reset();
             // Reset death state
