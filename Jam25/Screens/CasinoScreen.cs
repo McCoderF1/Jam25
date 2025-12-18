@@ -145,10 +145,18 @@ namespace Jam25.Screens
             {
                 if (!spinning)
                 {
+                    audioController.PlaySound("CasinoSpin");
                     spinning = true;
                     Spin();
-                    CheckWin();
-                    Task.Delay(2000).ContinueWith(_ => { spinning = false; ClearReels(); win = winTypes.NoWin; });
+                    Task.Delay(2000).ContinueWith(_ => 
+                    {                         
+                        Task.Delay(CheckWin()).ContinueWith(_ => 
+                        { 
+                            spinning = false; 
+                            ClearReels(); 
+                            win = winTypes.NoWin; 
+                        }); 
+                    });
                 }
             }
         }
@@ -217,7 +225,7 @@ namespace Jam25.Screens
             reel3 = reelResults.Blank;
         }
 
-        private void CheckWin()
+        private int CheckWin()
         {
             if (reel1 == reel2 && reel2 == reel3)
             {
@@ -246,8 +254,11 @@ namespace Jam25.Screens
                     for (int i = 0; i < 250; i++) { PlayerTracker.CollectEmber(); }
                 }
 
+                audioController.PlaySound("CasinoPay");
                 PlayerTracker.SavePlayerProgress();
+                return 2500;
             }
+            return 0;
         }
     }
 }

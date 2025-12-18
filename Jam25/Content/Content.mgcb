@@ -1181,6 +1181,18 @@
 /processorParam:TextureFormat=Color
 /build:PlayerSprite/lvl3/Swordsman_lvl3_Walk_with_shadow.png
 
+#begin Sound/Effect/casinoPay.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sound/Effect/casinoPay.wav
+
+#begin Sound/Effect/casinoSpin.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sound/Effect/casinoSpin.wav
+
 #begin Sound/Effect/LevelUpSound.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
