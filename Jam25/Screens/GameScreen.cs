@@ -33,7 +33,7 @@ namespace Jam25.Screens
 
         private const float SHADOW_ALPHA_CHANGE_SPEED = 5f;
 
-        private const float SHADOW_CULL_RADIUS_PADDING = 1f;
+        private const float SHADOW_CULL_RADIUS_PADDING = 64f;
 
         private readonly GraphicsDevice graphicsDevice;
         private readonly SpriteBatch spriteBatch;
