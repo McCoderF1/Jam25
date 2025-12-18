@@ -25,7 +25,6 @@ namespace Jam25.Screens
         Dungeon,
         Lava
     }
-
     public class GameScreen : IScreen
     {
         #region private members
@@ -223,8 +222,6 @@ namespace Jam25.Screens
                 pickup.Draw(spriteBatch, tileSize);
             }
 
-
-
             player.Draw();
 
             var sortedEnemies = gameScene.Enemies.OrderBy(enemy => enemy.Body.Position.Y).ToList();
@@ -264,8 +261,6 @@ namespace Jam25.Screens
             boss.DrawHealthBar(spriteBatch, game.GraphicsDevice.Viewport.Width);
 
             gameUI?.Draw();
-
-
         }
 
         public void Hide()
@@ -277,7 +272,6 @@ namespace Jam25.Screens
 
         public void Show()
         {
-
             // Reset death state
             playerDied = false;
             deathTimer = 0f;
@@ -287,7 +281,6 @@ namespace Jam25.Screens
             player.Health.Heal(player.Health.Max);
             player.LastState = Player.PlayerState.Idle;
             player.MoveSpeed = 1.0f;
-
 
             InitialiseHealthPickups();
             InitialiseCoalPickups();
@@ -302,20 +295,8 @@ namespace Jam25.Screens
                 gui.SetTorch(game.Torch);
             }
 
-
-
-
-
-
-
             // temporary
             boss.Position = PointWithinWalls();
-
-
-
-
-
-
 
             gameUI?.Show();
         }
