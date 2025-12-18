@@ -681,9 +681,11 @@ namespace Jam25.Screens
         {
             Vector2 resolvedPos = desiredPlayerPos;
 
+            // First pass: collect overlaps and separation vectors
+            var overlaps = new List<(Enemy enemy, Vector2 separation)>();
+
             foreach (var enemy in gameScene.Enemies)
             {
-                // Simple AABB for enemy around Body.Position
                 Rectangle enemyRect = new Rectangle(
                     (int)(enemy.Body.Position.X - EnemyColliderHalfWidth),
                     (int)(enemy.Body.Position.Y - EnemyColliderHalfHeight),
@@ -701,18 +703,15 @@ namespace Jam25.Screens
                     continue;
                 }
 
-                // Compute minimal separation vector
                 float overlapLeft = playerRect.Right - enemyRect.Left;
                 float overlapRight = enemyRect.Right - playerRect.Left;
                 float overlapTop = playerRect.Bottom - enemyRect.Top;
                 float overlapBottom = enemyRect.Bottom - playerRect.Top;
 
-                // Choose axis of least penetration
                 float xPush = (overlapLeft < overlapRight ? -overlapLeft : overlapRight);
                 float yPush = (overlapTop < overlapBottom ? -overlapTop : overlapBottom);
 
                 Vector2 separation;
-
                 if (Math.Abs(xPush) < Math.Abs(yPush))
                 {
                     separation = new Vector2(xPush, 0f);
@@ -722,14 +721,27 @@ namespace Jam25.Screens
                     separation = new Vector2(0f, yPush);
                 }
 
-                // Push strength: 0.5 means both move half the separation
-                const float playerShare = 0.2f;
-                const float enemyShare = 1f - playerShare;
+                overlaps.Add((enemy, separation));
+            }
 
-                // Apply to player
+            if (overlaps.Count == 0)
+            {
+                return resolvedPos;
+            }
+
+            // Slowdown factor when pushing multiple enemies
+            // 1 enemy => 1.0, 2 enemies => 0.5, 3 => ~0.33, etc.
+            float slowDownFactor = 1f / overlaps.Count;
+
+            const float basePlayerShare = 0.1f;
+            const float baseEnemyShare = 1f - basePlayerShare;
+
+            foreach (var (enemy, separation) in overlaps)
+            {
+                float playerShare = basePlayerShare * slowDownFactor;
+                float enemyShare = baseEnemyShare * slowDownFactor;
+
                 resolvedPos += separation * playerShare;
-
-                // Apply to enemy (soft push)
                 enemy.Body.Position -= separation * enemyShare;
             }
 
