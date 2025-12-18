@@ -1,4 +1,8 @@
-﻿using HDT.Gaming.Audio;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using HDT.Gaming.Audio;
 using HDT.Gaming.Input;
 using HDT.Gaming.Physics;
 using HDT.Gaming.Screens;
@@ -14,9 +18,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Jam25.Screens
 {
@@ -98,7 +99,7 @@ namespace Jam25.Screens
 
         private Boss boss;
 
-        EnemySpawner enemySpawner;
+        private Dictionary<int, EnemySpawner> enemySpawners;
 
         #endregion
 
@@ -120,15 +121,36 @@ namespace Jam25.Screens
 
             EnemyFactory enemyFactory = new(game.Content, audioController);
 
-            enemySpawner = new(
-                maxEnemies: 50,
-                minSpawnDistanceFromPlayer: 200,
-                PointWithinWalls,
-                [
-                    (_ => enemyFactory.CreateSlimeEnemy(_), 0.8),
-                    (_ => enemyFactory.CreateLavaSlimeEnemy(_), 0.2),
-                    (_ => enemyFactory.CreateVampireEnemy(_), 0.2),
-                ]);
+            enemySpawners = new Dictionary<int, EnemySpawner>
+            {
+                [1] = new(
+                    maxEnemies: 50,
+                    minSpawnDistanceFromPlayer: 200,
+                    PointWithinWalls,
+                    [
+                        (_ => enemyFactory.CreateSlimeEnemy(_), 0.6),
+                        (_ => enemyFactory.CreateLavaSlimeEnemy(_), 0.2),
+                        (_ => enemyFactory.CreateVampireEnemy(_), 0.2),
+                    ]),
+                [2] = new(
+                    maxEnemies: 50,
+                    minSpawnDistanceFromPlayer: 200,
+                    PointWithinWalls,
+                    [
+                        (_ => enemyFactory.CreateSlimeEnemy(_), 0.4),
+                        (_ => enemyFactory.CreateLavaSlimeEnemy(_), 0.3),
+                        (_ => enemyFactory.CreateVampireEnemy(_), 0.3),
+                    ]),
+                [3] = new(
+                    maxEnemies: 50,
+                    minSpawnDistanceFromPlayer: 200,
+                    PointWithinWalls,
+                    [
+                        (_ => enemyFactory.CreateSlimeEnemy(_), 0.2),
+                        (_ => enemyFactory.CreateLavaSlimeEnemy(_), 0.4),
+                        (_ => enemyFactory.CreateVampireEnemy(_), 0.4),
+                    ]),
+            };
 
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
             doorsTexture = game.Content.Load<Texture2D>("Images/doors_lever_chest_animation");
@@ -143,15 +165,20 @@ namespace Jam25.Screens
             visibleTiles = new bool[mapWidth, mapHeight];
 
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
-            gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player, gameScene);
 
             lightMask = LightMaskFactory.CreateRadialMask(graphicsDevice, lightMaskSize);
             tileShadowMask = LightMaskFactory.CreateTileShadowMask(graphicsDevice, 64);
 
             this.LevelCompleted += (_, _) => currentLevelCompleted = true;
 
+            key = new KeyPickup(keyTexture);
+            var dungeonLevel = new Dungeon(mapWidth, mapHeight, player, key);
+            gameScene = new GameScene(dungeonLevel.Map, player);
+
             debugPixel = new Texture2D(game.GraphicsDevice, 1, 1);
             debugPixel.SetData(new[] { Color.White });
+
+            gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player, gameScene);
 
             this.LevelCompleted += (_, _) => Task.Delay(1000).ContinueWith(_ => Transition());
 
@@ -242,11 +269,8 @@ namespace Jam25.Screens
             player.HasKey = false;
             player.MoveSpeed = 1.0f;
 
-            key = new KeyPickup(keyTexture);
             key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
 
-            var dungeonLevel = new Dungeon(mapWidth, mapHeight, player, key);
-            gameScene = new GameScene(dungeonLevel.Map, player);
             gameScene.Pickups.Add(key);
 
             InitialiseHealthPickups();
@@ -256,8 +280,6 @@ namespace Jam25.Screens
 
             ResetWorld();
             BuildWorld();
-
-            gameScene.EnemySpawner = enemySpawner;
 
             if (gameUI is GameUserInterface gui)
             {
@@ -933,6 +955,15 @@ namespace Jam25.Screens
 
             key.Reset();
             gameScene.Pickups.Add(key);
+
+            if (enemySpawners.TryGetValue(gameScene.GameLevel, out EnemySpawner enemySpawner))
+            {
+                gameScene.EnemySpawner = enemySpawner;
+            }
+            else
+            {
+                gameScene.EnemySpawner = null;
+            }
         }
 
         private void InitialiseCoalPickups()
