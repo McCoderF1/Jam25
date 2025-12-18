@@ -18,6 +18,11 @@ namespace Jam25.Entities.Enemies
 {
     public class Boss
     {
+        private float hitFlashDuration = 0.1f; // seconds
+        private float hitFlashTimer = 0f;
+
+        public bool IsHitFlashing => hitFlashTimer > 0f;
+
         public enum Stage
         {
             Phase1,
@@ -64,7 +69,7 @@ namespace Jam25.Entities.Enemies
             whitePixel = content.Load<Texture2D>("Textures/WhiteRectangle");
             Phase1Texture = content.Load<Texture2D>($"Boss/firstphase");
             Phase2Texture = content.Load<Texture2D>($"Boss/secondphase");
-            TransitionTexture = content.Load<Texture2D>($"Boss/transition");
+            //TransitionTexture = content.Load<Texture2D>($"Boss/transition");
             CurrentTexture = Phase1Texture;
             CurrentStage = Stage.Phase1;
             ProjectileTexture = content.Load<Texture2D>("Images/projectile");
@@ -75,7 +80,7 @@ namespace Jam25.Entities.Enemies
                 ExplosionTextures.Add(content.Load<Texture2D>($"Images/explosion/Circle_explosion{i}"));
             }
 
-            for (int i = 0; i < 53; i++)
+            for (int i = 0; i < 52; i++)
             {
                 try
                 {
@@ -107,6 +112,8 @@ namespace Jam25.Entities.Enemies
                     CurrentStage = Stage.Dead;
                 }
             }
+
+            hitFlashTimer = hitFlashDuration;
         }
 
         private void EnterTransition()
@@ -128,9 +135,7 @@ namespace Jam25.Entities.Enemies
         public void Draw(SpriteBatch spriteBatch)
         {
             if (CurrentStage == Stage.Dead)
-            {
                 return;
-            }
 
             Texture2D toDraw;
 
@@ -154,8 +159,11 @@ namespace Jam25.Entities.Enemies
                 toDraw = CurrentTexture;
             }
 
+            float t = hitFlashTimer / hitFlashDuration;
+            Color flash = Color.Lerp(Color.White, Color.Red, t);
+
             var origin = new Vector2(toDraw.Width / 2f, toDraw.Height / 2f);
-            spriteBatch.Draw(toDraw, Position, null, Color.White, 0, origin, 0.2f, SpriteEffects.None, 0f);
+            spriteBatch.Draw(toDraw, Position, null, flash, 0, origin, 0.2f, SpriteEffects.None, 0f);
         }
 
         private void StartAttackCooldown()
@@ -220,6 +228,11 @@ namespace Jam25.Entities.Enemies
                 return;
             }
 
+            float delta = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            if (hitFlashTimer > 0f)
+                hitFlashTimer -= delta;
+
             Vector2 playerPos = player.Body.Position;
             float distFromPlayer = Vector2.Distance(Position, playerPos);
 
@@ -268,8 +281,7 @@ namespace Jam25.Entities.Enemies
                         vel = 100f;
                     }
 
-
-                    if (distFromPlayer < 100)
+                    if (distFromPlayer < 50)
                     {
                         attackCooldown = 1500;
                         StartAttackCooldown();

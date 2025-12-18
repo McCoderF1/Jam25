@@ -38,6 +38,7 @@ namespace Jam25
         private const PlayerState MovementMask = PlayerState.Idle | PlayerState.Running | PlayerState.Walking;
         private const PlayerState AttackMask = PlayerState.Attacking;
 
+
         #endregion
 
         #region Private members
@@ -95,7 +96,13 @@ namespace Jam25
 
         private PlayerState lastMovementState;
 
+        private float hitFlashDuration = 0.1f; // seconds
+        private float hitFlashTimer = 0f;
+
         #endregion
+
+
+        public bool IsHitFlashing => hitFlashTimer > 0f;
 
         public static bool DebugInvincibleMode { get; set; } = false;
 
@@ -186,9 +193,10 @@ namespace Jam25
             bool runKeyDown = keyboardState.IsKeyDown(Keys.LeftShift);
 
             if (attackTimer > 0)
-            {
                 attackTimer -= deltaSeconds;
-            }
+
+            if (hitFlashTimer > 0f)
+                hitFlashTimer -= deltaSeconds;
 
             SeeThroughWallsTimer = Math.Max(SeeThroughWallsTimer - deltaSeconds, 0f);
 
@@ -379,6 +387,8 @@ namespace Jam25
 
             if (LastState != PlayerState.Hurt && LastState != PlayerState.Dying)
             {
+                hitFlashTimer = hitFlashDuration;
+
                 AudioManager.PlaySound("HitFlesh");
                 Health.TakeDamage(damage);
                 animationStage = 0;
@@ -415,11 +425,14 @@ namespace Jam25
                 cellSize,
                 cellSize);
 
+            float t = hitFlashTimer / hitFlashDuration;
+            Color flash = Color.Lerp(Color.White, Color.Red, t);
+
             spriteBatch.Draw(
                 currentTexture.texture,
                 Body.Position,
                 sourceRect,
-                Color.White,
+                flash,
                 0f,
                 new Vector2(32, 32),
                 Vector2.One,

@@ -37,7 +37,7 @@
 /processorParam:TextureFormat=Color
 /build:Boss/secondphase.png
 
-#begin Boss/transition.gif
+#begin Boss/transition/frame_00_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -47,9 +47,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition.gif
+/build:Boss/transition/frame_00_delay-0.1s.gif
 
-#begin Boss/transition/frame_00_delay-0.1s.png
+#begin Boss/transition/frame_01_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -59,9 +59,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_00_delay-0.1s.png
+/build:Boss/transition/frame_01_delay-0.1s.gif
 
-#begin Boss/transition/frame_01_delay-0.1s.png
+#begin Boss/transition/frame_02_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -71,9 +71,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_01_delay-0.1s.png
+/build:Boss/transition/frame_02_delay-0.1s.gif
 
-#begin Boss/transition/frame_02_delay-0.1s.png
+#begin Boss/transition/frame_03_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -83,9 +83,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_02_delay-0.1s.png
+/build:Boss/transition/frame_03_delay-0.1s.gif
 
-#begin Boss/transition/frame_03_delay-0.1s.png
+#begin Boss/transition/frame_04_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -95,9 +95,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_03_delay-0.1s.png
+/build:Boss/transition/frame_04_delay-0.1s.gif
 
-#begin Boss/transition/frame_04_delay-0.1s.png
+#begin Boss/transition/frame_05_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -107,9 +107,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_04_delay-0.1s.png
+/build:Boss/transition/frame_05_delay-0.1s.gif
 
-#begin Boss/transition/frame_05_delay-0.1s.png
+#begin Boss/transition/frame_06_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -119,9 +119,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_05_delay-0.1s.png
+/build:Boss/transition/frame_06_delay-0.1s.gif
 
-#begin Boss/transition/frame_06_delay-0.1s.png
+#begin Boss/transition/frame_07_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -131,9 +131,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_06_delay-0.1s.png
+/build:Boss/transition/frame_07_delay-0.1s.gif
 
-#begin Boss/transition/frame_07_delay-0.1s.png
+#begin Boss/transition/frame_08_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -143,9 +143,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_07_delay-0.1s.png
+/build:Boss/transition/frame_08_delay-0.1s.gif
 
-#begin Boss/transition/frame_08_delay-0.1s.png
+#begin Boss/transition/frame_09_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -155,9 +155,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_08_delay-0.1s.png
+/build:Boss/transition/frame_09_delay-0.1s.gif
 
-#begin Boss/transition/frame_09_delay-0.1s.png
+#begin Boss/transition/frame_10_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -167,9 +167,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_09_delay-0.1s.png
+/build:Boss/transition/frame_10_delay-0.1s.gif
 
-#begin Boss/transition/frame_10_delay-0.1s.png
+#begin Boss/transition/frame_11_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -179,9 +179,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_10_delay-0.1s.png
+/build:Boss/transition/frame_11_delay-0.1s.gif
 
-#begin Boss/transition/frame_11_delay-0.1s.png
+#begin Boss/transition/frame_12_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -191,9 +191,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_11_delay-0.1s.png
+/build:Boss/transition/frame_12_delay-0.1s.gif
 
-#begin Boss/transition/frame_12_delay-0.1s.png
+#begin Boss/transition/frame_13_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -203,9 +203,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_12_delay-0.1s.png
+/build:Boss/transition/frame_13_delay-0.1s.gif
 
-#begin Boss/transition/frame_13_delay-0.1s.png
+#begin Boss/transition/frame_14_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -215,9 +215,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_13_delay-0.1s.png
+/build:Boss/transition/frame_14_delay-0.1s.gif
 
-#begin Boss/transition/frame_14_delay-0.1s.png
+#begin Boss/transition/frame_15_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -227,9 +227,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_14_delay-0.1s.png
+/build:Boss/transition/frame_15_delay-0.1s.gif
 
-#begin Boss/transition/frame_15_delay-0.1s.png
+#begin Boss/transition/frame_16_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -239,9 +239,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_15_delay-0.1s.png
+/build:Boss/transition/frame_16_delay-0.1s.gif
 
-#begin Boss/transition/frame_16_delay-0.1s.png
+#begin Boss/transition/frame_17_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -251,9 +251,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_16_delay-0.1s.png
+/build:Boss/transition/frame_17_delay-0.1s.gif
 
-#begin Boss/transition/frame_17_delay-0.1s.png
+#begin Boss/transition/frame_18_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -263,9 +263,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_17_delay-0.1s.png
+/build:Boss/transition/frame_18_delay-0.1s.gif
 
-#begin Boss/transition/frame_18_delay-0.1s.png
+#begin Boss/transition/frame_19_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -275,9 +275,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_18_delay-0.1s.png
+/build:Boss/transition/frame_19_delay-0.1s.gif
 
-#begin Boss/transition/frame_19_delay-0.1s.png
+#begin Boss/transition/frame_20_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -287,9 +287,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_19_delay-0.1s.png
+/build:Boss/transition/frame_20_delay-0.1s.gif
 
-#begin Boss/transition/frame_20_delay-0.1s.png
+#begin Boss/transition/frame_21_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -299,9 +299,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_20_delay-0.1s.png
+/build:Boss/transition/frame_21_delay-0.1s.gif
 
-#begin Boss/transition/frame_21_delay-0.1s.png
+#begin Boss/transition/frame_22_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -311,9 +311,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_21_delay-0.1s.png
+/build:Boss/transition/frame_22_delay-0.1s.gif
 
-#begin Boss/transition/frame_22_delay-0.1s.png
+#begin Boss/transition/frame_23_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -323,9 +323,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_22_delay-0.1s.png
+/build:Boss/transition/frame_23_delay-0.1s.gif
 
-#begin Boss/transition/frame_23_delay-0.1s.png
+#begin Boss/transition/frame_24_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -335,9 +335,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_23_delay-0.1s.png
+/build:Boss/transition/frame_24_delay-0.1s.gif
 
-#begin Boss/transition/frame_24_delay-0.1s.png
+#begin Boss/transition/frame_25_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -347,9 +347,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_24_delay-0.1s.png
+/build:Boss/transition/frame_25_delay-0.1s.gif
 
-#begin Boss/transition/frame_25_delay-0.1s.png
+#begin Boss/transition/frame_26_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -359,9 +359,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_25_delay-0.1s.png
+/build:Boss/transition/frame_26_delay-0.1s.gif
 
-#begin Boss/transition/frame_26_delay-0.1s.png
+#begin Boss/transition/frame_27_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -371,9 +371,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_26_delay-0.1s.png
+/build:Boss/transition/frame_27_delay-0.1s.gif
 
-#begin Boss/transition/frame_27_delay-0.1s.png
+#begin Boss/transition/frame_28_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -383,9 +383,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_27_delay-0.1s.png
+/build:Boss/transition/frame_28_delay-0.1s.gif
 
-#begin Boss/transition/frame_28_delay-0.1s.png
+#begin Boss/transition/frame_29_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -395,9 +395,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_28_delay-0.1s.png
+/build:Boss/transition/frame_29_delay-0.1s.gif
 
-#begin Boss/transition/frame_29_delay-0.1s.png
+#begin Boss/transition/frame_30_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -407,9 +407,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_29_delay-0.1s.png
+/build:Boss/transition/frame_30_delay-0.1s.gif
 
-#begin Boss/transition/frame_30_delay-0.1s.png
+#begin Boss/transition/frame_31_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -419,9 +419,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_30_delay-0.1s.png
+/build:Boss/transition/frame_31_delay-0.1s.gif
 
-#begin Boss/transition/frame_31_delay-0.1s.png
+#begin Boss/transition/frame_32_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -431,9 +431,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_31_delay-0.1s.png
+/build:Boss/transition/frame_32_delay-0.1s.gif
 
-#begin Boss/transition/frame_32_delay-0.1s.png
+#begin Boss/transition/frame_33_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -443,9 +443,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_32_delay-0.1s.png
+/build:Boss/transition/frame_33_delay-0.1s.gif
 
-#begin Boss/transition/frame_33_delay-0.1s.png
+#begin Boss/transition/frame_34_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -455,9 +455,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_33_delay-0.1s.png
+/build:Boss/transition/frame_34_delay-0.1s.gif
 
-#begin Boss/transition/frame_34_delay-0.1s.png
+#begin Boss/transition/frame_35_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -467,9 +467,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_34_delay-0.1s.png
+/build:Boss/transition/frame_35_delay-0.1s.gif
 
-#begin Boss/transition/frame_35_delay-0.1s.png
+#begin Boss/transition/frame_36_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -479,9 +479,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_35_delay-0.1s.png
+/build:Boss/transition/frame_36_delay-0.1s.gif
 
-#begin Boss/transition/frame_36_delay-0.1s.png
+#begin Boss/transition/frame_37_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -491,9 +491,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_36_delay-0.1s.png
+/build:Boss/transition/frame_37_delay-0.1s.gif
 
-#begin Boss/transition/frame_37_delay-0.1s.png
+#begin Boss/transition/frame_38_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -503,9 +503,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_37_delay-0.1s.png
+/build:Boss/transition/frame_38_delay-0.1s.gif
 
-#begin Boss/transition/frame_38_delay-0.1s.png
+#begin Boss/transition/frame_39_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -515,9 +515,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_38_delay-0.1s.png
+/build:Boss/transition/frame_39_delay-0.1s.gif
 
-#begin Boss/transition/frame_39_delay-0.1s.png
+#begin Boss/transition/frame_40_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -527,9 +527,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_39_delay-0.1s.png
+/build:Boss/transition/frame_40_delay-0.1s.gif
 
-#begin Boss/transition/frame_40_delay-0.1s.png
+#begin Boss/transition/frame_41_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -539,9 +539,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_40_delay-0.1s.png
+/build:Boss/transition/frame_41_delay-0.1s.gif
 
-#begin Boss/transition/frame_41_delay-0.1s.png
+#begin Boss/transition/frame_42_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -551,9 +551,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_41_delay-0.1s.png
+/build:Boss/transition/frame_42_delay-0.1s.gif
 
-#begin Boss/transition/frame_42_delay-0.1s.png
+#begin Boss/transition/frame_43_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -563,9 +563,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_42_delay-0.1s.png
+/build:Boss/transition/frame_43_delay-0.1s.gif
 
-#begin Boss/transition/frame_43_delay-0.1s.png
+#begin Boss/transition/frame_44_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -575,9 +575,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_43_delay-0.1s.png
+/build:Boss/transition/frame_44_delay-0.1s.gif
 
-#begin Boss/transition/frame_44_delay-0.1s.png
+#begin Boss/transition/frame_45_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -587,9 +587,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_44_delay-0.1s.png
+/build:Boss/transition/frame_45_delay-0.1s.gif
 
-#begin Boss/transition/frame_45_delay-0.1s.png
+#begin Boss/transition/frame_46_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -599,9 +599,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_45_delay-0.1s.png
+/build:Boss/transition/frame_46_delay-0.1s.gif
 
-#begin Boss/transition/frame_46_delay-0.1s.png
+#begin Boss/transition/frame_47_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -611,9 +611,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_46_delay-0.1s.png
+/build:Boss/transition/frame_47_delay-0.1s.gif
 
-#begin Boss/transition/frame_47_delay-0.1s.png
+#begin Boss/transition/frame_48_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -623,9 +623,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_47_delay-0.1s.png
+/build:Boss/transition/frame_48_delay-0.1s.gif
 
-#begin Boss/transition/frame_48_delay-0.1s.png
+#begin Boss/transition/frame_49_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -635,9 +635,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_48_delay-0.1s.png
+/build:Boss/transition/frame_49_delay-0.1s.gif
 
-#begin Boss/transition/frame_49_delay-0.1s.png
+#begin Boss/transition/frame_50_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -647,9 +647,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_49_delay-0.1s.png
+/build:Boss/transition/frame_50_delay-0.1s.gif
 
-#begin Boss/transition/frame_50_delay-0.1s.png
+#begin Boss/transition/frame_51_delay-0.1s.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -659,31 +659,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Boss/transition/frame_50_delay-0.1s.png
-
-#begin Boss/transition/frame_51_delay-0.1s.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Boss/transition/frame_51_delay-0.1s.png
-
-#begin Boss/transition/frame_52_delay-0.1s.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Boss/transition/frame_52_delay-0.1s.png
+/build:Boss/transition/frame_51_delay-0.1s.gif
 
 #begin EnemySprite/LavaSlime/Slime3_Attack_with_shadow.png
 /importer:TextureImporter

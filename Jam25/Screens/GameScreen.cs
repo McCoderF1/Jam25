@@ -152,6 +152,10 @@ namespace Jam25.Screens
 
         public event EventHandler WinScreenTransition;
 
+        private List<Projectile> playerProjectiles = new();
+        private bool fireballReady = false;
+        private float FireballTorchCost;
+
         public GameScreen(
             GraphicsDevice gfxDevice,
             SpriteBatch spriteBatch,
@@ -222,7 +226,6 @@ namespace Jam25.Screens
             visitedTiles = new bool[mapWidth, mapHeight];
 
             key = new KeyPickup(keyTexture);
-            key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
 
             var dungeonLevel = new Dungeon(mapWidth, mapHeight, player, key);
             gameScene = new GameScene(dungeonLevel.Map, player);
@@ -231,6 +234,8 @@ namespace Jam25.Screens
             font = content.Load<SpriteFont>("Fonts/Menu");
 
             gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player, gameScene);
+
+            key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
 
             lightMask = LightMaskFactory.CreateRadialMask(graphicsDevice, lightMaskSize);
             tileShadowMask = LightMaskFactory.CreateTileShadowMask(graphicsDevice, 64);
@@ -277,6 +282,7 @@ namespace Jam25.Screens
                 .Where(enemy => enemy.CurrentState != Enemy.EnemyState.Dead)
                 .OrderBy(enemy => enemy.Body.Position.Y)
                 .ToList();
+
             bool playerDrawn = false; // Used to sort player sprite among enemies
             for (int i = 0; i < sortedEnemies.Count; i++)
             {
@@ -288,7 +294,7 @@ namespace Jam25.Screens
                     playerDrawn = true;
                 }
 
-                enemy.CurrentSprite.Draw(spriteBatch, enemy.Body.Position);
+                enemy.CurrentSprite.Draw(spriteBatch, enemy.Body.Position, enemy.IsHitFlashing ? Color.Red : Color.White);
 
                 foreach (Projectile p in enemy.Projectiles)
                 {
@@ -298,6 +304,11 @@ namespace Jam25.Screens
             if (!playerDrawn)
             {
                 player.Draw();
+            }
+
+            foreach (var proj in playerProjectiles)
+            {
+                proj.Draw(spriteBatch);
             }
 
             //DrawLighting();
@@ -349,6 +360,8 @@ namespace Jam25.Screens
 
         public void Show()
         {
+            FireballTorchCost = game.Torch.MaxEnergy * 0.24f;
+
             ResetWorld();
 
             // Reset death state
@@ -397,6 +410,69 @@ namespace Jam25.Screens
             }
 
             KeyboardInput.GetInput();
+            KeyboardState keyboardState = Keyboard.GetState();
+
+            // Fireball input: Press B to fire at nearest enemy (not boss)
+            if (keyboardState.IsKeyDown(Keys.B) && !fireballReady)
+            {
+                fireballReady = true;
+                var nearestEnemy = gameScene.Enemies
+                    .Where(e => e.CurrentState != Enemy.EnemyState.Dead && !(e is Jam25.Entities.Enemies.Boss))
+                    .OrderBy(e => Vector2.Distance(e.Body.Position, player.Body.Position))
+                    .FirstOrDefault();
+                if (nearestEnemy != null)
+                {
+                    Vector2 fireDirection = nearestEnemy.Body.Position - player.Body.Position;
+                    if (fireDirection != Vector2.Zero && game.Torch.NormalizedEnergy * game.Torch.MaxEnergy >= FireballTorchCost)
+                    {
+                        Vector2 toEnemy = nearestEnemy.Body.Position - player.Body.Position;
+                        if (toEnemy.LengthSquared() > 0 && game.Torch.NormalizedEnergy * game.Torch.MaxEnergy >= FireballTorchCost)
+                        {
+                            var fireball = new Projectile();
+                            fireball.Position = player.Body.Position;
+                            fireball.Direction = Math.Atan2(fireDirection.Y, fireDirection.X);
+                            fireball.Velocity = 300;
+                            fireball.Direction = Math.Atan2(toEnemy.Y, toEnemy.X);
+                            fireball.Velocity = 500;
+                            fireball.Texture = game.Content.Load<Texture2D>("Images/projectile");
+                            fireball.Damage = 10;
+                            fireball.Lifespan = 1200;
+                            fireball.Damage = 99999; //instant kill
+                            fireball.Lifespan = 3000;
+                            fireball.Target = nearestEnemy;
+                            playerProjectiles.Add(fireball);
+                            game.Torch.AddEnergy(-FireballTorchCost);
+                        }
+                    }
+                }
+            }
+            if (!keyboardState.IsKeyDown(Keys.B))
+            {
+                fireballReady = false;
+            }
+
+            // Update player projectiles
+            for (int i = playerProjectiles.Count - 1; i >= 0; i--)
+            {
+                var proj = playerProjectiles[i];
+                if (proj.Target != null && proj.Target.CurrentState != Enemy.EnemyState.Dead)
+                {
+                    Vector2 toTarget = proj.Target.Body.Position - proj.Position;
+                    if (toTarget.LengthSquared() > 0.1f)
+                    {
+                        proj.Direction = Math.Atan2(toTarget.Y, toTarget.X);
+                    }
+                    if (Vector2.Distance(proj.Position, proj.Target.Body.Position) < 24)
+                    {
+                        proj.Target.Health.TakeDamage(proj.Damage);
+                        proj.Target.CurrentState = Enemy.EnemyState.Dying;
+                        proj.Lifespan = 0;
+                    }
+                }
+                proj.Update(gameTime.ElapsedGameTime.Milliseconds);
+                if (proj.CurrentState == Projectile.ProjectileState.Dead)
+                    playerProjectiles.RemoveAt(i);
+            }
 
             if (player.LastState == Player.PlayerState.Dying && !playerDied)
             {
@@ -466,23 +542,16 @@ namespace Jam25.Screens
             float raw = 1f + combined * FlickerStrength;
             currentFlicker = MathHelper.Clamp(raw, 1f - FlickerStrength, 1f + FlickerStrength);
 
-
-
-
-
             if (CurrentLevelType == LevelType.Lava)
             {
                 boss.Update(gameTime, player);
-
 
                 if (boss.CurrentStage == Boss.Stage.Dead)
                 {
                     WinScreenTransition?.Invoke(this, EventArgs.Empty);
                 }
 
-
-
-                if (Vector2.Distance(boss.Position, player.Body.Position) < 150 && player.IsAttacking != playerAttackState)
+                if (Vector2.Distance(boss.Position, player.Body.Position) < 200 && player.IsAttacking != playerAttackState)
                 {
                     playerAttackState = player.IsAttacking;
 
@@ -532,6 +601,7 @@ namespace Jam25.Screens
             Vector2 playerPos = player.Body.Position;
             Vector2? closestDoorCenter = null;
             float closestDistSq = float.MaxValue;
+
 
             for (int x = 0; x < mapWidth; x++)
             {
@@ -864,6 +934,7 @@ namespace Jam25.Screens
                 // 1) Try move along X
                 if (delta.X != 0f)
                 {
+
                     Vector2 testPosX = currentPos + new Vector2(delta.X, 0f);
 
                     Rectangle rectX = new Rectangle(
