@@ -241,10 +241,43 @@ namespace Jam25.Entities
 
         private bool IsSealedHorizontalDoorCandidate(Tile[,] map, int x, int y)
         {
+            // Tile must be a wall
+            if (map[x, y].Type != TileType.Wall1)
+                return false;
+
+            // Ensure we are not at the map border (avoid out-of-range)
+            int w = map.GetLength(0);
+            int h = map.GetLength(1);
+
+            if (x <= 1 || x >= w - 2 || y <= 0 || y >= h - 1)
+                return false;
+
             bool westFloor = map[x - 1, y].Type == TileType.Floor;
             bool eastFloor = map[x + 1, y].Type == TileType.Floor;
 
-            return map[x, y].Type == TileType.Wall1 && !westFloor && !eastFloor;
+            // We want a sealed wall between rooms/corridor – no floor on left/right
+            if (westFloor || eastFloor)
+                return false;
+
+            // Check that this is part of a reasonably straight horizontal wall segment:
+            // the three tiles directly above OR below are floor. This avoids “corner” walls.
+            bool aboveLeftFloor = map[x - 1, y - 1].Type == TileType.Floor;
+            bool aboveFloor = map[x, y - 1].Type == TileType.Floor;
+            bool aboveRightFloor = map[x + 1, y - 1].Type == TileType.Floor;
+
+            bool belowLeftFloor = map[x - 1, y + 1].Type == TileType.Floor;
+            bool belowFloor = map[x, y + 1].Type == TileType.Floor;
+            bool belowRightFloor = map[x + 1, y + 1].Type == TileType.Floor;
+
+            bool goodTopSegment = aboveFloor && (aboveLeftFloor || aboveRightFloor);
+            bool goodBottomSegment = belowFloor && (belowLeftFloor || belowRightFloor);
+
+            // Require a solid segment on at least one side of the wall so the door
+            // is in a flat stretch, not at a corner
+            if (!goodTopSegment && !goodBottomSegment)
+                return false;
+
+            return true;
         }
 
 
