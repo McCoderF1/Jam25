@@ -33,7 +33,7 @@ namespace Jam25.Screens
 
         private const float SHADOW_ALPHA_CHANGE_SPEED = 5f;
 
-        private const float SHADOW_CULL_RADIUS_PADDING = 1f;
+        private const float SHADOW_CULL_RADIUS_PADDING = 64f;
 
         private static readonly TileColors[] levelTileColors = new TileColors[]
         {
@@ -340,6 +340,8 @@ namespace Jam25.Screens
             AudioManager.PlayMusic($"Game{r.Next(1, 4)}");
 
             BuildWorld(CurrentLevelType);
+
+            debugLightingDisabled = (CurrentLevelType == LevelType.Lava);
 
             if (gameUI is GameUserInterface gui)
             {
@@ -997,7 +999,23 @@ namespace Jam25.Screens
                     TileType tile = gameScene.GameMap.tiles[tx, ty].Type;
 
                     if (tile == TileType.Floor)
+                    {
                         visibleTiles[tx, ty] = true;
+
+                        // Check tiles around floor for walls/doors to mark as visible.
+                        for (int ox = -1; ox <= 1; ox++)
+                        {
+                            for (int oy = -1; oy <= 1; oy++)
+                            {
+                                int checkX = tx + ox;
+                                int checkY = ty + oy;
+                                if (checkX < 0 || checkX >= mapWidth || checkY < 0 || checkY >= mapHeight)
+                                    continue;
+                                TileType adjacentTile = gameScene.GameMap.tiles[checkX, checkY].Type;
+                                visibleTiles[checkX, checkY] = true;
+                            }
+                        }
+                    }
 
                     if (tile == TileType.Wall1 || tile == TileType.Door)
                     {
@@ -1081,8 +1099,8 @@ namespace Jam25.Screens
                         continue;
 
                     TileType tileType = gameScene.GameMap.tiles[x, y].Type;
-                    if (tileType == TileType.Wall1 || tileType == TileType.Door)
-                        continue;
+                    //if (tileType == TileType.Wall1 || tileType == TileType.Door)
+                    //    continue;
 
                     Vector2 tileCenterWorld = new Vector2(x * tileSize + tileSize / 2f, y * tileSize + tileSize / 2f);
                     float distToLight = Vector2.Distance(tileCenterWorld, lightCenter);
@@ -1132,6 +1150,8 @@ namespace Jam25.Screens
         {
             ResetWorld();
             BuildWorld(levelType);
+
+            debugLightingDisabled = (levelType == LevelType.Lava);
 
             return;
         }
