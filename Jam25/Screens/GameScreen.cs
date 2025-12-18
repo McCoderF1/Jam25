@@ -17,6 +17,9 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Jam25.Screens
 {
@@ -212,6 +215,14 @@ namespace Jam25.Screens
 
             DrawLighting();
 
+
+            // temporary
+            boss.Draw(spriteBatch);
+            foreach (Projectile p in boss.Projectiles)
+            {
+                p.Draw(spriteBatch);
+            }
+
             spriteBatch.End();
             spriteBatch.Begin(samplerState: SamplerState.PointClamp);
 
@@ -263,7 +274,20 @@ namespace Jam25.Screens
                 gui.SetTorch(game.Torch);
             }
 
-            boss.Position = player.Body.Position;
+
+
+
+
+
+
+            // temporary
+            boss.Position = PointWithinWalls();
+
+
+
+
+
+
 
             gameUI?.Show();
         }
@@ -352,6 +376,39 @@ namespace Jam25.Screens
             float combined = sine * 0.7f + noise * 0.3f;
             float raw = 1f + combined * FlickerStrength;
             currentFlicker = MathHelper.Clamp(raw, 1f - FlickerStrength, 1f + FlickerStrength);
+
+
+
+
+
+
+            // temporary
+            boss.Update(gameTime, player.Body.Position);
+            List<Projectile> toRemove = new();
+            foreach (Projectile p in boss.Projectiles)
+            {
+                p.Update(gameTime.ElapsedGameTime.Milliseconds);
+                if (Vector2.Distance(p.Position, player.Body.Position) < 20 && p.CurrentState == Projectile.ProjectileState.Alive)
+                {
+                    p.HitSomething();
+                    player.TakeDamage(p.Damage);
+                }
+                if (gameScene.GameMap.tiles[(int)p.Position.X / 32, (int)p.Position.Y / 32].Type != TileType.Floor)
+                {
+                    p.HitSomething();
+                }
+                if (p.CurrentState == Projectile.ProjectileState.Dead)
+                {
+                    toRemove.Add(p);
+                }
+            }
+            boss.Projectiles.RemoveAll(i => toRemove.Contains(i));
+
+
+
+
+
+
 
             gameUI.UpdateWithVector(gameTime, CameraPosition);
         }
