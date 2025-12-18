@@ -166,8 +166,8 @@ namespace Jam25.Screens
                     PointWithinWalls,
                     [
                         (_ => enemyFactory.CreateSlimeEnemy(_), 0.6),
-                        (_ => enemyFactory.CreateLavaSlimeEnemy(_), 0.2),
-                        (_ => enemyFactory.CreateVampireEnemy(_), 0.2),
+                        //(_ => enemyFactory.CreateLavaSlimeEnemy(_), 0.2),
+                        //(_ => enemyFactory.CreateVampireEnemy(_), 0.2),
                     ]),
                 [2] = new(
                     maxEnemies: 25,
@@ -176,7 +176,7 @@ namespace Jam25.Screens
                     [
                         (_ => enemyFactory.CreateSlimeEnemy(_), 0.4),
                         (_ => enemyFactory.CreateLavaSlimeEnemy(_), 0.3),
-                        (_ => enemyFactory.CreateVampireEnemy(_), 0.3),
+                        //(_ => enemyFactory.CreateVampireEnemy(_), 0.3),
                     ]),
                 [3] = new(
                     maxEnemies: 30,

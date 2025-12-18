@@ -89,7 +89,6 @@ namespace Jam25
         private Vector2 movementDirection = Vector2.Zero;
 
         private bool isAttacking;
-
         // Stamina exhaustion tracking
         private bool staminaExhausted = false;
         private bool shiftWasReleased = true;
@@ -127,7 +126,15 @@ namespace Jam25
 
         public int IsAttacking { get; private set; }
 
+        private float attackTimer;
+
+        public float AttackRate { get; set; } = 1.0f;
+
+        public bool CanAttack => attackTimer <= 0;
+
         public int AttackRange { get; set; } = 50;
+
+        public int AttackDamage { get; set; } = 4;
 
         public Player(SpriteBatch spriteBatch)
         {
@@ -176,8 +183,12 @@ namespace Jam25
             bool attackKeyDown = keyboardState.IsKeyDown(Keys.Space);
             bool runKeyDown = keyboardState.IsKeyDown(Keys.LeftShift);
 
-            // ... debug T/L
+            if (attackTimer > 0)
+            {
+                attackTimer -= deltaSeconds;
+            }
 
+            // ... debug T/L
             switch (LastState)
             {
                 case PlayerState.Idle:
@@ -190,7 +201,7 @@ namespace Jam25
                         keyboardState.IsKeyDown(Keys.D),
                         runKeyDown);
 
-                    if (attackKeyDown && !isAttacking)
+                    if (attackKeyDown && CanAttack && !isAttacking)
                     {
                         StartAttacking();
 
@@ -222,11 +233,18 @@ namespace Jam25
                         keyboardState.IsKeyDown(Keys.D),
                         runKeyDown);
 
-                    if (attackKeyDown && !isAttacking)
+                    if (attackKeyDown && CanAttack && !isAttacking)
                     {
                         StartAttacking();
                         if (!DebugInvincibleMode)
                             Stamina.TakeStamina(7);
+                    }
+                    else if (attackKeyDown && !CanAttack)
+                    {
+                        if (animationStage == currentTexture.cols - 1)
+                        {
+                            StopAttacking();
+                        }
                     }
                     else if (!attackKeyDown && isAttacking && IsAnimationComplete())
                     {
@@ -249,13 +267,20 @@ namespace Jam25
                         keyboardState.IsKeyDown(Keys.D),
                         runKeyDown);
 
-                    if (attackKeyDown && !isAttacking)
+                    if (attackKeyDown && CanAttack && !isAttacking)
                     {
                         StartAttacking();
                         if (!DebugInvincibleMode)
                             Stamina.TakeStamina(5);
                     }
-                    else if (!attackKeyDown && isAttacking && IsAnimationComplete())
+                    else if (attackKeyDown && !CanAttack)
+                    {
+                        if (animationStage == currentTexture.cols - 1)
+                        {
+                            StopAttacking();
+                        }
+                    }
+                    else if (!attackKeyDown && isAttacking && IsAnimationComplete() )
                     {
                         StopAttacking();
                     }
@@ -267,7 +292,7 @@ namespace Jam25
 
                     return MovePlayer(deltaSeconds, 1.0f);
 
-                // Note, this is idle attack only
+                // This is idle attack only
                 case PlayerState.Idle | PlayerState.Attacking:
                 case PlayerState.Attacking:
                     IncrementAnimation(deltaSeconds);
@@ -279,12 +304,34 @@ namespace Jam25
 
                 // Hurt/Dying unchanged
 
+                case PlayerState.Hurt | PlayerState.Attacking:
                 case PlayerState.Hurt:
-                    IncrementAnimation(deltaSeconds);
-                    if (animationStage == currentTexture.cols - 1)
+                    if (attackKeyDown && CanAttack && !isAttacking)
                     {
-                        LastState = PlayerState.Idle;
+                        StartAttacking();
+                        if (!DebugInvincibleMode)
+                            Stamina.TakeStamina(5);
                     }
+                    else if (attackKeyDown && !CanAttack)
+                    {
+                        if (animationStage == currentTexture.cols - 1)
+                        {
+                            StopAttacking();
+                        }
+                    }
+                    else if (!attackKeyDown && isAttacking && IsAnimationComplete())
+                    {
+                        StopAttacking();
+                    }
+                    else
+                    {
+                        IncrementAnimation(deltaSeconds);
+                        if (animationStage == currentTexture.cols - 1)
+                        {
+                            LastState = PlayerState.Idle;
+                        }
+                    }
+
                     break;
                 case PlayerState.Dying:
                     if (animationStage != currentTexture.cols - 1)
@@ -305,6 +352,7 @@ namespace Jam25
 
         private void StartAttacking()
         {
+            attackTimer = AttackRate;
             IsAttacking++;
             isAttacking = true;
             frameDuration = AttackFrameDuration; // speed up

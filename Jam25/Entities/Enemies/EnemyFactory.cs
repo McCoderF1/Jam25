@@ -105,12 +105,12 @@ namespace Jam25.Entities.Enemies
                     LocalBounds = new (0, 0, FRAME_WIDTH, FRAME_WIDTH),
                     PositionOffset = new Vector2(FRAME_WIDTH * 0.5f, FRAME_WIDTH)
                 },
-                Health = new HDT.Gaming.Models.Health(10),
+                Health = new HDT.Gaming.Models.Health(5),
                 MovementSpeed = 30,
                 ChaseMemoryDuration = TimeSpan.FromSeconds(3),
                 SightRange = 250,
                 EnemyController = enemyController,
-                AttackRange = 30,
+                AttackRange = 20,
                 UseProjectiles = false,
                 StopsToAttack = false,
                 AttackDamage = 10
@@ -136,7 +136,7 @@ namespace Jam25.Entities.Enemies
                     LocalBounds = new (0, 0, FRAME_WIDTH, FRAME_WIDTH),
                     PositionOffset = new Vector2(FRAME_WIDTH * 0.5f, FRAME_WIDTH)
                 },
-                Health = new HDT.Gaming.Models.Health(15),
+                Health = new HDT.Gaming.Models.Health(10),
                 MovementSpeed = 25,
                 ChaseMemoryDuration = TimeSpan.FromSeconds(3),
                 SightRange = 250,
@@ -168,7 +168,7 @@ namespace Jam25.Entities.Enemies
                     LocalBounds = new (0, 0, FRAME_WIDTH, FRAME_WIDTH),
                     PositionOffset = new Vector2(FRAME_WIDTH * 0.5f, FRAME_WIDTH)
                 },
-                Health = new HDT.Gaming.Models.Health(20),
+                Health = new HDT.Gaming.Models.Health(5),
                 MovementSpeed = 10,
                 ChaseMemoryDuration = TimeSpan.FromSeconds(10),
                 SightRange = 250,
