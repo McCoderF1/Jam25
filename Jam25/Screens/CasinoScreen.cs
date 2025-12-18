@@ -34,6 +34,9 @@ namespace Jam25.Screens
         private readonly Texture2D handleDown;
 
         private readonly SpriteFont font;
+        private readonly Random random = new Random();
+
+        public bool spinning = false;
 
         #endregion
 
@@ -70,7 +73,17 @@ namespace Jam25.Screens
                 new Rectangle(0, 0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height), 
                 Color.White);
 
-            spriteBatch.DrawString(font, "Menu (BackSpace)", new Microsoft.Xna.Framework.Vector2(graphicsDevice.Viewport.Width - 420, graphicsDevice.Viewport.Height - 100), Color.WhiteSmoke);
+            if(!spinning)
+                spriteBatch.Draw(handleUp, new Rectangle(0, 0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height), Color.WhiteSmoke);
+            else
+                spriteBatch.Draw(handleDown, new Rectangle(0, 0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height), Color.WhiteSmoke);
+
+            spriteBatch.Draw(seven, new Rectangle(395, 360, 96, 96), Color.WhiteSmoke);
+            spriteBatch.Draw(cherry, new Rectangle(595, 360, 96, 96), Color.WhiteSmoke);
+            spriteBatch.Draw(bar, new Rectangle(795, 360, 96, 96), Color.WhiteSmoke);
+
+            spriteBatch.DrawString(font, "Spin (Space)", new Microsoft.Xna.Framework.Vector2(graphicsDevice.Viewport.Width / 2 - 105, graphicsDevice.Viewport.Height - 70), Color.WhiteSmoke);
+            spriteBatch.DrawString(font, "Menu (BackSpace)", new Microsoft.Xna.Framework.Vector2(graphicsDevice.Viewport.Width /2 - 145, graphicsDevice.Viewport.Height - 35), Color.WhiteSmoke);
         }
 
         public void Hide()
@@ -89,6 +102,20 @@ namespace Jam25.Screens
 
             if (KeyboardInput.HasBeenPressed(Keys.Back))
                 BackToMainMenu.Invoke(this, EventArgs.Empty);
+
+            if (KeyboardInput.HasBeenPressed(Keys.Space))
+                spinning = true;
+        }
+
+        private void Spin()
+        {
+            spinning = true;
+            var numbers = new int[]
+            {
+                random.Next(0, 3),
+                random.Next(0, 3),
+                random.Next(0, 3)
+            };
         }
     }
 }

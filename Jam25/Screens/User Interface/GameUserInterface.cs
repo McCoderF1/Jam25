@@ -330,7 +330,6 @@ namespace Jam25.Screens.UserInterface
 
         private void DrawInformation()
         {
-
             spriteBatch.DrawString(font, $"Floor {gameScene.GameLevel}", new Vector2(1127, 60), Color.White);
         }
 
