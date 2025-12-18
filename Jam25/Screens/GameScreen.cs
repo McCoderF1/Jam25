@@ -74,6 +74,7 @@ namespace Jam25.Screens
         private int maxRoomSize = 10;
         private int minRoomSize = 6;
 
+        private int playerAttackState = 0;
         private int healthPickupCount = 20;
         private int coalPickupCount = 15;
 
@@ -143,7 +144,7 @@ namespace Jam25.Screens
             enemySpawners = new Dictionary<int, EnemySpawner>
             {
                 [1] = new(
-                    maxEnemies: 50,
+                    maxEnemies: 15,
                     minSpawnDistanceFromPlayer: 200,
                     PointWithinWalls,
                     [
@@ -152,7 +153,7 @@ namespace Jam25.Screens
                         (_ => enemyFactory.CreateVampireEnemy(_), 0.2),
                     ]),
                 [2] = new(
-                    maxEnemies: 50,
+                    maxEnemies: 25,
                     minSpawnDistanceFromPlayer: 200,
                     PointWithinWalls,
                     [
@@ -161,7 +162,7 @@ namespace Jam25.Screens
                         (_ => enemyFactory.CreateVampireEnemy(_), 0.3),
                     ]),
                 [3] = new(
-                    maxEnemies: 50,
+                    maxEnemies: 30,
                     minSpawnDistanceFromPlayer: 200,
                     PointWithinWalls,
                     [
@@ -169,6 +170,15 @@ namespace Jam25.Screens
                         (_ => enemyFactory.CreateLavaSlimeEnemy(_), 0.4),
                         (_ => enemyFactory.CreateVampireEnemy(_), 0.4),
                     ]),
+                [4] = new(
+                    maxEnemies: 50,
+                    minSpawnDistanceFromPlayer: 200,
+                    PointWithinWalls,
+                    [
+                        (_ => enemyFactory.CreateSlimeEnemy(_), 0.2),
+                        (_ => enemyFactory.CreateLavaSlimeEnemy(_), 0.4),
+                        (_ => enemyFactory.CreateVampireEnemy(_), 0.4),
+                    ])
             };
 
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
@@ -437,10 +447,15 @@ namespace Jam25.Screens
                 }
 
 
-                // TODO: improve this
-                if (Vector2.Distance(boss.Position, player.Body.Position) < 200 && (player.IsAttacking != 0))
+
+                if (Vector2.Distance(boss.Position, player.Body.Position) < 200 && player.IsAttacking != playerAttackState)
                 {
-                    boss.TakeDamage(1);
+                    playerAttackState = player.IsAttacking;
+
+                    if (playerAttackState > 0)
+                    {
+                        boss.TakeDamage(20);
+                    }
                 }
 
                 List<Projectile> toRemove = new();
