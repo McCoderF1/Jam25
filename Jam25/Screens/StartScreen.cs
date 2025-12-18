@@ -31,6 +31,7 @@ namespace Jam25.Screens
             Start,
             Player,
             Settings,
+            Casino,
             Quit
         }
 
@@ -42,6 +43,7 @@ namespace Jam25.Screens
         public event EventHandler Settings;
         public event EventHandler Start;
         public event EventHandler Player;
+        public event EventHandler Casino;
 
         public StartScreen(
             GraphicsDevice gfxDevice,
@@ -75,7 +77,7 @@ namespace Jam25.Screens
 
         private void DrawMenu()
         {
-            int ySelection = 505 + (int)currentSelection * 50;
+            int ySelection = 455 + (int)currentSelection * 50;
             spriteBatch.Draw(whiteRectangle, new Microsoft.Xna.Framework.Vector2(100, ySelection),
                 new Rectangle(0, 0, 160, 50),
                 new Color(232, 190, 84) * 0.5f,
@@ -85,9 +87,10 @@ namespace Jam25.Screens
                 SpriteEffects.None,
                 0);
 
-            spriteBatch.DrawString(font, "Start", new Microsoft.Xna.Framework.Vector2(110, 505), Color.WhiteSmoke);
-            spriteBatch.DrawString(font, "Player", new Microsoft.Xna.Framework.Vector2(110, 555), Color.WhiteSmoke);
-            spriteBatch.DrawString(font, "Settings", new Microsoft.Xna.Framework.Vector2(110, 605), Color.WhiteSmoke);
+            spriteBatch.DrawString(font, "Start", new Microsoft.Xna.Framework.Vector2(110, 455), Color.WhiteSmoke);
+            spriteBatch.DrawString(font, "Player", new Microsoft.Xna.Framework.Vector2(110, 505), Color.WhiteSmoke);
+            spriteBatch.DrawString(font, "Settings", new Microsoft.Xna.Framework.Vector2(110, 555), Color.WhiteSmoke);
+            spriteBatch.DrawString(font, "Casino", new Microsoft.Xna.Framework.Vector2(110, 605), Color.WhiteSmoke);
             spriteBatch.DrawString(font, "Quit", new Microsoft.Xna.Framework.Vector2(110, 655), Color.WhiteSmoke);
         }
 
@@ -119,6 +122,9 @@ namespace Jam25.Screens
 
                 if (currentSelection == MenuSelection.Player)
                     Player.Invoke(this, EventArgs.Empty);
+
+                if (currentSelection == MenuSelection.Casino)
+                    Casino.Invoke(this, EventArgs.Empty);
             }
             else if (KeyboardInput.HasBeenPressed(Keys.M))
             {
@@ -126,12 +132,12 @@ namespace Jam25.Screens
             }
             else if (KeyboardInput.HasBeenPressed(Keys.Down) || KeyboardInput.HasBeenPressed(Keys.S))
             {
-                currentSelection = (MenuSelection)(((int)currentSelection + 1) % 4);
+                currentSelection = (MenuSelection)(((int)currentSelection + 1) % 5);
                 AudioManager.PlaySound("RetroClick");
             }
             else if (KeyboardInput.HasBeenPressed(Keys.Up) || KeyboardInput.HasBeenPressed(Keys.W))
             {
-                currentSelection = (MenuSelection)(((int)currentSelection + 3) % 4);
+                currentSelection = (MenuSelection)(((int)currentSelection + 4) % 5);
                 AudioManager.PlaySound("RetroClick");
             }
         }

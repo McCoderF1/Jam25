@@ -99,13 +99,13 @@ namespace Jam25
 
             var startScreen = new StartScreen(graphics.GraphicsDevice, spriteBatch, Content, audioController, this);
             var settingScreen = new SettingsScreen(spriteBatch, graphics, content, Content, audioController);
-
+            var casinoScreen = new CasinoScreen(spriteBatch, graphics, content, Content, audioController);
 
             var gameScreen = new GameScreen(graphics.GraphicsDevice, spriteBatch, content, Content, audioController, this);
             var playerScreen = new PlayerScreen(spriteBatch, graphics, content, Content, audioController);
             var deathScreen = new DeathScreen(graphics.GraphicsDevice, spriteBatch, Content);
 
-            screenManager = new ScreenManager(startScreen, settingScreen, gameScreen, playerScreen, transitionHandler, deathScreen);
+            screenManager = new ScreenManager(startScreen, settingScreen, gameScreen, playerScreen, transitionHandler, deathScreen, casinoScreen);
         }
 
         protected override void Update(GameTime gameTime)
