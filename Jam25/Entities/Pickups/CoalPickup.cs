@@ -34,10 +34,10 @@ namespace Jam25.Entities.Pickups
 
             EnergyAmount = size switch
             {
-                CoalSize.Small => 10f,
-                CoalSize.Medium => 20f,
-                CoalSize.Large => 35f,
-                CoalSize.Huge => 60f,
+                CoalSize.Small => 60f,
+                CoalSize.Medium => 35f,
+                CoalSize.Large => 20f,
+                CoalSize.Huge => 10f,
                 _ => 10f
             };
 

@@ -90,6 +90,8 @@ namespace Jam25
             audioController.InstallEffect("LevelUp", Content.Load<SoundEffect>("Sound/Effects/LevelUp"));
             audioController.InstallEffect("GetKey", Content.Load<SoundEffect>("Sound/Effects/GetKey"));
             audioController.InstallEffect("TakeItem", Content.Load<SoundEffect>("Sound/Effects/TakeItem"));
+            audioController.InstallEffect("CasinoPay", Content.Load<SoundEffect>("Sound/Effect/casinoPay"));
+            audioController.InstallEffect("CasinoSpin", Content.Load<SoundEffect>("Sound/Effect/casinoSpin"));
             //add audio here
             // - ok
 
