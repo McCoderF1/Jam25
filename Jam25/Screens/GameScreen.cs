@@ -225,6 +225,7 @@ namespace Jam25.Screens
             {
                 currentLevelCompleted = false;
                 Transition();
+                gameUI.SkillsAndAbilitiesTrigger();
                 return;
             }
 

@@ -13,21 +13,10 @@ namespace Jam25.Stores
     /// </summary>
     public static class PlayerTracker
     {
-        #region private members
-
-        private static Subject<string> triggerOnLevelUp = new();
-
-        #endregion
-
         /// <summary>
         /// Embers needed to level up, ramped up per level (15 levels total)
         /// </summary>
         public static readonly List<int> EmbersPerLevel = new() { 10, 50, 100, 250, 400, 600, 850, 1100, 1450, 2000, 2500, 3000, 3500, 4000, 5000 };
-
-        /// <summary>
-        /// Watch for when the player levels up
-        /// </summary>
-        public static IObservable<string> OnLevelUp => triggerOnLevelUp;
 
         /// <summary>
         /// Player's stats
@@ -105,21 +94,7 @@ namespace Jam25.Stores
 
             if(PlayerStats.EmbersCollected >= EmbersPerLevel[PlayerStats.TotalLevel])
             {
-
-                switch(PlayerStats.TotalLevel)
-                {
-                    case 0: case 3: case 6: case 9: case 12:
-                        PlayerStats.HealthLevel++;
-                        break;
-                    case 1: case 4: case 7: case 10: case 13:
-                        PlayerStats.TorchLevel++;
-                        break;
-                    case 2: case 5: case 8: case 11: case 14:
-                        PlayerStats.SpeedLevel++;
-                        break;
-                }
                 PlayerStats.TotalLevel++;
-                triggerOnLevelUp.OnNext("Leveled");
             }
         }
 
