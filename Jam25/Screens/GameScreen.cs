@@ -826,6 +826,8 @@ namespace Jam25.Screens
             player.LastState = Player.PlayerState.Idle;
             player.HasKey = false;
             player.MoveSpeed = 1.0f;
+
+            game.Torch.Reset();
         }
 
         private void BuildWorld()

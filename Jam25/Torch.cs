@@ -82,5 +82,10 @@ namespace Jam25
         {
             Energy = 0f;
         }
+
+        public void Reset()
+        {
+            Energy = MaxEnergy;
+        }
     }
 }
