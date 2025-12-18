@@ -30,7 +30,6 @@ namespace Jam25.Entities.Pickups
             if (Consumed) return;
 
             Consumed = true;
-            player.HasKey = true;
             PickedUp.Invoke(this, EventArgs.Empty);
             AudioManager.PlaySound("GetKey");
             Console.WriteLine("Collected Key!");

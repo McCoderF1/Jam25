@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using HDT.Gaming.Audio;
+﻿using HDT.Gaming.Audio;
 using HDT.Gaming.Input;
 using HDT.Gaming.Physics;
 using HDT.Gaming.Screens;
@@ -16,6 +13,9 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Jam25.Screens
 {
@@ -415,8 +415,13 @@ namespace Jam25.Screens
                 {
                     player.Body.Position = targetPosition;
 
-                    if (IsOverDoor(playerRect) && player.HasKey)
+                    CollectedItem key = gameUI.CollectedItems.Where(item => item.Name == "Key").FirstOrDefault();
+
+                    if (IsOverDoor(playerRect) && key.Name != null)
                     {
+                        if (gameUI.CollectedItems.Contains(key))
+                            gameUI.CollectedItems.Remove(key);
+
                         player.MoveSpeed = 0f;
                         LevelCompleted?.Invoke(this, EventArgs.Empty);
                     }
@@ -430,6 +435,11 @@ namespace Jam25.Screens
                     }
                 }
             }
+        }
+
+        private bool AnyKey()
+        {
+            return gameUI.CollectedItems.Where(item => item.Name == "Key").Any();
         }
 
         private bool CanMoveTo(Rectangle playerRect)
@@ -453,7 +463,7 @@ namespace Jam25.Screens
                     }
 
                     // Doors only block if you don't have the key; allow floor always
-                    if (type == TileType.Door && !player.HasKey)
+                    if (type == TileType.Door && !AnyKey())
                     {
                         return false;
                     }
@@ -814,7 +824,6 @@ namespace Jam25.Screens
             gameScene.Pickups.Clear();
             gameScene.EnemySpawner = null;
             gameScene.Player.MoveSpeed = 1.0f;
-            gameScene.Player.HasKey = false;
             gameUI.CollectedItems.Clear();
 
             gameScene.GameMap = checkPoint;
@@ -834,7 +843,6 @@ namespace Jam25.Screens
             // Reset player state
             player.Health.Heal(player.Health.Max);
             player.LastState = Player.PlayerState.Idle;
-            player.HasKey = false;
             player.MoveSpeed = 1.0f;
 
             game.Torch.Reset();

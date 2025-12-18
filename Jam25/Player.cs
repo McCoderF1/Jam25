@@ -125,8 +125,6 @@ namespace Jam25
 
         public int IsAttacking { get; private set; }
 
-        public bool HasKey { get; set; } = false;
-
         public int AttackRange { get; set; } = 50;
 
         public Player(SpriteBatch spriteBatch)
