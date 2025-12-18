@@ -2,7 +2,6 @@
 using Jam25.Graphics;
 using Jam25.Screens;
 using Jam25.Screens.Transitions;
-using Jam25.Screens.UserInterface;
 using Jam25.Stores;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
@@ -76,6 +75,7 @@ namespace Jam25
             audioController.InstallMusic("Game2", Content.Load<Song>("Sound/Music/Shadows Rise2"));
             audioController.InstallMusic("Game3", Content.Load<Song>("Sound/Music/Shadows and Smoke1"));
             audioController.InstallMusic("Game4", Content.Load<Song>("Sound/Music/Shadows and Smoke2"));
+            audioController.InstallMusic("Death", Content.Load<Song>("Sound/Music/Shadows of the Heart"));
             audioController.InstallEffect("MetalHit", Content.Load<SoundEffect>("Sound/Effects/MetalHit"));
             audioController.InstallEffect("RetroClick", Content.Load<SoundEffect>("Sound/Effects/RetroClick"));
             audioController.InstallEffect("AppClick", Content.Load<SoundEffect>("Sound/Effects/AppClick"));
@@ -99,6 +99,8 @@ namespace Jam25
 
             var startScreen = new StartScreen(graphics.GraphicsDevice, spriteBatch, Content, audioController, this);
             var settingScreen = new SettingsScreen(spriteBatch, graphics, content, Content, audioController);
+
+
             var gameScreen = new GameScreen(graphics.GraphicsDevice, spriteBatch, content, Content, audioController, this);
             var playerScreen = new PlayerScreen(spriteBatch, graphics, content, Content, audioController);
             var deathScreen = new DeathScreen(graphics.GraphicsDevice, spriteBatch, Content);
@@ -119,7 +121,7 @@ namespace Jam25
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.Black);
+            GraphicsDevice.Clear(GameSettings.BackgroundColor);
 
             spriteBatch.Begin(samplerState: SamplerState.PointClamp);
             screenManager.Draw();
