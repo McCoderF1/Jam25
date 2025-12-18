@@ -241,16 +241,19 @@ namespace Jam25.Screens
             //DrawLighting();
             DrawDungeon(backgroundOnly: false);
 
-            // Draw enemy health bars
-            for (int i = 0; i < sortedEnemies.Count; i++)
-            {
-                sortedEnemies[i].CurrentSprite.DrawHealthBar(spriteBatch, sortedEnemies[i].Body.Position, whitePixelTexture, sortedEnemies[i].Health);
-            }
-
             DrawDebugCollision();
 
             DrawLighting();
 
+            // Draw enemy health bars
+            for (int i = 0; i < sortedEnemies.Count; i++)
+            {
+                var enemy = sortedEnemies[i];
+                if (TryGetTileCoords(enemy.Body.Position, out int tileX, out int tileY) && visibleTiles[tileX, tileY])
+                {
+                    enemy.CurrentSprite.DrawHealthBar(spriteBatch, enemy.Body.Position, whitePixelTexture, enemy.Health);
+                }
+            }
 
             if (CurrentLevelType == LevelType.Lava)
             {
