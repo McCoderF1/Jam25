@@ -141,7 +141,7 @@ namespace Jam25.Screens
             visibleTiles = new bool[mapWidth, mapHeight];
 
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
-            gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player);
+            gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player, gameScene);
 
             key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
 
