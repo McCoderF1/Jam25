@@ -18,7 +18,6 @@ namespace Jam25.Scenes
     {
         private int playerAttackState = 0;
 
-
         public GameMap GameMap { get; set; }
 
         public Player Player { get; }
@@ -96,7 +95,7 @@ namespace Jam25.Scenes
                 {
                     if (distFromPlayer < Player.AttackRange)
                     {
-                        enemy.TakeDamage(4);
+                        enemy.TakeDamage(Player.AttackDamage);
                         hitSomething = true;
                     }
                 }
