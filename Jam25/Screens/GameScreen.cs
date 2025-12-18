@@ -251,7 +251,6 @@ namespace Jam25.Screens
             // Reset player state
             player.Health.Heal(player.Health.Max);
             player.LastState = Player.PlayerState.Idle;
-            player.HasKey = false;
             player.MoveSpeed = 1.0f;
 
             key = new KeyPickup(keyTexture);
