@@ -64,7 +64,7 @@ namespace Jam25.Entities.Enemies
             whitePixel = content.Load<Texture2D>("Textures/WhiteRectangle");
             Phase1Texture = content.Load<Texture2D>($"Boss/firstphase");
             Phase2Texture = content.Load<Texture2D>($"Boss/secondphase");
-            TransitionTexture = content.Load<Texture2D>($"Boss/transition");
+            //TransitionTexture = content.Load<Texture2D>($"Boss/transition");
             CurrentTexture = Phase1Texture;
             CurrentStage = Stage.Phase1;
             ProjectileTexture = content.Load<Texture2D>("Images/projectile");
@@ -75,7 +75,7 @@ namespace Jam25.Entities.Enemies
                 ExplosionTextures.Add(content.Load<Texture2D>($"Images/explosion/Circle_explosion{i}"));
             }
 
-            for (int i = 0; i < 53; i++)
+            for (int i = 0; i < 52; i++)
             {
                 try
                 {
