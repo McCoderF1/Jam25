@@ -118,6 +118,13 @@ namespace Jam25.Screens
 
         private LevelType CurrentLevelType = LevelType.Dungeon;
 
+        // Mini-map
+        private bool[,] visitedTiles;
+        private bool showMiniMap = false;
+        private readonly int miniMapWidth = 200;
+        private readonly int miniMapHeight = 120;
+        private readonly int miniMapPadding = 8;
+
         #endregion
 
         public EventHandler LevelCompleted { get; set; }
@@ -193,6 +200,7 @@ namespace Jam25.Screens
 
             visibleTiles = new bool[mapWidth, mapHeight];
             tileShadowTransparency = new float[mapWidth, mapHeight];
+            visitedTiles = new bool[mapWidth, mapHeight];
 
             key = new KeyPickup(keyTexture);
             key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
@@ -305,6 +313,7 @@ namespace Jam25.Screens
             }
 
             gameUI?.Draw();
+            DrawMiniMap();
         }
 
         public void Hide()
@@ -491,6 +500,115 @@ namespace Jam25.Screens
         }
 
         #region private methods
+
+        private void DrawMiniMap()
+        {
+            if (!showMiniMap || gameScene?.GameMap?.tiles == null || whitePixelTexture == null)
+            {
+                return;
+            }
+
+            int viewportWidth = graphicsDevice.Viewport.Width;
+            int viewportHeight = graphicsDevice.Viewport.Height;
+
+            // Bottom-right corner with padding
+            int mapX = viewportWidth - miniMapWidth - miniMapPadding;
+            int mapY = viewportHeight - miniMapHeight - miniMapPadding;
+
+            Rectangle miniMapRect = new Rectangle(mapX, mapY, miniMapWidth, miniMapHeight);
+
+            // Background (semi-transparent)
+            spriteBatch.Draw(
+                whitePixelTexture,
+                miniMapRect,
+                Color.Black * 0.6f);
+
+            // Calculate tile → minimap pixel scaling
+            float scaleX = miniMapWidth / (float)mapWidth;
+            float scaleY = miniMapHeight / (float)mapHeight;
+
+            // Draw tiles
+            for (int x = 0; x < mapWidth; x++)
+            {
+                for (int y = 0; y < mapHeight; y++)
+                {
+                    // Skip tiles never visited (fog of war)
+                    if (!visitedTiles[x, y])
+                    {
+                        continue;
+                    }
+
+                    var tile = gameScene.GameMap.tiles[x, y];
+
+                    Color color;
+                    switch (tile.Type)
+                    {
+                        case TileType.Wall1:
+                            color = new Color(200, 200, 200, 255); // light wall
+                            break;
+                        case TileType.Floor:
+                            color = new Color(60, 60, 60, 255); // dark floor
+                            break;
+                        case TileType.Door:
+                            color = Color.Gold; // door highlight
+                            break;
+                        default:
+                            continue;
+                    }
+
+                    // Convert tile index to minimap pixel rect
+                    int px = mapX + (int)(x * scaleX);
+                    int py = mapY + (int)(y * scaleY);
+                    int pw = Math.Max(1, (int)Math.Ceiling(scaleX));
+                    int ph = Math.Max(1, (int)Math.Ceiling(scaleY));
+
+                    Rectangle tileRect = new Rectangle(px, py, pw, ph);
+
+                    spriteBatch.Draw(
+                        whitePixelTexture,
+                        tileRect,
+                        color);
+                }
+            }
+
+            // Draw key marker (if not picked up)
+            if (!key.Consumed)
+            {
+                // Key.Position is in world space (top-left of sprite)
+                Vector2 keyCenter = key.Sprite.Position + new Vector2(tileSize / 2f, tileSize / 2f);
+
+                int keyTileX = (int)(keyCenter.X / tileSize);
+                int keyTileY = (int)(keyCenter.Y / tileSize);
+
+                if (keyTileX >= 0 && keyTileX < mapWidth &&
+                    keyTileY >= 0 && keyTileY < mapHeight &&
+                    visitedTiles[keyTileX, keyTileY])
+                {
+                    int kx = mapX + (int)(keyTileX * scaleX);
+                    int ky = mapY + (int)(keyTileY * scaleY);
+
+                    Rectangle keyRect = new Rectangle(kx - 2, ky - 2, 4, 4);
+                    spriteBatch.Draw(whitePixelTexture, keyRect, Color.Cyan);
+                }
+            }
+
+            // Draw player marker
+            {
+                Vector2 playerCenter = player.Body.Position;
+
+                float playerTileX = playerCenter.X / tileSize;
+                float playerTileY = playerCenter.Y / tileSize;
+
+                int px = mapX + (int)(playerTileX * scaleX);
+                int py = mapY + (int)(playerTileY * scaleY);
+
+                Rectangle playerRect = new Rectangle(px - 2, py - 2, 4, 4);
+                spriteBatch.Draw(whitePixelTexture, playerRect, Color.White);
+            }
+
+            // Optional: thin border around minimap
+            DrawDebugRect(miniMapRect, Color.White * 0.8f, 1f);
+        }
 
         private void DrawDebugRect(Rectangle rect, Color color, float thickness = 1f)
         {
@@ -1006,6 +1124,18 @@ namespace Jam25.Screens
                     tileShadowTransparency[x, y] = MathHelper.Clamp(tileShadowTransparency[x, y] + changeDirection * SHADOW_ALPHA_CHANGE_SPEED * dt, 0f, 1f);
                 }
             }
+
+            // Mark tiles we can currently see as permanently visited (for minimap)
+            for (int y = 0; y < mapHeight; y++)
+            {
+                for (int x = 0; x < mapWidth; x++)
+                {
+                    if (visibleTiles[x, y])
+                    {
+                        visitedTiles[x, y] = true;
+                    }
+                }
+            }
         }
 
         private void DrawLighting()
@@ -1150,6 +1280,7 @@ namespace Jam25.Screens
 
             Array.Clear(visibleTiles, 0, visibleTiles.Length);
             Array.Clear(tileShadowTransparency, 0, tileShadowTransparency.Length);
+            Array.Clear(visitedTiles, 0, visitedTiles.Length);
         }
 
         private void BuildWorld(LevelType levelType)
