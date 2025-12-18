@@ -1,4 +1,7 @@
-﻿using HDT.Gaming.Audio;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using HDT.Gaming.Audio;
 using HDT.Gaming.Input;
 using HDT.Gaming.Physics;
 using HDT.Gaming.Screens;
@@ -14,9 +17,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Jam25.Screens
 {
@@ -33,7 +33,7 @@ namespace Jam25.Screens
 
         private const float SHADOW_ALPHA_CHANGE_SPEED = 5f;
 
-        private const float SHADOW_CULL_RADIUS_PADDING = 1f; 
+        private const float SHADOW_CULL_RADIUS_PADDING = 1f;
 
         private readonly GraphicsDevice graphicsDevice;
         private readonly SpriteBatch spriteBatch;
@@ -180,7 +180,7 @@ namespace Jam25.Screens
             player.Initalise(content, graphicsDevice);
 
             visibleTiles = new bool[mapWidth, mapHeight];
-            tileShadowTransparency = new float[mapWidth, mapHeight]; 
+            tileShadowTransparency = new float[mapWidth, mapHeight];
 
             key = new KeyPickup(keyTexture);
             key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
@@ -304,6 +304,8 @@ namespace Jam25.Screens
 
         public void Show()
         {
+            ResetWorld();
+
             // Reset death state
             playerDied = false;
             deathTimer = 0f;
@@ -314,12 +316,9 @@ namespace Jam25.Screens
             player.LastState = Player.PlayerState.Idle;
             player.MoveSpeed = 1.0f;
 
-            InitialiseHealthPickups();
-            InitialiseCoalPickups();
             Random r = new Random();
             AudioManager.PlayMusic($"Game{r.Next(1, 4)}");
 
-            ResetWorld();
             BuildWorld(CurrentLevelType);
 
             if (gameUI is GameUserInterface gui)
@@ -1139,6 +1138,9 @@ namespace Jam25.Screens
 
         private void ResetWorld()
         {
+            if (playerDied)
+                gameScene.GameLevel = 1;
+
             gameScene.Reset();
             key.Reset();
             // Reset death state
