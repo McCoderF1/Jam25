@@ -1,5 +1,6 @@
 ﻿using HDT.Gaming.Models;
 using HDT.Gaming.Physics;
+using Jam25.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -21,8 +22,8 @@ namespace Jam25.Entities.Enemies
         Texture2D Texture;
         Texture2D ProjectileTexture;
         List<Texture2D> ExplosionTextures;
-        Vector2 Position;
-        List<Projectile> Projectiles;
+        public Vector2 Position;
+        public List<Projectile> Projectiles = new();
         float attackBlockedUntil = 0f;
         float attackCooldown = 500f;
 
@@ -43,10 +44,8 @@ namespace Jam25.Entities.Enemies
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(
-                Texture,
-                Position,
-                Color.White);
+            var origin = new Vector2(Texture.Width / 2f, Texture.Height / 2f);
+            spriteBatch.Draw(Texture, Position, null, Color.White, 0, origin, 0.2f, SpriteEffects.None, 0f);
         }
 
         private void StartCooldown()
@@ -63,17 +62,46 @@ namespace Jam25.Entities.Enemies
             }
 
 
-            StartCooldown();
-            Projectiles.Add(new Projectile()
+            float distFromPlayer = Vector2.Distance(Position, playerPos);
+
+            if (distFromPlayer < 100)
             {
-                Position = Position,
-                Direction = Math.Atan2(playerPos.Y - Position.Y, playerPos.X - Position.X),
-                Velocity = 500,
-                Texture = ProjectileTexture,
-                ExplosionTextures = this.ExplosionTextures,
-                Damage = 5,
-                Lifespan = 2000  // ms before removed
-            });
+                attackCooldown = 500;
+                for (double dTheta = -Math.PI / 4; dTheta < Math.PI / 4; dTheta += Math.PI / 24)
+                {
+                    StartCooldown();
+                    Projectiles.Add(new Projectile()
+                    {
+                        Position = Position,
+                        Direction = Math.Atan2(playerPos.Y - Position.Y, playerPos.X - Position.X) + dTheta,
+                        Velocity = 500,
+                        Texture = ProjectileTexture,
+                        ExplosionTextures = this.ExplosionTextures,
+                        Damage = 5,
+                        Lifespan = 2000  // ms before removed
+                    });
+                }
+            }
+            else
+            {
+                attackCooldown = 1000;
+                for (double dTheta = -Math.PI / 6; dTheta < Math.PI / 6; dTheta += Math.PI / 16)
+                {
+                    StartCooldown();
+                    Projectiles.Add(new Projectile()
+                    {
+                        Position = Position,
+                        Direction = Math.Atan2(playerPos.Y - Position.Y, playerPos.X - Position.X) + dTheta,
+                        Velocity = 500,
+                        Texture = ProjectileTexture,
+                        ExplosionTextures = this.ExplosionTextures,
+                        Damage = 5,
+                        Lifespan = 2000  // ms before removed
+                    });
+                }
+            }
+
+
         }
     }
 }
