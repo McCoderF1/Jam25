@@ -29,9 +29,11 @@ namespace Jam25.Screens
     {
         #region private members
 
+        private const float TORCH_FADE_IN_SPEED = 2f;
+
         private const float SHADOW_ALPHA_CHANGE_SPEED = 5f;
 
-        private const float SHADOW_CULL_RADIUS_PADDING = 2f; 
+        private const float SHADOW_CULL_RADIUS_PADDING = 1f; 
 
         private readonly GraphicsDevice graphicsDevice;
         private readonly SpriteBatch spriteBatch;
@@ -63,6 +65,8 @@ namespace Jam25.Screens
         private const float FlickerFrequency = 1.5f;
         private const float FlickerStrength = 0.05f;
 
+        private float torchFadeIn;
+
         private int mapWidth = 80;
         private int mapHeight = 42;
 
@@ -77,7 +81,7 @@ namespace Jam25.Screens
         private PhysicsWorld physicsWorld;
 
         private bool[,] visibleTiles;
-        private float[,] tileShadowAlpha; // 0 = no shadow, 1 = full shadow
+        private float[,] tileShadowTransparency; // 0 = full shadow, 1 = no shadow
         private int rayCount = 360;
         private float rayStep = 8f;
 
@@ -176,7 +180,7 @@ namespace Jam25.Screens
             player.Initalise(content, graphicsDevice);
 
             visibleTiles = new bool[mapWidth, mapHeight];
-            tileShadowAlpha = new float[mapWidth, mapHeight]; 
+            tileShadowTransparency = new float[mapWidth, mapHeight]; 
 
             key = new KeyPickup(keyTexture);
             key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
@@ -449,6 +453,8 @@ namespace Jam25.Screens
 
 
             gameUI.UpdateWithVector(gameTime, CameraPosition);
+
+            torchFadeIn = Math.Min(torchFadeIn + TORCH_FADE_IN_SPEED * dt, 1f);
 
             UpdateLighting(dt);
         }
@@ -877,7 +883,7 @@ namespace Jam25.Screens
         {
             Array.Clear(visibleTiles, 0, visibleTiles.Length);
 
-            float radius = game.Torch.CurrentRadius * currentFlicker;
+            float radius = GetTorchRadius();
             Vector2 lightCenter = player.Body.Position;
 
             float tileRadius = radius / tileSize + SHADOW_CULL_RADIUS_PADDING;
@@ -921,8 +927,8 @@ namespace Jam25.Screens
             {
                 for (int x = 0; x < mapWidth; x++)
                 {
-                    float shadowAlphaChangeDirection = visibleTiles[x, y] ? -1f : 1f;
-                    tileShadowAlpha[x, y] = MathHelper.Clamp(tileShadowAlpha[x, y] + shadowAlphaChangeDirection * SHADOW_ALPHA_CHANGE_SPEED * dt, 0f, 1f);
+                    float changeDirection = visibleTiles[x, y] ? 1f : -1f;
+                    tileShadowTransparency[x, y] = MathHelper.Clamp(tileShadowTransparency[x, y] + changeDirection * SHADOW_ALPHA_CHANGE_SPEED * dt, 0f, 1f);
                 }
             }
         }
@@ -940,7 +946,7 @@ namespace Jam25.Screens
             }
 
             var viewport = graphicsDevice.Viewport;
-            float radius = game.Torch.CurrentRadius * currentFlicker;
+            float radius = GetTorchRadius();
 
             var screenInWorld = new Rectangle(
                 (int)CameraPosition.X,
@@ -1011,7 +1017,8 @@ namespace Jam25.Screens
                             int drawY = (int)(y * tileSize + cy * spacing + spacing / 2 - shadowSize / 2);
 
                             var shadowRect = new Rectangle(drawX, drawY, shadowSize, shadowSize);
-                            spriteBatch.Draw(tileShadowMask, shadowRect, Color.White * tileShadowAlpha[x, y]);
+                            float alpha = 1f - tileShadowTransparency[x, y];
+                            spriteBatch.Draw(tileShadowMask, shadowRect, Color.White * alpha);
                         }
                     }
                 }
@@ -1019,6 +1026,11 @@ namespace Jam25.Screens
 
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, Matrix.CreateTranslation(new Vector3(-CameraPosition, 0f)));
+        }
+
+        private float GetTorchRadius()
+        {
+            return game.Torch.CurrentRadius * currentFlicker * torchFadeIn;
         }
 
         private bool TryGetTileCoords(Vector2 worldPos, out int tileX, out int tileY)
@@ -1055,6 +1067,11 @@ namespace Jam25.Screens
             player.MoveSpeed = 1.0f;
 
             game.Torch.Reset();
+
+            torchFadeIn = 0f;
+
+            Array.Clear(visibleTiles, 0, visibleTiles.Length);
+            Array.Clear(tileShadowTransparency, 0, tileShadowTransparency.Length);
         }
 
         private void BuildWorld(LevelType levelType)
