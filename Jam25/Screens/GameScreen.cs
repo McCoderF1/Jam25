@@ -29,6 +29,10 @@ namespace Jam25.Screens
     {
         #region private members
 
+        private const float SHADOW_ALPHA_CHANGE_SPEED = 5f;
+
+        private const float SHADOW_CULL_RADIUS_PADDING = 2f; 
+
         private readonly GraphicsDevice graphicsDevice;
         private readonly SpriteBatch spriteBatch;
         private readonly AudioController audioController;
@@ -73,6 +77,7 @@ namespace Jam25.Screens
         private PhysicsWorld physicsWorld;
 
         private bool[,] visibleTiles;
+        private float[,] tileShadowAlpha; // 0 = no shadow, 1 = full shadow
         private int rayCount = 360;
         private float rayStep = 8f;
 
@@ -171,6 +176,7 @@ namespace Jam25.Screens
             player.Initalise(content, graphicsDevice);
 
             visibleTiles = new bool[mapWidth, mapHeight];
+            tileShadowAlpha = new float[mapWidth, mapHeight]; 
 
             key = new KeyPickup(keyTexture);
             key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
@@ -443,6 +449,8 @@ namespace Jam25.Screens
 
 
             gameUI.UpdateWithVector(gameTime, CameraPosition);
+
+            UpdateLighting(dt);
         }
 
         #region private methods
@@ -865,38 +873,14 @@ namespace Jam25.Screens
             }
         }
 
-        private void DrawLighting()
+        private void UpdateLighting(float dt)
         {
-            if (debugLightingDisabled)
-            {
-                return;
-            }
-
-            if (lightMask == null || game.Torch == null || game.UiWhitePixel == null)
-            {
-                return;
-            }
-
-            var viewport = graphicsDevice.Viewport;
-            float radius = game.Torch.CurrentRadius * currentFlicker;
-
-            var screenInWorld = new Rectangle(
-                (int)CameraPosition.X,
-                (int)CameraPosition.Y,
-                viewport.Width,
-                viewport.Height);
-
-            Vector2 lightCenter = player.Body.Position;
-
-            if (radius <= 0f)
-            {
-                spriteBatch.Draw(game.UiWhitePixel, screenInWorld, Color.Black * 0.99f);
-                return;
-            }
-
             Array.Clear(visibleTiles, 0, visibleTiles.Length);
 
-            float tileRadius = radius / tileSize;
+            float radius = game.Torch.CurrentRadius * currentFlicker;
+            Vector2 lightCenter = player.Body.Position;
+
+            float tileRadius = radius / tileSize + SHADOW_CULL_RADIUS_PADDING;
             float maxDistanceSq = tileRadius * tileRadius;
             Vector2 playerTile = lightCenter / tileSize;
 
@@ -933,6 +917,45 @@ namespace Jam25.Screens
                 }
             }
 
+            for (int y = 0; y < mapHeight; y++)
+            {
+                for (int x = 0; x < mapWidth; x++)
+                {
+                    float shadowAlphaChangeDirection = visibleTiles[x, y] ? -1f : 1f;
+                    tileShadowAlpha[x, y] = MathHelper.Clamp(tileShadowAlpha[x, y] + shadowAlphaChangeDirection * SHADOW_ALPHA_CHANGE_SPEED * dt, 0f, 1f);
+                }
+            }
+        }
+
+        private void DrawLighting()
+        {
+            if (debugLightingDisabled)
+            {
+                return;
+            }
+
+            if (lightMask == null || game.Torch == null || game.UiWhitePixel == null)
+            {
+                return;
+            }
+
+            var viewport = graphicsDevice.Viewport;
+            float radius = game.Torch.CurrentRadius * currentFlicker;
+
+            var screenInWorld = new Rectangle(
+                (int)CameraPosition.X,
+                (int)CameraPosition.Y,
+                viewport.Width,
+                viewport.Height);
+
+            Vector2 lightCenter = player.Body.Position;
+
+            if (radius <= 0f)
+            {
+                spriteBatch.Draw(game.UiWhitePixel, screenInWorld, Color.Black * 0.99f);
+                return;
+            }
+
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, null, null, null, Matrix.CreateTranslation(new Vector3(-CameraPosition, 0f)));
 
@@ -967,9 +990,6 @@ namespace Jam25.Screens
                     if (!destRect.Intersects(tileWorldRect))
                         continue;
 
-                    if (visibleTiles[x, y])
-                        continue;
-
                     TileType tileType = gameScene.GameMap.tiles[x, y].Type;
                     if (tileType == TileType.Wall1 || tileType == TileType.Door)
                         continue;
@@ -977,7 +997,7 @@ namespace Jam25.Screens
                     Vector2 tileCenterWorld = new Vector2(x * tileSize + tileSize / 2f, y * tileSize + tileSize / 2f);
                     float distToLight = Vector2.Distance(tileCenterWorld, lightCenter);
 
-                    if (distToLight > radius)
+                    if (distToLight > radius + SHADOW_CULL_RADIUS_PADDING)
                         continue;
 
                     int circlesPerRow = 3;
@@ -991,7 +1011,7 @@ namespace Jam25.Screens
                             int drawY = (int)(y * tileSize + cy * spacing + spacing / 2 - shadowSize / 2);
 
                             var shadowRect = new Rectangle(drawX, drawY, shadowSize, shadowSize);
-                            spriteBatch.Draw(tileShadowMask, shadowRect, Color.White);
+                            spriteBatch.Draw(tileShadowMask, shadowRect, Color.White * tileShadowAlpha[x, y]);
                         }
                     }
                 }
