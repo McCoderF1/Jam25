@@ -145,7 +145,7 @@ namespace Jam25.Screens
 
             gameScene.Enemies.Add(enemyFactory.CreateSlimeEnemy(new(200, 200)));
 
-            this.LevelCompleted += (_, _) => Task.Delay(1000).ContinueWith(_ => Transition());
+            this.LevelCompleted += (_, _) => Task.Delay(1000).ContinueWith(_ => { Transition(); gameUI.SkillsAndAbilitiesTrigger(); });
         }
 
         public void Draw()
