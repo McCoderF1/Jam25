@@ -93,7 +93,7 @@ namespace Jam25.Screens
         private float[,] tileShadowTransparency; // 0 = full shadow, 1 = no shadow
         private int rayCount = 360;
         private float rayStep = 8f;
-
+        private SpriteFont font;
         private GameUserInterface gameUI;
         private readonly Random spawnRandom = new Random();
         private Texture2D whitePixelTexture;
@@ -124,7 +124,16 @@ namespace Jam25.Screens
 
         private Dictionary<int, EnemySpawner> enemySpawners;
 
-        private LevelType CurrentLevelType = LevelType.Dungeon;
+        private LevelType CurrentLevelType = LevelType.Lava;
+
+        // Mini-map
+        private bool[,] visitedTiles;
+        private bool showMiniMap = false;
+        private readonly int miniMapWidth = 200;
+        private readonly int miniMapHeight = 120;
+        private readonly int miniMapPadding = 8;
+
+        private bool showGuidanceIndicator = false;
 
         #endregion
 
@@ -201,6 +210,7 @@ namespace Jam25.Screens
 
             visibleTiles = new bool[mapWidth, mapHeight];
             tileShadowTransparency = new float[mapWidth, mapHeight];
+            visitedTiles = new bool[mapWidth, mapHeight];
 
             key = new KeyPickup(keyTexture);
             key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
@@ -208,6 +218,8 @@ namespace Jam25.Screens
             var dungeonLevel = new Dungeon(mapWidth, mapHeight, player, key);
             gameScene = new GameScene(dungeonLevel.Map, player);
             gameScene.Pickups.Add(key);
+
+            font = content.Load<SpriteFont>("Fonts/Menu");
 
             gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player, gameScene);
 
@@ -313,7 +325,10 @@ namespace Jam25.Screens
                 boss.DrawHealthBar(spriteBatch, game.GraphicsDevice.Viewport.Width);
             }
 
+            DrawDirectionIndicator();
+
             gameUI?.Draw();
+            DrawMiniMap();
         }
 
         public void Hide()
@@ -448,17 +463,17 @@ namespace Jam25.Screens
 
             if (CurrentLevelType == LevelType.Lava)
             {
-                boss.Update(gameTime, player.Body.Position);
+                boss.Update(gameTime, player);
 
 
-                if (!boss.Alive)
+                if (boss.CurrentStage == Boss.Stage.Dead)
                 {
                     WinScreenTransition?.Invoke(this, EventArgs.Empty);
                 }
 
 
 
-                if (Vector2.Distance(boss.Position, player.Body.Position) < 200 && player.IsAttacking != playerAttackState)
+                if (Vector2.Distance(boss.Position, player.Body.Position) < 150 && player.IsAttacking != playerAttackState)
                 {
                     playerAttackState = player.IsAttacking;
 
@@ -489,11 +504,6 @@ namespace Jam25.Screens
                 boss.Projectiles.RemoveAll(i => toRemove.Contains(i));
             }
 
-
-
-
-
-
             gameUI.UpdateWithVector(gameTime, CameraPosition);
 
             torchFadeIn = Math.Min(torchFadeIn + TORCH_FADE_IN_SPEED * dt, 1f);
@@ -502,6 +512,257 @@ namespace Jam25.Screens
         }
 
         #region private methods
+
+        private Vector2? GetGuidanceTarget()
+        {
+            if (!key.Consumed)
+            {
+                return key.Sprite.Position + new Vector2(tileSize / 2f, tileSize / 2f);
+            }
+
+            Vector2 playerPos = player.Body.Position;
+            Vector2? closestDoorCenter = null;
+            float closestDistSq = float.MaxValue;
+
+            for (int x = 0; x < mapWidth; x++)
+            {
+                for (int y = 0; y < mapHeight; y++)
+                {
+                    if (gameScene.GameMap.tiles[x, y].Type != TileType.Door)
+                    {
+                        continue;
+                    }
+
+                    Vector2 doorCenter = new Vector2(
+                        x * tileSize + tileSize / 2f,
+                        y * tileSize + tileSize / 2f);
+
+                    float distSq = Vector2.DistanceSquared(playerPos, doorCenter);
+                    if (distSq < closestDistSq)
+                    {
+                        closestDistSq = distSq;
+                        closestDoorCenter = doorCenter;
+                    }
+                }
+            }
+
+            return closestDoorCenter;
+        }
+
+        private void DrawDirectionIndicator()
+        {
+            if (whitePixelTexture == null || gameScene?.GameMap?.tiles == null || !showGuidanceIndicator)
+            {
+                return;
+            }
+
+            Vector2? targetWorld = GetGuidanceTarget();
+            if (targetWorld is null)
+            {
+                return;
+            }
+
+            // Direction from screen center toward target
+            int viewportWidth = graphicsDevice.Viewport.Width;
+            int viewportHeight = graphicsDevice.Viewport.Height;
+
+            Vector2 screenCenter = new Vector2(viewportWidth / 2f, viewportHeight / 2f);
+
+            // Convert world position to screen-space (UI space)
+            Vector2 targetScreen = targetWorld.Value - CameraPosition;
+
+            // If target is on screen already, skip (optional)
+            Rectangle screenRect = new Rectangle(0, 0, viewportWidth, viewportHeight);
+            if (screenRect.Contains(targetScreen))
+            {
+                return;
+            }
+
+            Vector2 dir = targetScreen - screenCenter;
+            if (dir.LengthSquared() < 0.0001f)
+            {
+                return;
+            }
+            dir.Normalize();
+
+
+            // Clamp marker to just inside the screen bounds
+            float edgePadding = 24f;
+            float halfW = viewportWidth / 2f - edgePadding;
+            float halfH = viewportHeight / 2f - edgePadding;
+
+            float maxDistX = dir.X != 0f ? halfW / Math.Abs(dir.X) : float.MaxValue;
+            float maxDistY = dir.Y != 0f ? halfH / Math.Abs(dir.Y) : float.MaxValue;
+            float maxDist = Math.Min(maxDistX, maxDistY);
+
+            if (float.IsInfinity(maxDist) || maxDist <= 0f)
+            {
+                return;
+            }
+
+            Vector2 markerPos = screenCenter + dir * maxDist;
+
+            // Decide which letter and color to use
+            bool guidingToKey = !key.Consumed;
+            char letter = guidingToKey ? 'K' : 'D';
+            Color color = guidingToKey ? Color.Cyan : Color.Gold;
+
+            if (font == null)
+            {
+                // Fallback: small colored square if no font is available
+                float size = 10f;
+                var rect = new Rectangle(
+                    (int)(markerPos.X - size / 2f),
+                    (int)(markerPos.Y - size / 2f),
+                    (int)size,
+                    (int)size);
+
+                spriteBatch.Draw(
+                    whitePixelTexture,
+                    rect,
+                    color * 0.9f);
+
+                return;
+            }
+
+            string text = letter.ToString();
+
+            Vector2 textSize = font.MeasureString(text);
+            Vector2 textOrigin = textSize / 2f;
+
+            // Optional subtle background for readability
+            float bgPadding = 4f;
+            var bgRect = new Rectangle(
+                (int)(markerPos.X - textSize.X / 2f - bgPadding),
+                (int)(markerPos.Y - textSize.Y / 2f - bgPadding),
+                (int)(textSize.X + bgPadding * 2f),
+                (int)(textSize.Y + bgPadding * 2f));
+
+            spriteBatch.Draw(
+                whitePixelTexture,
+                bgRect,
+                Color.Black * 0.6f);
+
+            spriteBatch.DrawString(
+                font,
+                text,
+                markerPos,
+                color,
+                0f,
+                textOrigin,
+                1f,
+                SpriteEffects.None,
+                0f);
+        }
+
+        private void DrawMiniMap()
+        {
+            if (!showMiniMap || gameScene?.GameMap?.tiles == null || whitePixelTexture == null)
+            {
+                return;
+            }
+
+            int viewportWidth = graphicsDevice.Viewport.Width;
+            int viewportHeight = graphicsDevice.Viewport.Height;
+
+            // Bottom-right corner with padding
+            int mapX = viewportWidth - miniMapWidth - miniMapPadding;
+            int mapY = viewportHeight - miniMapHeight - miniMapPadding;
+
+            Rectangle miniMapRect = new Rectangle(mapX, mapY, miniMapWidth, miniMapHeight);
+
+            // Background (semi-transparent)
+            spriteBatch.Draw(
+                whitePixelTexture,
+                miniMapRect,
+                Color.Black * 0.6f);
+
+            // Calculate tile → minimap pixel scaling
+            float scaleX = miniMapWidth / (float)mapWidth;
+            float scaleY = miniMapHeight / (float)mapHeight;
+
+            // Draw tiles
+            for (int x = 0; x < mapWidth; x++)
+            {
+                for (int y = 0; y < mapHeight; y++)
+                {
+                    // Skip tiles never visited (fog of war)
+                    if (!visitedTiles[x, y])
+                    {
+                        continue;
+                    }
+
+                    var tile = gameScene.GameMap.tiles[x, y];
+
+                    Color color;
+                    switch (tile.Type)
+                    {
+                        case TileType.Wall1:
+                            color = new Color(200, 200, 200, 255); // light wall
+                            break;
+                        case TileType.Floor:
+                            color = new Color(60, 60, 60, 255); // dark floor
+                            break;
+                        case TileType.Door:
+                            color = Color.Gold; // door highlight
+                            break;
+                        default:
+                            continue;
+                    }
+
+                    // Convert tile index to minimap pixel rect
+                    int px = mapX + (int)(x * scaleX);
+                    int py = mapY + (int)(y * scaleY);
+                    int pw = Math.Max(1, (int)Math.Ceiling(scaleX));
+                    int ph = Math.Max(1, (int)Math.Ceiling(scaleY));
+
+                    Rectangle tileRect = new Rectangle(px, py, pw, ph);
+
+                    spriteBatch.Draw(
+                        whitePixelTexture,
+                        tileRect,
+                        color);
+                }
+            }
+
+            // Draw key marker (if not picked up)
+            if (!key.Consumed)
+            {
+                // Key.Position is in world space (top-left of sprite)
+                Vector2 keyCenter = key.Sprite.Position + new Vector2(tileSize / 2f, tileSize / 2f);
+
+                int keyTileX = (int)(keyCenter.X / tileSize);
+                int keyTileY = (int)(keyCenter.Y / tileSize);
+
+                if (keyTileX >= 0 && keyTileX < mapWidth &&
+                    keyTileY >= 0 && keyTileY < mapHeight &&
+                    visitedTiles[keyTileX, keyTileY])
+                {
+                    int kx = mapX + (int)(keyTileX * scaleX);
+                    int ky = mapY + (int)(keyTileY * scaleY);
+
+                    Rectangle keyRect = new Rectangle(kx - 2, ky - 2, 4, 4);
+                    spriteBatch.Draw(whitePixelTexture, keyRect, Color.Cyan);
+                }
+            }
+
+            // Draw player marker
+            {
+                Vector2 playerCenter = player.Body.Position;
+
+                float playerTileX = playerCenter.X / tileSize;
+                float playerTileY = playerCenter.Y / tileSize;
+
+                int px = mapX + (int)(playerTileX * scaleX);
+                int py = mapY + (int)(playerTileY * scaleY);
+
+                Rectangle playerRect = new Rectangle(px - 2, py - 2, 4, 4);
+                spriteBatch.Draw(whitePixelTexture, playerRect, Color.White);
+            }
+
+            // Optional: thin border around minimap
+            DrawDebugRect(miniMapRect, Color.White * 0.8f, 1f);
+        }
 
         private void DrawDebugRect(Rectangle rect, Color color, float thickness = 1f)
         {
@@ -1034,6 +1295,18 @@ namespace Jam25.Screens
                     tileShadowTransparency[x, y] = MathHelper.Clamp(tileShadowTransparency[x, y] + changeDirection * SHADOW_ALPHA_CHANGE_SPEED * dt, 0f, 1f);
                 }
             }
+
+            // Mark tiles we can currently see as permanently visited (for minimap)
+            for (int y = 0; y < mapHeight; y++)
+            {
+                for (int x = 0; x < mapWidth; x++)
+                {
+                    if (visibleTiles[x, y])
+                    {
+                        visitedTiles[x, y] = true;
+                    }
+                }
+            }
         }
 
         private void DrawLighting()
@@ -1180,6 +1453,7 @@ namespace Jam25.Screens
 
             Array.Clear(visibleTiles, 0, visibleTiles.Length);
             Array.Clear(tileShadowTransparency, 0, tileShadowTransparency.Length);
+            Array.Clear(visitedTiles, 0, visitedTiles.Length);
         }
 
         private void BuildWorld(LevelType levelType)
