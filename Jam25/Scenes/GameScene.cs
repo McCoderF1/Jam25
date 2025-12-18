@@ -44,6 +44,7 @@ namespace Jam25.Scenes
             Enemies.Clear();
             Pickups.Clear();
             PhysicsWorld.ClearBodies();
+            EnemySpawner = null;
         }
 
         public void Update(GameTime gameTime)

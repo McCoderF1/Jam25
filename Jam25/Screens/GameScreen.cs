@@ -15,14 +15,17 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
-using System.Linq;
-using System.Threading.Tasks;
-using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Linq;
 
 namespace Jam25.Screens
 {
+    public enum LevelType
+    {
+        Dungeon,
+        Lava
+    }
+
     public class GameScreen : IScreen
     {
         #region private members
@@ -85,11 +88,12 @@ namespace Jam25.Screens
         private const float DeathShrinkDuration = 3.5f;
         private const float DeathFadeDuration = 1.5f;
         private float deathTorchEnergyAtDeath = 0f;
+
         // Camera
         private Vector2 CameraPosition;
         private Rectangle WorldBounds => new Rectangle(0, 0, mapWidth * tileSize, mapHeight * tileSize);
-        private bool draw = true;
 
+        private bool draw = true;
         private bool currentLevelCompleted = false;
 
         private readonly Texture2D debugPixel;
@@ -102,6 +106,8 @@ namespace Jam25.Screens
         private Boss boss;
 
         EnemySpawner enemySpawner;
+
+        private LevelType CurrentLevelType = LevelType.Dungeon;
 
         #endregion
 
@@ -145,19 +151,30 @@ namespace Jam25.Screens
 
             visibleTiles = new bool[mapWidth, mapHeight];
 
-            wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
+            key = new KeyPickup(keyTexture);
+            key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
+
+            var dungeonLevel = new Dungeon(mapWidth, mapHeight, player, key);
+            gameScene = new GameScene(dungeonLevel.Map, player);
+            gameScene.Pickups.Add(key);
+
             gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player, gameScene);
+
 
             lightMask = LightMaskFactory.CreateRadialMask(graphicsDevice, lightMaskSize);
             tileShadowMask = LightMaskFactory.CreateTileShadowMask(graphicsDevice, 64);
 
-            this.LevelCompleted += (_, _) => currentLevelCompleted = true;
+            this.LevelCompleted += (_, _) =>
+            {
+                currentLevelCompleted = true;
+
+                if (gameScene.GameLevel > 3)
+                    CurrentLevelType = LevelType.Lava;
+            };
+
 
             debugPixel = new Texture2D(game.GraphicsDevice, 1, 1);
             debugPixel.SetData(new[] { Color.White });
-
-            this.LevelCompleted += (_, _) => Task.Delay(1000).ContinueWith(_ => Transition());
-
 
             boss = new Boss(content);
         }
@@ -253,12 +270,6 @@ namespace Jam25.Screens
             player.HasKey = false;
             player.MoveSpeed = 1.0f;
 
-            key = new KeyPickup(keyTexture);
-            key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
-
-            var dungeonLevel = new Dungeon(mapWidth, mapHeight, player, key);
-            gameScene = new GameScene(dungeonLevel.Map, player);
-            gameScene.Pickups.Add(key);
 
             InitialiseHealthPickups();
             InitialiseCoalPickups();
@@ -266,7 +277,7 @@ namespace Jam25.Screens
             AudioManager.PlayMusic($"Game{r.Next(1, 4)}");
 
             ResetWorld();
-            BuildWorld();
+            BuildWorld(CurrentLevelType);
 
             gameScene.EnemySpawner = enemySpawner;
 
@@ -299,8 +310,9 @@ namespace Jam25.Screens
             {
                 gameScene.GameLevel++;
                 currentLevelCompleted = false;
-                Transition();
+                Transition(CurrentLevelType);
                 gameUI.SkillsAndAbilitiesTrigger();
+
                 return;
             }
 
@@ -937,35 +949,18 @@ namespace Jam25.Screens
             return true;
         }
 
-        private void Transition()
+        private void Transition(LevelType levelType)
         {
             ResetWorld();
-            BuildWorld();
+            BuildWorld(levelType);
 
             return;
-
-
-            GameMap checkPoint = new GameMap(mapWidth, mapHeight);
-            checkPoint.MakeMap(1, 10, 10, mapWidth, mapHeight);
-            checkPoint.AddWalls();
-
-            checkPoint.AddPlayer(gameScene.Player);
-            gameScene.Enemies.Clear();
-            gameScene.Pickups.Clear();
-            gameScene.EnemySpawner = null;
-            gameScene.Player.MoveSpeed = 1.0f;
-            gameScene.Player.HasKey = false;
-            gameUI.CollectedItems.Clear();
-
-            gameScene.GameMap = checkPoint;
-            draw = false;
-            Task.Delay(1000).ContinueWith(_ => draw = true);
         }
 
         private void ResetWorld()
         {
             gameScene.Reset();
-
+            key.Reset();
             // Reset death state
             playerDied = false;
             deathTimer = 0f;
@@ -980,16 +975,23 @@ namespace Jam25.Screens
             game.Torch.Reset();
         }
 
-        private void BuildWorld()
+        private void BuildWorld(LevelType levelType)
         {
-            var dungeonLevel = new Dungeon(mapWidth, mapHeight, player, key);
-            gameScene.GameMap = dungeonLevel.Map;
+            if (levelType == LevelType.Dungeon)
+            {
+                var bossLevel = new Dungeon(mapWidth, mapHeight, player, key);
+                gameScene.GameMap = bossLevel.Map;
 
-            InitialiseHealthPickups();
-            InitialiseCoalPickups();
-
-            key.Reset();
-            gameScene.Pickups.Add(key);
+                InitialiseHealthPickups();
+                InitialiseCoalPickups();
+                gameScene.Pickups.Add(key);
+                gameScene.EnemySpawner = enemySpawner;
+            }
+            else if (levelType == LevelType.Lava)
+            {
+                var bossLevel = new BossLevel(mapWidth, mapHeight, player);
+                gameScene.GameMap = bossLevel.Map;
+            }
         }
 
         private void InitialiseCoalPickups()
