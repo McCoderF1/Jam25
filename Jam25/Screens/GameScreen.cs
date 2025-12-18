@@ -231,22 +231,32 @@ namespace Jam25.Screens
                 pickup.Draw(spriteBatch, tileSize);
             }
 
-            player.Draw();
-
             var sortedEnemies = gameScene.Enemies
                 .Where(enemy => enemy.CurrentState != Enemy.EnemyState.Dead)
                 .OrderBy(enemy => enemy.Body.Position.Y)
                 .ToList();
+            bool playerDrawn = false; // Used to sort player sprite among enemies
             for (int i = 0; i < sortedEnemies.Count; i++)
             {
-                sortedEnemies[i].CurrentSprite.Draw(spriteBatch, sortedEnemies[i].Body.Position);
+                var enemy = sortedEnemies[i];
 
-                foreach (Projectile p in sortedEnemies[i].Projectiles)
+                if (!playerDrawn && enemy.Body.Position.Y > player.Body.Position.Y)
+                {
+                    player.Draw();
+                    playerDrawn = true;
+                }
+
+                enemy.CurrentSprite.Draw(spriteBatch, enemy.Body.Position);
+
+                foreach (Projectile p in enemy.Projectiles)
                 {
                     p.Draw(spriteBatch);
                 }
             }
-
+            if (!playerDrawn)
+            {
+                player.Draw();
+            }
 
             //DrawLighting();
             DrawDungeon(backgroundOnly: false);
