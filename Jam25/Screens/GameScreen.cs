@@ -676,20 +676,22 @@ namespace Jam25.Screens
         }
 
 
-        private const int EnemyColliderHalfWidth = 16;
-        private const int EnemyColliderHalfHeight = 16;
+        private const int EnemyColliderHalfWidth = 8;
+        private const int EnemyColliderHalfHeight = 8;
 
         /// <summary>
-        /// Resolves soft collisions between the player and enemies:
-        /// - Prevents entering an enemy core collider when moving
-        /// - If overlapping, gently pushes both player and enemy apart
+        /// Resolves collisions between the player and enemies without pushing:
+        /// - If the desired position would overlap an enemy, the move is rejected.
+        /// - Enemies are never moved.
         /// </summary>
         private Vector2 ResolvePlayerEnemyCollisions(Vector2 desiredPlayerPos)
         {
-            Vector2 resolvedPos = desiredPlayerPos;
-
-            // First pass: collect overlaps and separation vectors
-            var overlaps = new List<(Enemy enemy, Vector2 separation)>();
+            // Rectangle at the desired position
+            Rectangle desiredPlayerRect = new Rectangle(
+                (int)(desiredPlayerPos.X - PlayerColliderHalfWidth),
+                (int)(desiredPlayerPos.Y - PlayerColliderHalfHeight),
+                PlayerColliderHalfWidth * 2,
+                PlayerColliderHalfHeight * 2);
 
             foreach (var enemy in gameScene.Enemies)
             {
@@ -699,60 +701,15 @@ namespace Jam25.Screens
                     EnemyColliderHalfWidth * 2,
                     EnemyColliderHalfHeight * 2);
 
-                Rectangle playerRect = new Rectangle(
-                    (int)(resolvedPos.X - PlayerColliderHalfWidth),
-                    (int)(resolvedPos.Y - PlayerColliderHalfHeight),
-                    PlayerColliderHalfWidth * 2,
-                    PlayerColliderHalfHeight * 2);
-
-                if (!playerRect.Intersects(enemyRect))
+                if (desiredPlayerRect.Intersects(enemyRect))
                 {
-                    continue;
+                    // Reject movement into enemy: stay at current position
+                    return player.Body.Position;
                 }
-
-                float overlapLeft = playerRect.Right - enemyRect.Left;
-                float overlapRight = enemyRect.Right - playerRect.Left;
-                float overlapTop = playerRect.Bottom - enemyRect.Top;
-                float overlapBottom = enemyRect.Bottom - playerRect.Top;
-
-                float xPush = (overlapLeft < overlapRight ? -overlapLeft : overlapRight);
-                float yPush = (overlapTop < overlapBottom ? -overlapTop : overlapBottom);
-
-                Vector2 separation;
-                if (Math.Abs(xPush) < Math.Abs(yPush))
-                {
-                    separation = new Vector2(xPush, 0f);
-                }
-                else
-                {
-                    separation = new Vector2(0f, yPush);
-                }
-
-                overlaps.Add((enemy, separation));
             }
 
-            if (overlaps.Count == 0)
-            {
-                return resolvedPos;
-            }
-
-            // Slowdown factor when pushing multiple enemies
-            // 1 enemy => 1.0, 2 enemies => 0.5, 3 => ~0.33, etc.
-            float slowDownFactor = 1f / overlaps.Count;
-
-            const float basePlayerShare = 0.1f;
-            const float baseEnemyShare = 1f - basePlayerShare;
-
-            foreach (var (enemy, separation) in overlaps)
-            {
-                float playerShare = basePlayerShare * slowDownFactor;
-                float enemyShare = baseEnemyShare * slowDownFactor;
-
-                resolvedPos += separation * playerShare;
-                enemy.Body.Position -= separation * enemyShare;
-            }
-
-            return resolvedPos;
+            // No enemy collision: accept desired position
+            return desiredPlayerPos;
         }
 
 
