@@ -1,9 +1,8 @@
-﻿using System;
-using HDT.Gaming.Audio;
+﻿using HDT.Gaming.Audio;
 using Jam25.Graphics;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Jam25.Entities.Pickups
 {
@@ -15,11 +14,11 @@ namespace Jam25.Entities.Pickups
 
         public EventHandler PickedUp { get; set; }
 
-        public KeyPickup(ContentManager content)
+        public KeyPickup(Texture2D texture)
         {
             Sprite = new Sprite()
             {
-                Texture = content.Load<Texture2D>("Images/key32")
+                Texture = texture
             };
 
             Consumed = false;
