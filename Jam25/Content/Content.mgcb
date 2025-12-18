@@ -1229,6 +1229,18 @@
 /processorParam:TextureFormat=Color
 /build:Images/explosion/Circle_explosion9.png
 
+#begin Images/EyePickup.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/EyePickup.png
+
 #begin Images/HealthPickup.png
 /importer:TextureImporter
 /processor:TextureProcessor

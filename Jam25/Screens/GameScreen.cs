@@ -25,6 +25,14 @@ namespace Jam25.Screens
         Dungeon,
         Lava
     }
+
+    public enum TileVisibility
+    {
+        Hidden,
+        Partial,
+        Full,
+    }
+
     public class GameScreen : IScreen
     {
         #region private members
@@ -85,11 +93,12 @@ namespace Jam25.Screens
         private int playerAttackState = 0;
         private int healthPickupCount = 20;
         private int coalPickupCount = 15;
+        private int eyePickupCount = 1;
 
         private const int tileSize = 32;
         private PhysicsWorld physicsWorld;
 
-        private bool[,] visibleTiles;
+        private TileVisibility[,] visibleTiles;
         private float[,] tileShadowTransparency; // 0 = full shadow, 1 = no shadow
         private int rayCount = 360;
         private float rayStep = 8f;
@@ -124,7 +133,7 @@ namespace Jam25.Screens
 
         private Dictionary<int, EnemySpawner> enemySpawners;
 
-        private LevelType CurrentLevelType = LevelType.Lava;
+        private LevelType CurrentLevelType = LevelType.Dungeon;
 
         // Mini-map
         private bool[,] visitedTiles;
@@ -208,7 +217,7 @@ namespace Jam25.Screens
             player = new Player(spriteBatch);
             player.Initalise(content, graphicsDevice);
 
-            visibleTiles = new bool[mapWidth, mapHeight];
+            visibleTiles = new TileVisibility[mapWidth, mapHeight];
             tileShadowTransparency = new float[mapWidth, mapHeight];
             visitedTiles = new bool[mapWidth, mapHeight];
 
@@ -302,7 +311,7 @@ namespace Jam25.Screens
             for (int i = 0; i < sortedEnemies.Count; i++)
             {
                 var enemy = sortedEnemies[i];
-                if (TryGetTileCoords(enemy.Body.Position, out int tileX, out int tileY) && visibleTiles[tileX, tileY])
+                if (TryGetTileCoords(enemy.Body.Position, out int tileX, out int tileY) && visibleTiles[tileX, tileY] != TileVisibility.Hidden)
                 {
                     enemy.CurrentSprite.DrawHealthBar(spriteBatch, enemy.Body.Position, whitePixelTexture, enemy.Health);
                 }
@@ -1246,6 +1255,8 @@ namespace Jam25.Screens
                 Vector2 pos = lightCenter;
                 float traveled = 0f;
 
+                var rayVisibility = TileVisibility.Full;
+
                 while (traveled <= radius)
                 {
                     pos += dir * rayStep;
@@ -1262,7 +1273,7 @@ namespace Jam25.Screens
 
                     if (tile == TileType.Floor)
                     {
-                        visibleTiles[tx, ty] = true;
+                        visibleTiles[tx, ty] = rayVisibility;
 
                         // Check tiles around floor for walls/doors to mark as visible.
                         for (int ox = -1; ox <= 1; ox++)
@@ -1274,15 +1285,25 @@ namespace Jam25.Screens
                                 if (checkX < 0 || checkX >= mapWidth || checkY < 0 || checkY >= mapHeight)
                                     continue;
                                 TileType adjacentTile = gameScene.GameMap.tiles[checkX, checkY].Type;
-                                visibleTiles[checkX, checkY] = true;
+                                visibleTiles[checkX, checkY] = rayVisibility;
                             }
                         }
                     }
 
                     if (tile == TileType.Wall1 || tile == TileType.Door)
                     {
-                        visibleTiles[tx, ty] = true;
-                        break;
+                        visibleTiles[tx, ty] = rayVisibility;
+
+                        if (player.SeeThroughWallsTimer > 0f)
+                        {
+                            // Continue raymarch with partial visibility
+                            rayVisibility = TileVisibility.Partial;
+                        }
+                        else
+                        {
+                            // Finish raymarch
+                            break;
+                        }
                     }
                 }
             }
@@ -1291,8 +1312,19 @@ namespace Jam25.Screens
             {
                 for (int x = 0; x < mapWidth; x++)
                 {
-                    float changeDirection = visibleTiles[x, y] ? 1f : -1f;
-                    tileShadowTransparency[x, y] = MathHelper.Clamp(tileShadowTransparency[x, y] + changeDirection * SHADOW_ALPHA_CHANGE_SPEED * dt, 0f, 1f);
+                    float targetTransparency = visibleTiles[x, y] switch {
+                        TileVisibility.Hidden => 0f,
+                        TileVisibility.Partial => 0.9f,
+                        TileVisibility.Full => 1f,
+                    };
+                    
+                    float changeSpeed = SHADOW_ALPHA_CHANGE_SPEED * dt;
+                    if (player.SeeThroughWallsTimer > 0f)
+                    {
+                        changeSpeed *= 0.2f;
+                    }
+
+                    tileShadowTransparency[x, y] = StepTowards(tileShadowTransparency[x, y], targetTransparency, changeSpeed);
                 }
             }
 
@@ -1301,12 +1333,22 @@ namespace Jam25.Screens
             {
                 for (int x = 0; x < mapWidth; x++)
                 {
-                    if (visibleTiles[x, y])
+                    if (visibleTiles[x, y] != TileVisibility.Hidden)
                     {
                         visitedTiles[x, y] = true;
                     }
                 }
             }
+        }
+
+        // step should be positive, fromValue and toValue can be anything
+        private float StepTowards(float fromValue, float toValue, float step)
+        {
+            if (fromValue < toValue - step)
+                return fromValue + step;
+            if (fromValue > toValue + step)
+                return fromValue - step;
+            return toValue;
         }
 
         private void DrawLighting()
@@ -1472,6 +1514,7 @@ namespace Jam25.Screens
 
                 InitialiseHealthPickups();
                 InitialiseCoalPickups();
+                InitialiseEyePickups();
 
                 key.Reset();
                 gameScene.Pickups.Add(key);
@@ -1510,6 +1553,14 @@ namespace Jam25.Screens
             for (int i = 0; i < healthPickupCount; i++)
             {
                 gameScene.Pickups.Add(new HealthPack(PointWithinWalls(), game.Content));
+            }
+        }
+
+        private void InitialiseEyePickups()
+        {
+            for (int i = 0; i < eyePickupCount; i++)
+            {
+                gameScene.Pickups.Add(new EyePickup(PointWithinWalls(), game.Content));
             }
         }
 

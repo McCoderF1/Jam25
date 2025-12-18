@@ -136,6 +136,8 @@ namespace Jam25
 
         public int AttackDamage { get; set; } = 4;
 
+        public float SeeThroughWallsTimer { get; set; } = 0;
+
         public Player(SpriteBatch spriteBatch)
         {
             lastDir = Direction.Down;
@@ -187,6 +189,8 @@ namespace Jam25
             {
                 attackTimer -= deltaSeconds;
             }
+
+            SeeThroughWallsTimer = Math.Max(SeeThroughWallsTimer - deltaSeconds, 0f);
 
             // ... debug T/L
             switch (LastState)

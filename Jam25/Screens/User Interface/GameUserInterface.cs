@@ -5,6 +5,7 @@ using HDT.Gaming.Screens;
 using Jam25.Graphics;
 using Jam25.Scenes;
 using Jam25.Stores;
+using Jam25.Entities.Pickups;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -46,6 +47,7 @@ namespace Jam25.Screens.UserInterface
         private readonly Texture2D abilitySelect;
         private readonly Texture2D skillOptions;
         private readonly Texture2D skillSelect;
+        private readonly Texture2D eyePickup;
 
         private Torch torch;
 
@@ -91,6 +93,7 @@ namespace Jam25.Screens.UserInterface
             abilitySelect = content.Load<Texture2D>("Images/UI/abilitySelect");
             skillOptions = content.Load<Texture2D>("Images/UI/SkillOptions");
             skillSelect = content.Load<Texture2D>("Images/UI/skillSelect");
+            eyePickup = content.Load<Texture2D>("Images/EyePickup");
             game.LoadSprite(SpriteID.PlayerUIIcon, "Images/UI/PlayerUIIcon", 12, 5, new Vector2(64f, 64f));
             game.LoadSprite(SpriteID.LevelUp, "Images/UI/levelup", 12, 6, new Vector2(64f, 64f));
 
@@ -133,6 +136,7 @@ namespace Jam25.Screens.UserInterface
             spriteBatch.Draw(UIItems, new Vector2(graphicsDevice.Viewport.Width - 181f, graphicsDevice.Viewport.Height - 58f), Color.White);
 
             DrawPlayerStatusBars();
+            DrawBuffs();
             DrawTorchBar();
             DrawTimer();
             DrawInformation();
@@ -297,6 +301,42 @@ namespace Jam25.Screens.UserInterface
             {
                 var healthRect = new Rectangle(x, yHealth, currentHealthWidth, barHeight);
                 roundedRectangle.Draw(healthRect, cornerRadius, Color.DarkRed);
+            }
+        }
+
+        private void DrawBuffs()
+        {
+            if (player == null)
+                return;
+
+            const int barHeight = 11;
+            const int cornerRadius = 4;
+            const int barOffsetX = 48;
+            const int barOffsetY = 10;
+            const int buffSpacing = 64;
+
+            int x = 32;
+            int y = graphicsDevice.Viewport.Height - 64;
+
+            if (player.SeeThroughWallsTimer > 0f)
+            {
+                var rectIcon = new Rectangle(x, y, 32, 32);
+                roundedRectangle.Draw(rectIcon, cornerRadius, Color.Gold);
+
+                spriteBatch.Draw(eyePickup, new Vector2(x, y), Color.White);
+
+                float percent = player.SeeThroughWallsTimer / EyePickup.DURATION;
+                int currentWidth = (int)(maxBarWidth * percent);
+                if (currentWidth > 0)
+                {
+                    var rectBg = new Rectangle(x + barOffsetX + 1, y + barOffsetY + 1, maxBarWidth, barHeight);
+                    roundedRectangle.Draw(rectBg, cornerRadius, Color.DarkGoldenrod);
+
+                    var rect = new Rectangle(x + barOffsetX, y + barOffsetY, currentWidth, barHeight);
+                    roundedRectangle.Draw(rect, cornerRadius, Color.Gold);
+                }
+
+                y -= buffSpacing;
             }
         }
 
