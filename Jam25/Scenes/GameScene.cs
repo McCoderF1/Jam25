@@ -33,7 +33,7 @@ namespace Jam25.Scenes
 
         public int GameLevel { get; set; } = 1;
 
-        public GameScene(GameMap gameMap, Player player, IEnemySpawner enemySpawner)
+        public GameScene(GameMap gameMap, Player player)
         {
             GameMap = gameMap;
             Player = player;
@@ -44,7 +44,6 @@ namespace Jam25.Scenes
             Enemies.Clear();
             Pickups.Clear();
             PhysicsWorld.ClearBodies();
-            //GameMap.Reset();
         }
 
         public void Update(GameTime gameTime)
