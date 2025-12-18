@@ -84,6 +84,9 @@ namespace Jam25.Screens
 
         private bool currentLevelCompleted = false;
 
+        private Texture2D debugPixel;
+        private bool debugDrawCollision = true; // or hook this to a key toggle
+
         #endregion
 
         public EventHandler LevelCompleted { get; set; }
@@ -140,6 +143,9 @@ namespace Jam25.Screens
             gameScene.Enemies.Add(enemyFactory.CreateSlimeEnemy(new(200, 200)));
 
             this.LevelCompleted += (_, _) => currentLevelCompleted = true;
+
+            debugPixel = new Texture2D(game.GraphicsDevice, 1, 1);
+            debugPixel.SetData(new[] { Color.White });
         }
 
         public void Draw()
@@ -171,6 +177,8 @@ namespace Jam25.Screens
                     }
                 }
             }
+
+            DrawDebugCollision();
 
             DrawLighting();
 
@@ -283,6 +291,70 @@ namespace Jam25.Screens
 
         #region private methods
 
+        private void DrawDebugRect(Rectangle rect, Color color, float thickness = 1f)
+        {
+            // Left
+            spriteBatch.Draw(debugPixel, new Rectangle(rect.X, rect.Y, (int)thickness, rect.Height), color);
+            // Right
+            spriteBatch.Draw(debugPixel, new Rectangle(rect.Right, rect.Y, (int)thickness, rect.Height), color);
+            // Top
+            spriteBatch.Draw(debugPixel, new Rectangle(rect.X, rect.Y, rect.Width, (int)thickness), color);
+            // Bottom
+            spriteBatch.Draw(debugPixel, new Rectangle(rect.X, rect.Bottom, rect.Width, (int)thickness), color);
+        }
+
+        private void DrawDebugCollision()
+        {
+            if (!debugDrawCollision)
+            {
+                return;
+            }
+
+            // 1) Draw tile grid (optional)
+            for (int x = 0; x < mapWidth; x++)
+            {
+                for (int y = 0; y < mapHeight; y++)
+                {
+                    Rectangle tileRect = new Rectangle(x * tileSize, y * tileSize, tileSize, tileSize);
+
+                    // Thin gray grid
+                    DrawDebugRect(tileRect, new Color(80, 80, 80, 120), 1f);
+
+                    // 2) Highlight collidable tiles (walls, doors)
+                    var tile = gameScene.GameMap.tiles[x, y];
+                    if (tile.Type == TileType.Wall)
+                    {
+                        DrawDebugRect(tileRect, Color.Red, 2f);
+                    }
+                    else if (tile.Type == TileType.Door)
+                    {
+                        DrawDebugRect(tileRect, Color.Orange, 2f);
+                    }
+                }
+            }
+
+            // 3) Draw player body (assuming Body.Position is center and radius-like AABB)
+            const int playerHalfSize = 16; // adjust to your actual collider
+            var playerRect = new Rectangle(
+                (int)(player.Body.Position.X - playerHalfSize),
+                (int)(player.Body.Position.Y - playerHalfSize),
+                playerHalfSize * 2,
+                playerHalfSize * 2);
+            DrawDebugRect(playerRect, Color.Lime, 2f);
+
+            // 4) Draw enemies' bodies similarly
+            foreach (var enemy in gameScene.Enemies)
+            {
+                const int enemyHalfSize = 16; // adjust to actual
+                var enemyRect = new Rectangle(
+                    (int)(enemy.Body.Position.X - enemyHalfSize),
+                    (int)(enemy.Body.Position.Y - enemyHalfSize),
+                    enemyHalfSize * 2,
+                    enemyHalfSize * 2);
+                DrawDebugRect(enemyRect, Color.Cyan, 2f);
+            }
+        }
+
         private Vector2 PointWithinWalls()
         {
             Vector2 pos;
@@ -295,6 +367,9 @@ namespace Jam25.Screens
             return Vector2.Multiply(pos, tileSize);
         }
 
+        private const int PlayerColliderHalfWidth = 9;
+        private const int PlayerColliderHalfHeight = 6;
+
         private void MovePlayer(GameTime gameTime)
         {
             KeyboardInput.GetInput();
@@ -304,19 +379,23 @@ namespace Jam25.Screens
             if (probableTargetPosition is not null)
             {
                 Vector2 targetPosition = (Vector2)probableTargetPosition;
-                float buffer = 8;
 
-                bool canMove = IsTileType(TileType.Floor, targetPosition.X - buffer, targetPosition.Y)
-                    || (player.HasKey && (IsTileType(TileType.Door, targetPosition.X, targetPosition.Y)));
+                // Build player collider at proposed position (centered on Body.Position)
+                Rectangle playerRect = new Rectangle(
+                    (int)(targetPosition.X - PlayerColliderHalfWidth),
+                    (int)(targetPosition.Y - PlayerColliderHalfHeight),
+                    PlayerColliderHalfWidth * 2,
+                    PlayerColliderHalfHeight * 2);
+
+                bool canMove = CanMoveTo(playerRect);
 
                 if (canMove)
                 {
                     player.Body.Position = targetPosition;
 
-                    if (IsTileType(TileType.Door, targetPosition.X, targetPosition.Y))
+                    if (IsOverDoor(playerRect) && player.HasKey)
                     {
                         player.MoveSpeed = 0f;
-
                         LevelCompleted?.Invoke(this, EventArgs.Empty);
                     }
 
@@ -329,6 +408,58 @@ namespace Jam25.Screens
                     }
                 }
             }
+        }
+
+        private bool CanMoveTo(Rectangle playerRect)
+        {
+            // Convert world rect to tile indices
+            int minTileX = Math.Max(0, playerRect.Left / tileSize);
+            int maxTileX = Math.Min(mapWidth - 1, playerRect.Right / tileSize);
+            int minTileY = Math.Max(0, playerRect.Top / tileSize);
+            int maxTileY = Math.Min(mapHeight - 1, playerRect.Bottom / tileSize);
+
+            for (int tx = minTileX; tx <= maxTileX; tx++)
+            {
+                for (int ty = minTileY; ty <= maxTileY; ty++)
+                {
+                    TileType type = gameScene.GameMap.tiles[tx, ty].Type;
+
+                    // Block movement on walls always
+                    if (type == TileType.Wall)
+                    {
+                        return false;
+                    }
+
+                    // Doors only block if you don't have the key; allow floor always
+                    if (type == TileType.Door && !player.HasKey)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private bool IsOverDoor(Rectangle playerRect)
+        {
+            int minTileX = Math.Max(0, playerRect.Left / tileSize);
+            int maxTileX = Math.Min(mapWidth - 1, playerRect.Right / tileSize);
+            int minTileY = Math.Max(0, playerRect.Top / tileSize);
+            int maxTileY = Math.Min(mapHeight - 1, playerRect.Bottom / tileSize);
+
+            for (int tx = minTileX; tx <= maxTileX; tx++)
+            {
+                for (int ty = minTileY; ty <= maxTileY; ty++)
+                {
+                    if (gameScene.GameMap.tiles[tx, ty].Type == TileType.Door)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private bool IsTileType(TileType type, float x, float y)
