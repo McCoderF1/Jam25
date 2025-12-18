@@ -118,7 +118,12 @@ namespace Jam25.Screens
                 maxEnemies: 50,
                 minSpawnDistanceFromPlayer: 200,
                 PointWithinWalls,
-                enemyFactory);
+                [
+                    (_ => enemyFactory.CreateSlimeEnemy(_), 0.8),
+                    (_ => enemyFactory.CreateLavaSlimeEnemy(_), 0.2),
+                    (_ => enemyFactory.CreateVampireEnemy(_), 0.2),
+                ]);
+
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
             doorsTexture = game.Content.Load<Texture2D>("Images/doors_lever_chest_animation");
             whitePixelTexture = game.Content.Load<Texture2D>("Textures/WhiteRectangle");
@@ -224,11 +229,16 @@ namespace Jam25.Screens
 
         public void Hide()
         {
+            AudioManager.PlayMusic(string.Empty);
+
             gameUI?.Hide();
         }
 
         public void Show()
         {
+            Random r = new Random();
+            AudioManager.PlayMusic($"Game{r.Next(1, 4)}");
+
             ResetWorld();
             BuildWorld();
 
@@ -509,14 +519,14 @@ namespace Jam25.Screens
                     TileType tileType = gameScene.GameMap.tiles[x, y].Type;
 
                     // Floors and doors should be drawn fully in the background pass only
-                    if (tileType == TileType.Floor || tileType == TileType.Door)
+                    if (tileType == TileType.Floor)
                     {
                         if (!backgroundOnly)
                         {
                             continue;
                         }
                     }
-                    else if (tileType == TileType.Wall)
+                    else if (tileType == TileType.Wall || tileType == TileType.Door)
                     {
                         // Walls are split: upper in background pass, lower in foreground pass
                         // so in background pass we draw the wall minus a bottom strip
@@ -572,7 +582,7 @@ namespace Jam25.Screens
 
                     Rectangle destRect = new Rectangle(x * tileSize, y * tileSize, tileSize, tileSize);
 
-                    if (tileType == TileType.Wall)
+                    if (tileType == TileType.Wall || tileType == TileType.Door)
                     {
                         // Map “world” overlap height into texture space
                         int overlapWorld = WallOverlapHeight;

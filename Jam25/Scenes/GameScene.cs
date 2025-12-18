@@ -95,7 +95,7 @@ namespace Jam25.Scenes
 
                 if (attacking)
                 {
-                    if (distFromPlayer < 50)
+                    if (distFromPlayer < Player.AttackRange)
                     {
                         enemy.TakeDamage(4);
                         hitSomething = true;

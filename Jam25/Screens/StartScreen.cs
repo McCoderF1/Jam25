@@ -93,6 +93,7 @@ namespace Jam25.Screens
 
         public void Hide()
         {
+            AudioManager.PlayMusic(string.Empty);
         }
 
         public void Show()
@@ -123,12 +124,12 @@ namespace Jam25.Screens
             {
                 AudioManager.ToggleMute();
             }
-            else if (KeyboardInput.HasBeenPressed(Keys.Down))
+            else if (KeyboardInput.HasBeenPressed(Keys.Down) || KeyboardInput.HasBeenPressed(Keys.S))
             {
                 currentSelection = (MenuSelection)(((int)currentSelection + 1) % 4);
                 AudioManager.PlaySound("RetroClick");
             }
-            else if (KeyboardInput.HasBeenPressed(Keys.Up))
+            else if (KeyboardInput.HasBeenPressed(Keys.Up) || KeyboardInput.HasBeenPressed(Keys.W))
             {
                 currentSelection = (MenuSelection)(((int)currentSelection + 3) % 4);
                 AudioManager.PlaySound("RetroClick");

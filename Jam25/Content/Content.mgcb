@@ -1043,6 +1043,36 @@
 /processorParam:Quality=Best
 /build:Sound/Effects/WhooshMiss.wav
 
+#begin Sound/Music/Shadows and Smoke1.mp3
+/importer:Mp3Importer
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:Sound/Music/Shadows and Smoke1.mp3
+
+#begin Sound/Music/Shadows and Smoke2.mp3
+/importer:Mp3Importer
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:Sound/Music/Shadows and Smoke2.mp3
+
+#begin Sound/Music/Shadows of the Heart.mp3
+/importer:Mp3Importer
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:Sound/Music/Shadows of the Heart.mp3
+
+#begin Sound/Music/Shadows Rise1.mp3
+/importer:Mp3Importer
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:Sound/Music/Shadows Rise1.mp3
+
+#begin Sound/Music/Shadows Rise2.mp3
+/importer:Mp3Importer
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:Sound/Music/Shadows Rise2.mp3
+
 #begin Sound/Music/The Flickering Flame.mp3
 /importer:Mp3Importer
 /processor:SongProcessor
