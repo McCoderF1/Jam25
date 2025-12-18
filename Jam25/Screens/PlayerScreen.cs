@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Reflection.Emit;
 
 namespace Jam25.Screens
 {
@@ -34,8 +35,14 @@ namespace Jam25.Screens
 
         private readonly List<int> levelMarkerLocations = new() { 248, 292, 333, 376, 420 };
 
-        private AnimatedSprite idle;
-        private AnimatedTexture animatedIdle;
+        private AnimatedSprite idleLvl1;
+        private AnimatedTexture animatedIdleLvl1;
+
+        private AnimatedSprite idleLvl2;
+        private AnimatedTexture animatedIdleLvl2;
+
+        private AnimatedSprite idleLvl3;
+        private AnimatedTexture animatedIdleLvl3;
 
         #endregion
 
@@ -63,10 +70,22 @@ namespace Jam25.Screens
 
             font = content.Load<SpriteFont>("Fonts/Menu");
 
-            if (game.TryGetSprite(SpriteID.PlayerLvl1, out AnimatedTexture animatedIdle))
+            if (game.TryGetSprite(SpriteID.PlayerLvl1, out AnimatedTexture animatedIdleLvl1))
             {
-                this.animatedIdle = animatedIdle;
-                idle = new AnimatedSprite() { SpriteId = SpriteID.PlayerLvl1, ScaleX = 6, ScaleY = 6 };
+                this.animatedIdleLvl1 = animatedIdleLvl1;
+                idleLvl1 = new AnimatedSprite() { SpriteId = SpriteID.PlayerLvl1, ScaleX = 6, ScaleY = 6 };
+            }
+
+            if (game.TryGetSprite(SpriteID.PlayerLvl2, out AnimatedTexture animatedIdleLvl2))
+            {
+                this.animatedIdleLvl2 = animatedIdleLvl2;
+                idleLvl2 = new AnimatedSprite() { SpriteId = SpriteID.PlayerLvl2, ScaleX = 6, ScaleY = 6 };
+            }
+
+            if (game.TryGetSprite(SpriteID.PlayerLvl3, out AnimatedTexture animatedIdleLvl3))
+            {
+                this.animatedIdleLvl3 = animatedIdleLvl3;
+                idleLvl3 = new AnimatedSprite() { SpriteId = SpriteID.PlayerLvl3, ScaleX = 6, ScaleY = 6 };
             }
         }
 
@@ -81,7 +100,14 @@ namespace Jam25.Screens
                 new Rectangle(100, 100, graphicsDevice.Viewport.Width - 200, graphicsDevice.Viewport.Height - 200),
                 Color.White);
 
-            animatedIdle.DrawFrame(spriteBatch, idle.Frame, new Vector2(835, 555), idle);
+            var totalLvl = PlayerTracker.PlayerStats.TotalLevel;
+
+            if (totalLvl >= 5 && totalLvl < 10)
+                animatedIdleLvl2.DrawFrame(spriteBatch, idleLvl2.Frame, new Vector2(835, 555), idleLvl2);
+            else if (totalLvl >= 10)
+                animatedIdleLvl3.DrawFrame(spriteBatch, idleLvl3.Frame, new Vector2(835, 555), idleLvl3);
+            else
+                animatedIdleLvl1.DrawFrame(spriteBatch, idleLvl1.Frame, new Vector2(835, 555), idleLvl1);
 
             DrawLevelMarkings();
             DrawXPBar();
@@ -107,7 +133,9 @@ namespace Jam25.Screens
         {
             KeyboardInput.GetInput();
 
-            UpdateSprite(idle, (float)gameTime.ElapsedGameTime.TotalSeconds);
+            UpdateSprite(idleLvl1, (float)gameTime.ElapsedGameTime.TotalSeconds);
+            UpdateSprite(idleLvl2, (float)gameTime.ElapsedGameTime.TotalSeconds);
+            UpdateSprite(idleLvl3, (float)gameTime.ElapsedGameTime.TotalSeconds);
 
             if (KeyboardInput.HasBeenPressed(Keys.Back))
                 BackToMainMenu.Invoke(this, EventArgs.Empty);
