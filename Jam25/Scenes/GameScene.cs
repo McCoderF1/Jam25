@@ -31,6 +31,8 @@ namespace Jam25.Scenes
 
         public IEnemySpawner EnemySpawner { get; set; }
 
+        public int GameLevel { get; set; } = 1;
+
         public GameScene(GameMap gameMap, Player player, IEnemySpawner enemySpawner)
         {
             GameMap = gameMap;

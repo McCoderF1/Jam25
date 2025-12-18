@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using HDT.Gaming.Audio;
 using HDT.Gaming.Input;
@@ -176,13 +177,14 @@ namespace Jam25.Screens
 
             player.Draw();
 
-            for (int i = 0; i < gameScene.Enemies.Count; i++)
+            var sortedEnemies = gameScene.Enemies.OrderBy(enemy => enemy.Body.Position.Y).ToList();
+            for (int i = 0; i < sortedEnemies.Count; i++)
             {
-                if (gameScene.Enemies[i].CurrentState != Enemy.EnemyState.Dead)
+                if (sortedEnemies[i].CurrentState != Enemy.EnemyState.Dead)
                 {
-                    gameScene.Enemies[i].CurrentSprite.Draw(spriteBatch, gameScene.Enemies[i].Body.Position, whitePixelTexture, gameScene.Enemies[i].Health);
+                    sortedEnemies[i].CurrentSprite.Draw(spriteBatch, sortedEnemies[i].Body.Position, whitePixelTexture, sortedEnemies[i].Health);
 
-                    foreach (Projectile p in gameScene.Enemies[i].Projectiles)
+                    foreach (Projectile p in sortedEnemies[i].Projectiles)
                     {
                         p.Draw(spriteBatch);
                     }
@@ -228,6 +230,7 @@ namespace Jam25.Screens
         {
             if (currentLevelCompleted)
             {
+                gameScene.GameLevel++;
                 currentLevelCompleted = false;
                 Transition();
                 gameUI.SkillsAndAbilitiesTrigger();
@@ -475,7 +478,7 @@ namespace Jam25.Screens
 
             return false;
         }
-        
+
         private void DrawDungeon(bool backgroundOnly)
         {
             for (int x = 0; x < mapWidth; x++)
@@ -828,6 +831,8 @@ namespace Jam25.Screens
             player.LastState = Player.PlayerState.Idle;
             player.HasKey = false;
             player.MoveSpeed = 1.0f;
+
+            game.Torch.Reset();
         }
 
         private void BuildWorld()
