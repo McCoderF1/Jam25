@@ -85,7 +85,7 @@ namespace Jam25.Screens
         private float[,] tileShadowTransparency; // 0 = full shadow, 1 = no shadow
         private int rayCount = 360;
         private float rayStep = 8f;
-
+        private SpriteFont font;
         private GameUserInterface gameUI;
         private readonly Random spawnRandom = new Random();
         private Texture2D whitePixelTexture;
@@ -124,6 +124,8 @@ namespace Jam25.Screens
         private readonly int miniMapWidth = 200;
         private readonly int miniMapHeight = 120;
         private readonly int miniMapPadding = 8;
+
+        private bool showGuidanceIndicator = false;
 
         #endregion
 
@@ -208,6 +210,8 @@ namespace Jam25.Screens
             var dungeonLevel = new Dungeon(mapWidth, mapHeight, player, key);
             gameScene = new GameScene(dungeonLevel.Map, player);
             gameScene.Pickups.Add(key);
+
+            font = content.Load<SpriteFont>("Fonts/Menu");
 
             gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player, gameScene);
 
@@ -311,6 +315,8 @@ namespace Jam25.Screens
             {
                 boss.DrawHealthBar(spriteBatch, game.GraphicsDevice.Viewport.Width);
             }
+
+            DrawDirectionIndicator();
 
             gameUI?.Draw();
             DrawMiniMap();
@@ -487,11 +493,6 @@ namespace Jam25.Screens
                 boss.Projectiles.RemoveAll(i => toRemove.Contains(i));
             }
 
-
-
-
-
-
             gameUI.UpdateWithVector(gameTime, CameraPosition);
 
             torchFadeIn = Math.Min(torchFadeIn + TORCH_FADE_IN_SPEED * dt, 1f);
@@ -500,6 +501,148 @@ namespace Jam25.Screens
         }
 
         #region private methods
+
+        private Vector2? GetGuidanceTarget()
+        {
+            if (!key.Consumed)
+            {
+                return key.Sprite.Position + new Vector2(tileSize / 2f, tileSize / 2f);
+            }
+
+            Vector2 playerPos = player.Body.Position;
+            Vector2? closestDoorCenter = null;
+            float closestDistSq = float.MaxValue;
+
+            for (int x = 0; x < mapWidth; x++)
+            {
+                for (int y = 0; y < mapHeight; y++)
+                {
+                    if (gameScene.GameMap.tiles[x, y].Type != TileType.Door)
+                    {
+                        continue;
+                    }
+
+                    Vector2 doorCenter = new Vector2(
+                        x * tileSize + tileSize / 2f,
+                        y * tileSize + tileSize / 2f);
+
+                    float distSq = Vector2.DistanceSquared(playerPos, doorCenter);
+                    if (distSq < closestDistSq)
+                    {
+                        closestDistSq = distSq;
+                        closestDoorCenter = doorCenter;
+                    }
+                }
+            }
+
+            return closestDoorCenter;
+        }
+
+        private void DrawDirectionIndicator()
+        {
+            if (whitePixelTexture == null || gameScene?.GameMap?.tiles == null || !showGuidanceIndicator)
+            {
+                return;
+            }
+
+            Vector2? targetWorld = GetGuidanceTarget();
+            if (targetWorld is null)
+            {
+                return;
+            }
+
+            // Direction from screen center toward target
+            int viewportWidth = graphicsDevice.Viewport.Width;
+            int viewportHeight = graphicsDevice.Viewport.Height;
+
+            Vector2 screenCenter = new Vector2(viewportWidth / 2f, viewportHeight / 2f);
+
+            // Convert world position to screen-space (UI space)
+            Vector2 targetScreen = targetWorld.Value - CameraPosition;
+
+            // If target is on screen already, skip (optional)
+            Rectangle screenRect = new Rectangle(0, 0, viewportWidth, viewportHeight);
+            if (screenRect.Contains(targetScreen))
+            {
+                return;
+            }
+
+            Vector2 dir = targetScreen - screenCenter;
+            if (dir.LengthSquared() < 0.0001f)
+            {
+                return;
+            }
+            dir.Normalize();
+
+
+            // Clamp marker to just inside the screen bounds
+            float edgePadding = 24f;
+            float halfW = viewportWidth / 2f - edgePadding;
+            float halfH = viewportHeight / 2f - edgePadding;
+
+            float maxDistX = dir.X != 0f ? halfW / Math.Abs(dir.X) : float.MaxValue;
+            float maxDistY = dir.Y != 0f ? halfH / Math.Abs(dir.Y) : float.MaxValue;
+            float maxDist = Math.Min(maxDistX, maxDistY);
+
+            if (float.IsInfinity(maxDist) || maxDist <= 0f)
+            {
+                return;
+            }
+
+            Vector2 markerPos = screenCenter + dir * maxDist;
+
+            // Decide which letter and color to use
+            bool guidingToKey = !key.Consumed;
+            char letter = guidingToKey ? 'K' : 'D';
+            Color color = guidingToKey ? Color.Cyan : Color.Gold;
+
+            if (font == null)
+            {
+                // Fallback: small colored square if no font is available
+                float size = 10f;
+                var rect = new Rectangle(
+                    (int)(markerPos.X - size / 2f),
+                    (int)(markerPos.Y - size / 2f),
+                    (int)size,
+                    (int)size);
+
+                spriteBatch.Draw(
+                    whitePixelTexture,
+                    rect,
+                    color * 0.9f);
+
+                return;
+            }
+
+            string text = letter.ToString();
+
+            Vector2 textSize = font.MeasureString(text);
+            Vector2 textOrigin = textSize / 2f;
+
+            // Optional subtle background for readability
+            float bgPadding = 4f;
+            var bgRect = new Rectangle(
+                (int)(markerPos.X - textSize.X / 2f - bgPadding),
+                (int)(markerPos.Y - textSize.Y / 2f - bgPadding),
+                (int)(textSize.X + bgPadding * 2f),
+                (int)(textSize.Y + bgPadding * 2f));
+
+            spriteBatch.Draw(
+                whitePixelTexture,
+                bgRect,
+                Color.Black * 0.6f);
+
+            spriteBatch.DrawString(
+                font,
+                text,
+                markerPos,
+                color,
+                0f,
+                textOrigin,
+                1f,
+                SpriteEffects.None,
+                0f);
+        }
 
         private void DrawMiniMap()
         {
