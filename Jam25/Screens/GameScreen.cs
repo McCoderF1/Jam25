@@ -145,7 +145,8 @@ namespace Jam25.Screens
 
             visibleTiles = new bool[mapWidth, mapHeight];
 
-            gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player);
+            wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
+            gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player, gameScene);
 
             lightMask = LightMaskFactory.CreateRadialMask(graphicsDevice, lightMaskSize);
             tileShadowMask = LightMaskFactory.CreateTileShadowMask(graphicsDevice, 64);

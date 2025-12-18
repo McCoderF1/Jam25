@@ -1,13 +1,14 @@
-﻿using HDT.Gaming.Audio;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using HDT.Gaming.Audio;
 using HDT.Gaming.Screens;
 using Jam25.Graphics;
+using Jam25.Scenes;
 using Jam25.Stores;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Jam25.Screens.UserInterface
 {
@@ -33,6 +34,7 @@ namespace Jam25.Screens.UserInterface
         private readonly ContentManager content;
         private readonly AudioController audioController;
         private readonly Player player;
+        private readonly GameScene gameScene;
         private readonly Texture2D UIBase;
         private readonly SpriteFont font;
         private readonly Texture2D whitePixel;
@@ -69,7 +71,7 @@ namespace Jam25.Screens.UserInterface
         /// <summary>
         /// Game User Interface constructor
         /// </summary>
-        public GameUserInterface(SpriteBatch spriteBatch, GraphicsDevice graphics, GameContent game, ContentManager content, AudioController audioController, Player player)
+        public GameUserInterface(SpriteBatch spriteBatch, GraphicsDevice graphics, GameContent game, ContentManager content, AudioController audioController, Player player, GameScene gameScene)
         {
             this.spriteBatch = spriteBatch;
             this.game = game;
@@ -77,7 +79,7 @@ namespace Jam25.Screens.UserInterface
             this.content = content;
             this.audioController = audioController;
             this.player = player;
-
+            this.gameScene = gameScene;
             UIBase = content.Load<Texture2D>("Images/UI/UIBase");
             LevelPopUp = content.Load<Texture2D>("Images/UI/LevelUpPop");
             font = content.Load<SpriteFont>("Fonts/Menu");
@@ -177,12 +179,12 @@ namespace Jam25.Screens.UserInterface
                         abilitySelection = false;
                         //update player
 
-                        if(indexSelection == 0)
+                        if (indexSelection == 0)
                         {
                             player.MoveSpeed += 1f;
                         }
 
-                        if(indexSelection == 1)
+                        if (indexSelection == 1)
                         {
                             player.AttackRange += 50;
                         }
@@ -328,7 +330,7 @@ namespace Jam25.Screens.UserInterface
 
         private void DrawInformation()
         {
-            spriteBatch.DrawString(font, "Floor 1", new Vector2(1127, 60), Color.White);
+            spriteBatch.DrawString(font, $"Floor {gameScene.GameLevel}", new Vector2(1127, 60), Color.White);
         }
 
         /// <summary>
