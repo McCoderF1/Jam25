@@ -211,8 +211,6 @@ namespace Jam25.Screens
             ResetWorld();
             BuildWorld();
 
-            game.Torch = new Torch(maxEnergy: 100f, drainPerSecond: 0.4f, maxRadius: 250f, minRadius: 60f);
-
             if (gameUI is GameUserInterface gui)
             {
                 gui.SetTorch(game.Torch);
