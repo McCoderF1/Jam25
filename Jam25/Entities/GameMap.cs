@@ -1,5 +1,4 @@
 ﻿using Jam25.Entities.Pickups;
-using Jam25.Scenes;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -37,7 +36,8 @@ namespace Jam25.Entities
     {
         Empty,
         Floor,
-        Wall,
+        Wall1,
+        Wall2,
         Door
     }
 
@@ -81,7 +81,7 @@ namespace Jam25.Entities
             InitialiseTiles(theme);
         }
 
-        public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight, GameScene gameScene)
+        public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight)
         {
             this.mapWidth = mapWidth;
             this.mapHeight = mapHeight;
@@ -94,15 +94,15 @@ namespace Jam25.Entities
             for (int i = 0; i < maxRooms; i++)
             {
                 // Random width and height room
-                int width = rand.Next(minRoomSize, maxRoomSize);
-                int height = rand.Next(minRoomSize, maxRoomSize);
+                int roomWidth = rand.Next(minRoomSize, maxRoomSize);
+                int roomHeight = rand.Next(minRoomSize, maxRoomSize);
 
                 // random position of room without going out of bounds of map
-                int x = rand.Next(1, mapWidth - width - 1);
-                int y = rand.Next(1, mapHeight - height - 1);
+                int x = rand.Next(1, mapWidth - roomWidth - 1);
+                int y = rand.Next(1, mapHeight - roomHeight - 1);
 
                 // Rectangle
-                Rectangle newRoom = new Rectangle(x, y, width, height);
+                Rectangle newRoom = new Rectangle(x, y, roomWidth, roomHeight);
 
                 // Loop through the rooms and see if they intersect
                 foreach (var otherRoom in Rooms)
@@ -236,7 +236,7 @@ namespace Jam25.Entities
             if (northFloor == southFloor)
                 return false;
 
-            return map[x, y].Type == TileType.Wall;
+            return map[x, y].Type == TileType.Wall1;
         }
 
         private bool IsSealedHorizontalDoorCandidate(Tile[,] map, int x, int y)
@@ -244,7 +244,7 @@ namespace Jam25.Entities
             bool westFloor = map[x - 1, y].Type == TileType.Floor;
             bool eastFloor = map[x + 1, y].Type == TileType.Floor;
 
-            return map[x, y].Type == TileType.Wall && !westFloor && !eastFloor;
+            return map[x, y].Type == TileType.Wall1 && !westFloor && !eastFloor;
         }
 
 
@@ -256,7 +256,7 @@ namespace Jam25.Entities
             for (int x = 1; x < w - 1; x++)
                 for (int y = 1; y < h - 1; y++)
                 {
-                    if (tiles[x, y].Type != TileType.Wall)
+                    if (tiles[x, y].Type != TileType.Wall1)
                         continue;
 
                     DirectionMask mask = DirectionMask.None;
@@ -265,6 +265,29 @@ namespace Jam25.Entities
                     if (tiles[x, y + 1].Type == TileType.Floor) mask |= DirectionMask.South;
                     if (tiles[x - 1, y].Type == TileType.Floor) mask |= DirectionMask.West;
                     if (tiles[x + 1, y].Type == TileType.Floor) mask |= DirectionMask.East;
+
+                    tiles[x, y].DirectionMask = mask;
+                    tiles[x, y].TileShape = DetermineTileShape(mask);
+                }
+        }
+
+        private void ComputeLavaWallDirection()
+        {
+            int w = tiles.GetLength(0);
+            int h = tiles.GetLength(1);
+
+            for (int x = 1; x < w - 1; x++)
+                for (int y = 1; y < h - 1; y++)
+                {
+                    if (tiles[x, y].Type != TileType.Wall1)
+                        continue;
+
+                    DirectionMask mask = DirectionMask.None;
+
+                    if (tiles[x, y - 1].Type == TileType.Floor) mask |= DirectionMask.South;
+                    if (tiles[x, y + 1].Type == TileType.Floor) mask |= DirectionMask.North;
+                    if (tiles[x - 1, y].Type == TileType.Empty) mask |= DirectionMask.West;
+                    if (tiles[x + 1, y].Type == TileType.Empty) mask |= DirectionMask.East;
 
                     tiles[x, y].DirectionMask = mask;
                     tiles[x, y].TileShape = DetermineTileShape(mask);
@@ -305,12 +328,31 @@ namespace Jam25.Entities
                         for (int nx = -1; nx <= 1; nx++)
                             for (int ny = -1; ny <= 1; ny++)
                                 if (tiles[x + nx, y + ny].Type == TileType.Empty)
-                                    tiles[x + nx, y + ny].Type = TileType.Wall;
+                                    tiles[x + nx, y + ny].Type = TileType.Wall1;
                     }
                 }
             }
 
             ComputeWallDirection();
+        }
+
+        public void AddLavaWalls()
+        {
+            for (int x = 1; x < mapWidth - 1; x++)
+            {
+                for (int y = 1; y < mapHeight - 1; y++)
+                {
+                    if (tiles[x, y].Type == TileType.Floor)
+                    {
+                        for (int nx = -1; nx <= 1; nx++)
+                            for (int ny = 0; ny <= 1; ny++)
+                                if (tiles[x, y + ny].Type == TileType.Empty)
+                                    tiles[x, y + ny].Type = TileType.Wall1;
+                    }
+                }
+            }
+
+            ComputeLavaWallDirection();
         }
 
         private TileShape DetermineTileShape(DirectionMask mask)
