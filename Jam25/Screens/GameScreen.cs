@@ -151,7 +151,7 @@ namespace Jam25.Screens
 
             debugPixel = new Texture2D(game.GraphicsDevice, 1, 1);
             debugPixel.SetData(new[] { Color.White });
-            key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
+
             this.LevelCompleted += (_, _) => Task.Delay(1000).ContinueWith(_ => Transition());
 
 
@@ -202,7 +202,7 @@ namespace Jam25.Screens
             boss.Draw(spriteBatch);
             foreach (Projectile p in boss.Projectiles)
             {
-                p.Draw(spriteBatch); 
+                p.Draw(spriteBatch);
             }
 
             //DrawLighting();
@@ -217,7 +217,7 @@ namespace Jam25.Screens
 
             gameUI?.Draw();
 
-            
+
         }
 
         public void Hide()
