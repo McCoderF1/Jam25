@@ -124,7 +124,7 @@ namespace Jam25.Screens
 
         private Dictionary<int, EnemySpawner> enemySpawners;
 
-        private LevelType CurrentLevelType = LevelType.Lava;
+        private LevelType CurrentLevelType = LevelType.Dungeon;
 
         // Mini-map
         private bool[,] visitedTiles;
