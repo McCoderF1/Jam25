@@ -1,7 +1,7 @@
-﻿using Jam25.Entities.Pickups;
-using Microsoft.Xna.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Jam25.Entities.Pickups;
+using Microsoft.Xna.Framework;
 
 namespace Jam25.Entities
 {

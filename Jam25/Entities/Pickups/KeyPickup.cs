@@ -1,8 +1,8 @@
-﻿using HDT.Gaming.Audio;
+﻿using System;
+using HDT.Gaming.Audio;
 using Jam25.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 
 namespace Jam25.Entities.Pickups
 {
@@ -47,6 +47,11 @@ namespace Jam25.Entities.Pickups
             );
 
             spriteBatch.Draw(Sprite.Texture, rect, null, Color.AliceBlue);
+        }
+
+        public void Reset()
+        {
+            Consumed = false;
         }
     }
 }
