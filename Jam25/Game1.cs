@@ -64,6 +64,8 @@ namespace Jam25
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             content.LoadSprite(SpriteID.PlayerLvl1, "Images/StatsPage/PlayerLvl1Idle", 12, 5, new Vector2(64f, 64f));
+            content.LoadSprite(SpriteID.PlayerLvl2, "Images/StatsPage/PlayerLvl2Idle", 12, 5, new Vector2(64f, 64f));
+            content.LoadSprite(SpriteID.PlayerLvl3, "Images/StatsPage/PlayerLvl3Idle", 12, 5, new Vector2(64f, 64f));
 
             content.LoadFont(FontID.Title, "Fonts/Title");
             content.LoadFont(FontID.Heading, "Fonts/GameState");

@@ -1337,6 +1337,30 @@
 /processorParam:TextureFormat=Color
 /build:Images/StatsPage/PlayerLvl1Idle.png
 
+#begin Images/StatsPage/PlayerLvl2Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/StatsPage/PlayerLvl2Idle.png
+
+#begin Images/StatsPage/PlayerLvl3Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/StatsPage/PlayerLvl3Idle.png
+
 #begin Images/StatsPage/PlayerTab.png
 /importer:TextureImporter
 /processor:TextureProcessor

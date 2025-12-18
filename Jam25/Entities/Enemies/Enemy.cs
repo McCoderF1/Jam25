@@ -176,9 +176,9 @@ namespace Jam25.Entities.Enemies
             StartCooldown();
             CurrentState = Enemy.EnemyState.Attacking;
             CurrentSprite.Reset();
-            
+
             float distFromPlayer = Vector2.Distance(Body.Position, windUpTarget.Body.Position);
-            if (distFromPlayer < AttackRange + 10)
+            if (distFromPlayer < AttackRange)
             {
                 windUpTarget.TakeDamage(AttackDamage);
             }

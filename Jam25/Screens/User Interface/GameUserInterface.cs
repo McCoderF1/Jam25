@@ -190,7 +190,7 @@ namespace Jam25.Screens.UserInterface
 
                         if (indexSelection == 1)
                         {
-                            player.AttackRange += 50;
+                            player.AttackRange += 10;
                         }
 
                         //Check level up
