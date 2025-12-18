@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Jam25.Entities.Enemies;
 using Jam25.Scenes;
 using Microsoft.Xna.Framework;
@@ -15,17 +17,19 @@ namespace Jam25.Models
         private readonly int maxEnemies;
         private readonly int minSpawnDistanceFromPlayer;
         private readonly Func<Vector2> getSpawnPosition;
-        private readonly EnemyFactory enemyFactory;
+        private readonly List<(Func<Vector2, Enemy> createMethod, double spawnRate)> enemySpawnRates;
+        private readonly double totalSpawnRate;
         private Random rand;
 
         #endregion Private Members
 
-        public EnemySpawner(int maxEnemies, int minSpawnDistanceFromPlayer, Func<Vector2> getSpawnPosition, EnemyFactory enemyFactory)
+        public EnemySpawner(int maxEnemies, int minSpawnDistanceFromPlayer, Func<Vector2> getSpawnPosition, List<(Func<Vector2, Enemy> createMethod, double spawnRate)> enemySpawnRates)
         {
             this.maxEnemies = maxEnemies;
             this.minSpawnDistanceFromPlayer = minSpawnDistanceFromPlayer;
             this.getSpawnPosition = getSpawnPosition;
-            this.enemyFactory = enemyFactory;
+            this.enemySpawnRates = enemySpawnRates;
+            totalSpawnRate = enemySpawnRates.Sum(tuple => tuple.spawnRate);
             rand = new Random();
         }
 
@@ -55,23 +59,22 @@ namespace Jam25.Models
             }
             while (Vector2.Distance(spawnPosition, playerPosition) <= minSpawnDistanceFromPlayer);
 
-            Enemy newEnemy;
+            Enemy newEnemy = null;
             double roll = rand.NextDouble();
 
-            if (roll < 0.2)
+            double cumulativeRate = 0.0;
+            foreach (var (createMethod, spawnRate) in enemySpawnRates)
             {
-                newEnemy = enemyFactory.CreateVampireEnemy(spawnPosition);
-            }
-            else if (roll < 0.8)
-            {
-                newEnemy = enemyFactory.CreateSlimeEnemy(spawnPosition);
-            }
-            else
-            {
-                newEnemy = enemyFactory.CreateLavaSlimeEnemy(spawnPosition);
+                cumulativeRate += (spawnRate / totalSpawnRate);
+                if (roll < cumulativeRate)
+                {
+                    newEnemy = createMethod(spawnPosition);
+                    break;
+                }
             }
 
-            gameScene.Enemies.Add(newEnemy);
+            if (newEnemy is not null)
+                gameScene.Enemies.Add(newEnemy);
         }
 
         #endregion Private Methods
