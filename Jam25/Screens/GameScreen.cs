@@ -114,6 +114,18 @@ namespace Jam25.Screens
             this.audioController = audioController;
             this.game = game;
 
+            EnemyFactory enemyFactory = new(game.Content, audioController);
+
+            EnemySpawner enemySpawner = new(
+                maxEnemies: 50,
+                minSpawnDistanceFromPlayer: 200,
+                PointWithinWalls,
+                [
+                    (_ => enemyFactory.CreateSlimeEnemy(_), 0.8),
+                    (_ => enemyFactory.CreateLavaSlimeEnemy(_), 0.2),
+                    (_ => enemyFactory.CreateVampireEnemy(_), 0.2),
+                ]);
+
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
             doorsTexture = game.Content.Load<Texture2D>("Images/doors_lever_chest_animation");
             whitePixelTexture = game.Content.Load<Texture2D>("Textures/WhiteRectangle");
@@ -520,7 +532,7 @@ namespace Jam25.Screens
                     TileType tileType = gameScene.GameMap.tiles[x, y].Type;
 
                     // Floors and doors should be drawn fully in the background pass only
-                    if (tileType == TileType.Floor )
+                    if (tileType == TileType.Floor)
                     {
                         if (!backgroundOnly)
                         {
