@@ -857,7 +857,7 @@
 /processorParam:TextureFormat=Color
 /build:Images/UI/UIItems.png
 
-#begin Images/UI/UIArea.png
+#begin Images/UI/UIStatus.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -867,7 +867,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Images/UI/UIArea.png
+/build:Images/UI/UIStatus.png
 
 #begin Images/Victoryscreen.png
 /importer:TextureImporter
