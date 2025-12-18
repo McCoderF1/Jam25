@@ -8,8 +8,6 @@ namespace Jam25.Screens.Transitions
 {
     public class BossScreen : TransitionBase
     {
-        public event EventHandler IntoNextArea;
-
         public BossScreen(SpriteBatch spriteBatch, GraphicsDeviceManager graphics, ContentManager content, AudioController audioController) : base(spriteBatch, graphics, content, audioController) 
         {
             background = content.Load<Texture2D>("Images/Transitions/Boss");
@@ -23,11 +21,6 @@ namespace Jam25.Screens.Transitions
         }
 
         public override void Show()
-        {
-
-        }
-
-        public override void Update(GameTime gameTime)
         {
 
         }
