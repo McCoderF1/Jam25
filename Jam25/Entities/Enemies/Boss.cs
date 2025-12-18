@@ -21,8 +21,8 @@ namespace Jam25.Entities.Enemies
         Texture2D Texture;
         Texture2D ProjectileTexture;
         List<Texture2D> ExplosionTextures;
-        Vector2 Position;
-        List<Projectile> Projectiles;
+        public Vector2 Position;
+        public List<Projectile> Projectiles = new();
         float attackBlockedUntil = 0f;
         float attackCooldown = 500f;
 
