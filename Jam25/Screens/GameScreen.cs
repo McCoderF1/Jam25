@@ -424,14 +424,14 @@ namespace Jam25.Screens
 
 
 
-
-            // temporary
             if (CurrentLevelType == LevelType.Lava)
             {
                 boss.Update(gameTime, player.Body.Position);
 
 
-                if (Vector2.Distance(boss.Position, player.Body.Position) < 150)
+
+                // TODO: improve this
+                if (Vector2.Distance(boss.Position, player.Body.Position) < 200 && (player.IsAttacking != 0))
                 {
                     boss.TakeDamage(1);
                 }
