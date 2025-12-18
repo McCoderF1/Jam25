@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace Jam25.Entities
 {
     [Flags]
-    public enum WallMask
+    public enum DirectionMask
     {
         None = 0,
         North = 1,
@@ -16,7 +16,7 @@ namespace Jam25.Entities
         East = 8
     }
 
-    public enum WallShape
+    public enum TileShape
     {
         None,
         StraightHorizontal,
@@ -47,11 +47,19 @@ namespace Jam25.Entities
         Vertical
     }
 
-    public class Tile(TileType type)
+    public enum TileTheme
+    {
+        Dungeon,
+        Lava
+    }
+
+    public class Tile(TileType type, TileTheme theme = TileTheme.Dungeon)
     {
         public TileType Type = type;
-        public WallMask WallMask;
-        public WallShape WallShape;
+        public TileTheme Theme = theme;
+        public DirectionMask DirectionMask;
+        public TileShape TileShape;
+
 
         public DoorOrientation? DoorOrientation;
     }
@@ -61,20 +69,23 @@ namespace Jam25.Entities
         public Tile[,] tiles;
         private readonly int width;
         private readonly int height;
-
+        private int mapWidth;
+        private int mapHeight;
         public Rectangle[] Rooms { get; private set; }
 
-
-        public GameMap(int width, int height)
+        public GameMap(int width, int height, TileTheme theme = TileTheme.Dungeon)
         {
             this.width = width;
             this.height = height;
 
-            InitialiseTiles();
+            InitialiseTiles(theme);
         }
 
         public void MakeMap(int maxRooms, int minRoomSize, int maxRoomSize, int mapWidth, int mapHeight, GameScene gameScene)
         {
+            this.mapWidth = mapWidth;
+            this.mapHeight = mapHeight;
+
             Rooms = new Rectangle[maxRooms];
             int numRooms = 0;
 
@@ -140,11 +151,6 @@ namespace Jam25.Entities
                 Rooms[numRooms] = newRoom;
                 numRooms += 1;
             }
-
-            // Add walls around floors
-            AddWalls(mapWidth, mapHeight);
-
-            ComputeWalls();
         }
 
         public void AddDoor()
@@ -168,6 +174,7 @@ namespace Jam25.Entities
         {
             player.Body.Position = Rooms[0].Center.ToVector2() * 32;
         }
+
         private bool PlaceSingleSealedDoor(Tile[,] map, Rectangle[] rooms)
         {
             var candidates = GetSealedDoorCandidates(map, rooms);
@@ -181,7 +188,7 @@ namespace Jam25.Entities
             tile.Type = TileType.Door;
             tile.DoorOrientation = chosen.orientation;
 
-            return true;
+            return true; // Door placed
         }
 
         private List<(int x, int y, DoorOrientation orientation)> GetSealedDoorCandidates(Tile[,] map, Rectangle[] rooms)
@@ -241,7 +248,7 @@ namespace Jam25.Entities
         }
 
 
-        private void ComputeWalls()
+        private void ComputeWallDirection()
         {
             int w = tiles.GetLength(0);
             int h = tiles.GetLength(1);
@@ -252,19 +259,42 @@ namespace Jam25.Entities
                     if (tiles[x, y].Type != TileType.Wall)
                         continue;
 
-                    WallMask mask = WallMask.None;
+                    DirectionMask mask = DirectionMask.None;
 
-                    if (tiles[x, y - 1].Type == TileType.Floor) mask |= WallMask.North;
-                    if (tiles[x, y + 1].Type == TileType.Floor) mask |= WallMask.South;
-                    if (tiles[x - 1, y].Type == TileType.Floor) mask |= WallMask.West;
-                    if (tiles[x + 1, y].Type == TileType.Floor) mask |= WallMask.East;
+                    if (tiles[x, y - 1].Type == TileType.Floor) mask |= DirectionMask.North;
+                    if (tiles[x, y + 1].Type == TileType.Floor) mask |= DirectionMask.South;
+                    if (tiles[x - 1, y].Type == TileType.Floor) mask |= DirectionMask.West;
+                    if (tiles[x + 1, y].Type == TileType.Floor) mask |= DirectionMask.East;
 
-                    tiles[x, y].WallMask = mask;
-                    tiles[x, y].WallShape = DetermineWallShape(mask);
+                    tiles[x, y].DirectionMask = mask;
+                    tiles[x, y].TileShape = DetermineTileShape(mask);
                 }
         }
 
-        private void AddWalls(int mapWidth, int mapHeight)
+        public void ComputeDirection()
+        {
+            int w = tiles.GetLength(0);
+            int h = tiles.GetLength(1);
+
+            for (int x = 1; x < w - 1; x++)
+                for (int y = 1; y < h - 1; y++)
+                {
+                    if (tiles[x, y].Type != TileType.Floor)
+                        continue;
+
+                    DirectionMask mask = DirectionMask.None;
+
+                    if (tiles[x, y - 1].Type != TileType.Floor) mask |= DirectionMask.North;
+                    if (tiles[x, y + 1].Type != TileType.Floor) mask |= DirectionMask.South;
+                    if (tiles[x - 1, y].Type != TileType.Floor) mask |= DirectionMask.West;
+                    if (tiles[x + 1, y].Type != TileType.Floor) mask |= DirectionMask.East;
+
+                    tiles[x, y].DirectionMask = mask;
+                    tiles[x, y].TileShape = DetermineTileShape(mask);
+                }
+        }
+
+        public void AddWalls()
         {
             for (int x = 1; x < mapWidth - 1; x++)
             {
@@ -279,48 +309,50 @@ namespace Jam25.Entities
                     }
                 }
             }
+
+            ComputeWallDirection();
         }
 
-        private WallShape DetermineWallShape(WallMask mask)
+        private TileShape DetermineTileShape(DirectionMask mask)
         {
-            bool n = mask.HasFlag(WallMask.North);
-            bool s = mask.HasFlag(WallMask.South);
-            bool w = mask.HasFlag(WallMask.West);
-            bool e = mask.HasFlag(WallMask.East);
+            bool n = mask.HasFlag(DirectionMask.North);
+            bool s = mask.HasFlag(DirectionMask.South);
+            bool w = mask.HasFlag(DirectionMask.West);
+            bool e = mask.HasFlag(DirectionMask.East);
 
             int count = (n ? 1 : 0) + (s ? 1 : 0) + (w ? 1 : 0) + (e ? 1 : 0);
 
             // Pillar (isolated wall)
             if (count == 0)
-                return WallShape.Pillar;
+                return TileShape.Pillar;
 
             // Ends
             if (count == 1)
-                return WallShape.End;
+                return TileShape.End;
 
             // Straight walls
             if (n && s && !e && !w)
-                return WallShape.StraightVertical;
+                return TileShape.StraightVertical;
 
             if (e && w && !n && !s)
-                return WallShape.StraightHorizontal;
+                return TileShape.StraightHorizontal;
 
             // Inner corners (touching floors)
-            if (n && e) return WallShape.InnerCornerNE;
-            if (n && w) return WallShape.InnerCornerNW;
-            if (s && e) return WallShape.InnerCornerSE;
-            if (s && w) return WallShape.InnerCornerSW;
+            if (n && e) return TileShape.InnerCornerNE;
+            if (n && w) return TileShape.InnerCornerNW;
+            if (s && e) return TileShape.InnerCornerSE;
+            if (s && w) return TileShape.InnerCornerSW;
 
             // Outer corners (missing diagonal floor)
             if (count == 3)
             {
-                if (!n) return WallShape.OuterCornerNE;
-                if (!s) return WallShape.OuterCornerSE;
-                if (!w) return WallShape.OuterCornerNW;
-                if (!e) return WallShape.OuterCornerSW;
+                if (!n) return TileShape.OuterCornerNE;
+                if (!s) return TileShape.OuterCornerSE;
+                if (!w) return TileShape.OuterCornerNW;
+                if (!e) return TileShape.OuterCornerSW;
             }
 
-            return WallShape.None;
+            return TileShape.None;
         }
 
         private void CreateRoom(Rectangle room)
@@ -351,7 +383,7 @@ namespace Jam25.Entities
             }
         }
 
-        private void InitialiseTiles()
+        private void InitialiseTiles(TileTheme theme)
         {
             tiles = new Tile[width, height];
 
@@ -359,7 +391,7 @@ namespace Jam25.Entities
             {
                 for (int y = 0; y < height; y++)
                 {
-                    tiles[x, y] = new Tile(TileType.Empty);
+                    tiles[x, y] = new Tile(TileType.Empty, theme);
                 }
             }
         }

@@ -26,9 +26,10 @@ namespace Jam25.Screens
         private readonly SpriteBatch spriteBatch;
         private readonly AudioController audioController;
         private readonly Game1 game;
-        private readonly GameScene gameScene;
+        private GameScene gameScene;
         private Texture2D wallsFloor;
         private Texture2D doorsTexture;
+        private Texture2D lavaSpriteSheet;
         private Texture2D objectSpriteSheet;
 
         private KeyPickup key;
@@ -100,49 +101,39 @@ namespace Jam25.Screens
             this.audioController = audioController;
             this.game = game;
 
-            EnemyFactory enemyFactory = new(game.Content, audioController);
+            wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
+            doorsTexture = game.Content.Load<Texture2D>("Images/doors_lever_chest_animation");
+            whitePixelTexture = game.Content.Load<Texture2D>("Textures/WhiteRectangle");
+            objectSpriteSheet = game.Content.Load<Texture2D>("Images/supplies_objects");
+            lavaSpriteSheet = game.Content.Load<Texture2D>("Images/spritesheet-lavaland");
 
+            EnemyFactory enemyFactory = new(game.Content, audioController);
             EnemySpawner enemySpawner = new(
                 maxEnemies: 50,
                 minSpawnDistanceFromPlayer: 200,
                 PointWithinWalls,
                 enemyFactory);
-            wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
-            doorsTexture = game.Content.Load<Texture2D>("Images/doors_lever_chest_animation");
-            whitePixelTexture = game.Content.Load<Texture2D>("Textures/WhiteRectangle");
 
             player = new Player(spriteBatch);
             player.Initalise(content, graphicsDevice);
 
             key = new KeyPickup(game.Content);
 
-            var gameMap = new GameMap(mapWidth, mapHeight);
-            gameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene);
-            gameMap.AddKey(key);
-            gameMap.AddPlayer(player);
-            gameMap.AddDoor();
-
-            gameScene = new(gameMap, player, enemySpawner);
-
-            wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
-            whitePixelTexture = game.Content.Load<Texture2D>("Textures/WhiteRectangle");
-
-            gameScene.Pickups.Add(key);
-
+            //var dungeonMap = new GameMap(mapWidth, mapHeight);
+            //dungeonMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene);
+            //dungeonMap.AddKey(key);
+            //dungeonMap.AddPlayer(player);
+            //dungeonMap.AddDoor();
             visibleTiles = new bool[mapWidth, mapHeight];
 
-            wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
             gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player);
-
-            key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
-
-            objectSpriteSheet = game.Content.Load<Texture2D>("Images/supplies_objects");
 
             lightMask = LightMaskFactory.CreateRadialMask(graphicsDevice, lightMaskSize);
             tileShadowMask = LightMaskFactory.CreateTileShadowMask(graphicsDevice, 64);
 
-            gameScene.Enemies.Add(enemyFactory.CreateSlimeEnemy(new(200, 200)));
+            //gameScene.Enemies.Add(enemyFactory.CreateSlimeEnemy(new(200, 200)));
 
+            key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
             this.LevelCompleted += (_, _) => Task.Delay(1000).ContinueWith(_ => Transition());
         }
 
@@ -176,7 +167,7 @@ namespace Jam25.Screens
                 }
             }
 
-            DrawLighting();
+            //DrawLighting();
 
             spriteBatch.End();
             spriteBatch.Begin(samplerState: SamplerState.PointClamp);
@@ -191,7 +182,12 @@ namespace Jam25.Screens
 
         public void Show()
         {
-            gameScene.Pickups.Clear();
+            var lavaMap = new GameMap(100, 100, TileTheme.Lava);
+            lavaMap.MakeMap(1, 20, 20, mapWidth, mapHeight, gameScene);
+            lavaMap.ComputeDirection();
+            lavaMap.AddPlayer(player);
+
+            gameScene = new(lavaMap, player);
 
             // Reset death state
             playerDied = false;
@@ -204,14 +200,13 @@ namespace Jam25.Screens
             player.HasKey = false;
             player.MoveSpeed = 1.0f;
 
-            gameScene.GameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene);
-            gameScene.GameMap.AddKey(key);
-            gameScene.GameMap.AddPlayer(player);
+            //gameScene.GameMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight, gameScene);
+            //gameScene.GameMap.AddKey(key);
+            //gameScene.GameMap.AddPlayer(player);
 
-            for (int i = 0; i < healthPickupCount; i++)
-            {
-                gameScene.Pickups.Add(new HealthPack(PointWithinWalls(), game.Content));
-            }
+            //InitialiseHealthPickups();
+            //InitialiseCoalPickups();
+            //gameScene.Pickups.Add(key);
 
             game.Torch = new Torch(maxEnergy: 100f, drainPerSecond: 0.4f, maxRadius: 250f, minRadius: 60f);
 
@@ -220,6 +215,11 @@ namespace Jam25.Screens
                 gui.SetTorch(game.Torch);
             }
 
+            gameUI?.Show();
+        }
+
+        private void InitialiseCoalPickups()
+        {
             for (int i = 0; i < coalPickupCount; i++)
             {
                 CoalSize size = (CoalSize)spawnRandom.Next(0, 4);
@@ -227,10 +227,14 @@ namespace Jam25.Screens
                 coal.TargetTorch = game.Torch;
                 gameScene.Pickups.Add(coal);
             }
+        }
 
-            gameScene.Pickups.Add(key);
-
-            gameUI?.Show();
+        private void InitialiseHealthPickups()
+        {
+            for (int i = 0; i < healthPickupCount; i++)
+            {
+                gameScene.Pickups.Add(new HealthPack(PointWithinWalls(), game.Content));
+            }
         }
 
         public void Update(GameTime gameTime)
@@ -371,39 +375,68 @@ namespace Jam25.Screens
             {
                 for (int y = 0; y < mapHeight; y++)
                 {
-                    Texture2D texture = gameScene.GameMap.tiles[x, y].Type switch
+                    Texture2D texture = gameScene.GameMap.tiles[x, y].Theme switch
                     {
-                        TileType.Floor => wallsFloor,
-                        TileType.Wall => wallsFloor,
-                        TileType.Door => doorsTexture,
-                        _ => null,
+                        TileTheme.Dungeon => gameScene.GameMap.tiles[x, y].Type switch
+                        {
+                            TileType.Floor => wallsFloor,
+                            TileType.Wall => wallsFloor,
+                            TileType.Door => doorsTexture,
+                            _ => null
+                        },
+                        TileTheme.Lava => lavaSpriteSheet
                     };
 
                     if (texture != null)
                     {
-                        Rectangle sourceRect = gameScene.GameMap.tiles[x, y].Type switch
+                        Rectangle sourceRect = gameScene.GameMap.tiles[x, y].Theme switch
                         {
-                            TileType.Floor => new Rectangle(8, 86, 32, 32),
-                            TileType.Wall => gameScene.GameMap.tiles[x, y].WallMask switch
+                            TileTheme.Dungeon => gameScene.GameMap.tiles[x, y].Type switch
                             {
-                                WallMask.North => new Rectangle(8, 0, 30, 24),
-                                WallMask.South => new Rectangle(8, 32, 32, 32),
-                                WallMask.West => new Rectangle(2, 8, 32, 24),
-                                WallMask.East => new Rectangle(14, 8, 32, 24),
-                                _ => gameScene.GameMap.tiles[x, y].WallShape switch
+                                TileType.Floor => new Rectangle(8, 86, 32, 32),
+                                TileType.Wall => gameScene.GameMap.tiles[x, y].DirectionMask switch
                                 {
-                                    WallShape.InnerCornerNW => new Rectangle(2, 0, 32, 32),
-                                    WallShape.InnerCornerNE => new Rectangle(16, 0, 30, 32),
-                                    WallShape.InnerCornerSW => new Rectangle(2, 32, 32, 32),
-                                    WallShape.InnerCornerSE => new Rectangle(14, 32, 32, 32),
-                                    WallShape.OuterCornerSE => new Rectangle(64, 32, 32, 32),
-                                    WallShape.StraightHorizontal => new Rectangle(2, 7, 44, 30),
-                                    WallShape.StraightVertical => new Rectangle(9, 0, 30, 78),
-                                    _ => Rectangle.Empty
-                                }
+                                    DirectionMask.North => new Rectangle(8, 0, 30, 24),
+                                    DirectionMask.South => new Rectangle(8, 32, 32, 32),
+                                    DirectionMask.West => new Rectangle(2, 8, 32, 24),
+                                    DirectionMask.East => new Rectangle(14, 8, 32, 24),
+                                    _ => gameScene.GameMap.tiles[x, y].TileShape switch
+                                    {
+                                        TileShape.InnerCornerNW => new Rectangle(2, 0, 32, 32),
+                                        TileShape.InnerCornerNE => new Rectangle(16, 0, 30, 32),
+                                        TileShape.InnerCornerSW => new Rectangle(2, 32, 32, 32),
+                                        TileShape.InnerCornerSE => new Rectangle(14, 32, 32, 32),
+                                        TileShape.OuterCornerSE => new Rectangle(64, 32, 32, 32),
+                                        TileShape.StraightHorizontal => new Rectangle(2, 7, 44, 30),
+                                        TileShape.StraightVertical => new Rectangle(9, 0, 30, 78),
+                                        _ => Rectangle.Empty
+                                    }
+                                },
+                                TileType.Door => new Rectangle(1, 32, 32, 32),
+                                _ => Rectangle.Empty
                             },
-                            TileType.Door => new Rectangle(1, 32, 32, 32),
-                            _ => Rectangle.Empty
+                            TileTheme.Lava => gameScene.GameMap.tiles[x, y].Type switch
+                            {
+                                TileType.Floor => gameScene.GameMap.tiles[x, y].DirectionMask switch
+                                {
+                                    DirectionMask.North => new Rectangle(42, 15, 32, 32),
+                                    DirectionMask.South => new Rectangle(42, 79, 32, 32),
+                                    DirectionMask.West => new Rectangle(11, 49, 32, 32),
+                                    DirectionMask.East => new Rectangle(66, 49, 32, 32),
+                                    _ => gameScene.GameMap.tiles[x, y].TileShape switch
+                                    {
+                                        TileShape.InnerCornerNW => new Rectangle(2, 0, 32, 32),
+                                        TileShape.InnerCornerNE => new Rectangle(75, 6, 32, 32),
+                                        TileShape.InnerCornerSW => new Rectangle(2, 32, 32, 32),
+                                        TileShape.InnerCornerSE => new Rectangle(14, 32, 32, 32),
+                                        TileShape.OuterCornerSE => new Rectangle(64, 32, 32, 32),
+                                        TileShape.StraightHorizontal => new Rectangle(2, 7, 44, 30),
+                                        TileShape.StraightVertical => new Rectangle(9, 0, 30, 78),
+                                        _ => new Rectangle(32, 32, 32, 32)
+                                    }
+                                },
+                                _ => Rectangle.Empty
+                            }
                         };
 
                         spriteBatch.Draw(
@@ -568,6 +601,8 @@ namespace Jam25.Screens
         {
             GameMap checkPoint = new GameMap(mapWidth, mapHeight);
             checkPoint.MakeMap(1, 10, 10, mapWidth, mapHeight, gameScene);
+            checkPoint.AddWalls();
+
             checkPoint.AddPlayer(gameScene.Player);
             gameScene.Enemies.Clear();
             gameScene.Pickups.Clear();
