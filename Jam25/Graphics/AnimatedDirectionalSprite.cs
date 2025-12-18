@@ -24,6 +24,7 @@ namespace Jam25.Graphics
         private bool hasCompleted = false;
         private bool hasStarted = false;
         private Direction currentDirection;
+        private bool oneOff;
 
         public Texture2D Texture { get; }
 
@@ -32,13 +33,14 @@ namespace Jam25.Graphics
         /// </summary>
         public bool LoopCompleted => hasCompleted;
 
-        public AnimatedDirectionalSprite(Texture2D texture, int frameWidth, Direction[] directionsOrder, TimeSpan frameTime)
+        public AnimatedDirectionalSprite(Texture2D texture, int frameWidth, Direction[] directionsOrder, TimeSpan frameTime, bool oneOff = false)
         {
             Texture = texture;
             this.frameWidth = frameWidth;
             this.directionsOrder = directionsOrder;
             this.frameTime = frameTime;
             framesPerDirection = Texture.Width / frameWidth;
+            this.oneOff = oneOff;
 
             if (Texture.Width % frameWidth != 0)
                 throw new ArgumentException("Texture width must be a multiple of frame width.");
@@ -57,7 +59,7 @@ namespace Jam25.Graphics
 
         public void Update(Direction direction, GameTime gameTime)
         {
-            if (direction != currentDirection)
+            if (!oneOff && direction != currentDirection)
             {
                 currentDirection = direction;
                 currentFrame = 0;

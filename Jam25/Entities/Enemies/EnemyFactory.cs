@@ -93,11 +93,11 @@ namespace Jam25.Entities.Enemies
                 Sprites = new Dictionary<Enemy.EnemyState, AnimatedDirectionalSprite>
                 {
                     {Enemy.EnemyState.Idle, new AnimatedDirectionalSprite(slimeIdleTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
-                    {Enemy.EnemyState.Attacking, new AnimatedDirectionalSprite(slimeAttackTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Attacking, new AnimatedDirectionalSprite(slimeAttackTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME, oneOff: true)},
                     {Enemy.EnemyState.Hurt, new AnimatedDirectionalSprite(slimeHurtTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
-                    {Enemy.EnemyState.Dying, new AnimatedDirectionalSprite(slimeDeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Dying, new AnimatedDirectionalSprite(slimeDeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME, oneOff: true)},
                     {Enemy.EnemyState.Running, new AnimatedDirectionalSprite(slimeRunTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
-                    {Enemy.EnemyState.Dead, new AnimatedDirectionalSprite(slimeDeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Dead, new AnimatedDirectionalSprite(slimeDeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME, oneOff: true)},
                 },
                 Body =
                 {
@@ -124,11 +124,11 @@ namespace Jam25.Entities.Enemies
                 Sprites = new Dictionary<Enemy.EnemyState, AnimatedDirectionalSprite>
                 {
                     {Enemy.EnemyState.Idle, new AnimatedDirectionalSprite(lavaSlimeIdleTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
-                    {Enemy.EnemyState.Attacking, new AnimatedDirectionalSprite(lavaSlimeAttackTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Attacking, new AnimatedDirectionalSprite(lavaSlimeAttackTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME, oneOff: true)},
                     {Enemy.EnemyState.Hurt, new AnimatedDirectionalSprite(lavaSlimeHurtTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
-                    {Enemy.EnemyState.Dying, new AnimatedDirectionalSprite(lavaSlimeDeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Dying, new AnimatedDirectionalSprite(lavaSlimeDeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME, oneOff: true)},
                     {Enemy.EnemyState.Running, new AnimatedDirectionalSprite(lavaSlimeRunTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
-                    {Enemy.EnemyState.Dead, new AnimatedDirectionalSprite(lavaSlimeDeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Dead, new AnimatedDirectionalSprite(lavaSlimeDeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME, oneOff: true)},
                 },
                 Body =
                 {
@@ -156,11 +156,11 @@ namespace Jam25.Entities.Enemies
                 Sprites = new Dictionary<Enemy.EnemyState, AnimatedDirectionalSprite>
                 {
                     {Enemy.EnemyState.Idle, new AnimatedDirectionalSprite(vampireIdleTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
-                    {Enemy.EnemyState.Attacking, new AnimatedDirectionalSprite(vampireAttackTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Attacking, new AnimatedDirectionalSprite(vampireAttackTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME, oneOff: true)},
                     {Enemy.EnemyState.Hurt, new AnimatedDirectionalSprite(vampireHurtTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
-                    {Enemy.EnemyState.Dying, new AnimatedDirectionalSprite(vampireDeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Dying, new AnimatedDirectionalSprite(vampireDeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME, oneOff: true)},
                     {Enemy.EnemyState.Running, new AnimatedDirectionalSprite(vampireRunTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
-                    {Enemy.EnemyState.Dead, new AnimatedDirectionalSprite(vampireDeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME)},
+                    {Enemy.EnemyState.Dead, new AnimatedDirectionalSprite(vampireDeathTexture, FRAME_WIDTH, new[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right }, FRAME_TIME, oneOff: true)},
                 },
                 Body =
                 {
