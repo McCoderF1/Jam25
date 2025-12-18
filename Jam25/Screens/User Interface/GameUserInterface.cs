@@ -104,6 +104,7 @@ namespace Jam25.Screens.UserInterface
             whitePixel = new Texture2D(graphics, 1, 1);
             whitePixel.SetData(new[] { Color.White });
             roundedRectangle = new RoundedRectangle(spriteBatch, whitePixel);
+            previousPlayerLevel = PlayerTracker.PlayerStats.TotalLevel;
         }
 
         /// <summary>
@@ -176,7 +177,18 @@ namespace Jam25.Screens.UserInterface
                         abilitySelection = false;
                         //update player
 
+                        if(indexSelection == 0)
+                        {
+                            player.MoveSpeed += 1f;
+                        }
+
+                        if(indexSelection == 1)
+                        {
+                            player.AttackRange += 50;
+                        }
+
                         //Check level up
+                        PlayerTracker.SavePlayerProgress();
                         Task.Delay(1000).ContinueWith(_ => { if (PlayerTracker.PlayerStats.TotalLevel > previousPlayerLevel) { skillSelection = true; } });
                     }
                 }
@@ -378,7 +390,7 @@ namespace Jam25.Screens.UserInterface
 
             spriteBatch.Draw(abilityOptions, new Rectangle(graphicsDevice.Viewport.Width / 2 - 268, graphicsDevice.Viewport.Height / 2 - 198, 536, 397), Color.White);
 
-            spriteBatch.DrawString(font, "Attack \nSpeed +", new Microsoft.Xna.Framework.Vector2(graphicsDevice.Viewport.Width / 2 - 220, graphicsDevice.Viewport.Height / 2 - 40), Color.White);
+            spriteBatch.DrawString(font, "Move \nSpeed +", new Microsoft.Xna.Framework.Vector2(graphicsDevice.Viewport.Width / 2 - 220, graphicsDevice.Viewport.Height / 2 - 40), Color.White);
             spriteBatch.DrawString(font, "Attack \nRange +", new Microsoft.Xna.Framework.Vector2(graphicsDevice.Viewport.Width / 2 + 100, graphicsDevice.Viewport.Height / 2 - 40), Color.White);
             spriteBatch.DrawString(font, "Select (Space)", new Microsoft.Xna.Framework.Vector2(graphicsDevice.Viewport.Width / 2 - 125, graphicsDevice.Viewport.Height / 2 + 200), Color.White);
 
@@ -404,7 +416,7 @@ namespace Jam25.Screens.UserInterface
 
             spriteBatch.Draw(skillOptions, new Rectangle(graphicsDevice.Viewport.Width / 2 - 267, graphicsDevice.Viewport.Height / 2 - 85, 535, 170), Color.White);
             spriteBatch.DrawString(font, "Health", new Microsoft.Xna.Framework.Vector2(graphicsDevice.Viewport.Width / 2 - 230, graphicsDevice.Viewport.Height / 2 + 20), Color.White);
-            spriteBatch.DrawString(font, "Speed", new Microsoft.Xna.Framework.Vector2(graphicsDevice.Viewport.Width / 2 - 56, graphicsDevice.Viewport.Height / 2 + 20), Color.White);
+            spriteBatch.DrawString(font, "Stam", new Microsoft.Xna.Framework.Vector2(graphicsDevice.Viewport.Width / 2 - 45, graphicsDevice.Viewport.Height / 2 + 20), Color.White);
             spriteBatch.DrawString(font, "Torch", new Microsoft.Xna.Framework.Vector2(graphicsDevice.Viewport.Width / 2 + 122, graphicsDevice.Viewport.Height / 2 + 20), Color.White);
 
             spriteBatch.DrawString(font, "Select (Space)", new Microsoft.Xna.Framework.Vector2(graphicsDevice.Viewport.Width / 2 - 120, graphicsDevice.Viewport.Height / 4 + 250), Color.White);
