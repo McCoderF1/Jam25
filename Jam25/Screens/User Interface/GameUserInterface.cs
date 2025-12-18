@@ -226,11 +226,7 @@ namespace Jam25.Screens.UserInterface
 
         public void SkillsAndAbilitiesTrigger()
         {
-            abilitySelection = true;
-
-            while (abilitySelection)
-                Task.Delay(5);
-
+            //abilitySelection = true;
             skillSelection = true;
         }
 

@@ -29,12 +29,19 @@ namespace Jam25.Entities.Enemies.Controllers
                 return;
             }
 
+            if (canSeePlayer && enemy.AttackRange >= Vector2.Distance(scene.Player.Body.Position, enemy.Body.Position))
+            {
+                enemy.MovementDirection = Vector2.Zero;
+                return;
+            }
+
             (int x, int y)? nextTileIndex = GetNextMoveTile(gameMap, scene.Player.Body.Position, enemy.Body.Position);
 
             // If no next tile, do not move, or move directly towards the player.
             if (nextTileIndex == null)
             {
-                if (Vector2.Distance(scene.Player.Body.Position, enemy.Body.Position) is < TILE_SIZE and > 5)
+                float distanceToPlayer = Vector2.Distance(scene.Player.Body.Position, enemy.Body.Position);
+                if (distanceToPlayer < TILE_SIZE && distanceToPlayer > enemy.AttackRange)
                 {
                     Vector2 directionToPlayer = scene.Player.Body.Position - enemy.Body.Position;
                     directionToPlayer.Normalize();

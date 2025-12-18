@@ -1,11 +1,11 @@
-﻿using HDT.Gaming.Audio;
+﻿using System;
+using System.Collections.Generic;
+using HDT.Gaming.Audio;
 using Jam25.Entities.Enemies.Controllers;
 using Jam25.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
 
 namespace Jam25.Entities.Enemies
 {
@@ -45,6 +45,7 @@ namespace Jam25.Entities.Enemies
         private readonly Texture2D vampireRunTexture;
 
         private readonly Texture2D projectileTexture;
+        private readonly List<Texture2D> explosionTextures;
 
         #endregion Private Members
 
@@ -76,7 +77,13 @@ namespace Jam25.Entities.Enemies
             vampireWalkTexture = content.Load<Texture2D>("EnemySprite/Vampire/Vampires2_Walk_with_shadow");
             vampireRunTexture = content.Load<Texture2D>("EnemySprite/Vampire/Vampires2_Run_with_shadow");
 
-            projectileTexture = content.Load<Texture2D>("Images/key32");
+            projectileTexture = content.Load<Texture2D>("Images/projectile");
+
+            explosionTextures = new List<Texture2D>();
+            for (int i = 1; i <= 10; i++)
+            {
+                explosionTextures.Add(content.Load<Texture2D>($"Images/explosion/Circle_explosion{i}"));
+            }
         }
 
         public Enemy CreateSlimeEnemy(Vector2 position)
@@ -163,12 +170,13 @@ namespace Jam25.Entities.Enemies
                 },
                 Health = new HDT.Gaming.Models.Health(20),
                 MovementSpeed = 10,
-                ChaseMemoryDuration = TimeSpan.FromSeconds(3),
+                ChaseMemoryDuration = TimeSpan.FromSeconds(10),
                 SightRange = 250,
                 EnemyController = enemyController,
                 AttackRange = 200,
                 UseProjectiles = true,
-                ProjectileTexture = projectileTexture
+                ProjectileTexture = projectileTexture,
+                ExplosionTextures = explosionTextures
             };
         }
     }
