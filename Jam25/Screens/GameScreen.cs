@@ -203,11 +203,16 @@ namespace Jam25.Screens
 
         public void Hide()
         {
+            AudioManager.PlayMusic(string.Empty);
+
             gameUI?.Hide();
         }
 
         public void Show()
         {
+            Random r = new Random();
+            AudioManager.PlayMusic($"Game{r.Next(1, 4)}");
+
             ResetWorld();
             BuildWorld();
 
@@ -480,14 +485,14 @@ namespace Jam25.Screens
                     TileType tileType = gameScene.GameMap.tiles[x, y].Type;
 
                     // Floors and doors should be drawn fully in the background pass only
-                    if (tileType == TileType.Floor || tileType == TileType.Door)
+                    if (tileType == TileType.Floor )
                     {
                         if (!backgroundOnly)
                         {
                             continue;
                         }
                     }
-                    else if (tileType == TileType.Wall)
+                    else if (tileType == TileType.Wall || tileType == TileType.Door)
                     {
                         // Walls are split: upper in background pass, lower in foreground pass
                         // so in background pass we draw the wall minus a bottom strip
@@ -543,7 +548,7 @@ namespace Jam25.Screens
 
                     Rectangle destRect = new Rectangle(x * tileSize, y * tileSize, tileSize, tileSize);
 
-                    if (tileType == TileType.Wall)
+                    if (tileType == TileType.Wall || tileType == TileType.Door)
                     {
                         // Map “world” overlap height into texture space
                         int overlapWorld = WallOverlapHeight;
