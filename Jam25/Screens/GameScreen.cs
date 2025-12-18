@@ -596,30 +596,36 @@ namespace Jam25.Screens
                 // After axis-resolved movement, did we move at all?
                 if (currentPos != player.Body.Position)
                 {
-                    player.Body.Position = currentPos;
-
-                    Rectangle playerRect = new Rectangle(
-                        (int)(currentPos.X - PlayerColliderHalfWidth),
-                        (int)(currentPos.Y - PlayerColliderHalfHeight),
-                        PlayerColliderHalfWidth * 2,
-                        PlayerColliderHalfHeight * 2);
-
-                    CollectedItem key = gameUI.CollectedItems.Where(item => item.Name == "Key").FirstOrDefault();
-
-                    if (IsOverDoor(playerRect) && key.Name != null)
+                    // After axis-resolved movement, did we move at all?
+                    if (currentPos != player.Body.Position)
                     {
-                        if (gameUI.CollectedItems.Contains(key))
-                            gameUI.CollectedItems.Remove(key);
+                        // First resolve soft collisions with enemies
+                        Vector2 resolvedPos = ResolvePlayerEnemyCollisions(currentPos);
+                        player.Body.Position = resolvedPos;
 
-                        player.MoveSpeed = 0f;
-                        LevelCompleted?.Invoke(this, EventArgs.Empty);
-                    }
+                        Rectangle playerRect = new Rectangle(
+                            (int)(resolvedPos.X - PlayerColliderHalfWidth),
+                            (int)(resolvedPos.Y - PlayerColliderHalfHeight),
+                            PlayerColliderHalfWidth * 2,
+                            PlayerColliderHalfHeight * 2);
 
-                    foreach (IPickup pickup in gameScene.Pickups)
-                    {
-                        if (Vector2.Distance(pickup.Sprite.Position, Vector2.Subtract(player.Body.Position, new Vector2(tileSize / 2, tileSize / 2))) < tileSize)
+                        CollectedItem key = gameUI.CollectedItems.Where(item => item.Name == "Key").FirstOrDefault();
+
+                        if (IsOverDoor(playerRect) && key.Name != null)
                         {
-                            pickup.Collect(player);
+                            if (gameUI.CollectedItems.Contains(key))
+                                gameUI.CollectedItems.Remove(key);
+
+                            player.MoveSpeed = 0f;
+                            LevelCompleted?.Invoke(this, EventArgs.Empty);
+                        }
+
+                        foreach (IPickup pickup in gameScene.Pickups)
+                        {
+                            if (Vector2.Distance(pickup.Sprite.Position, Vector2.Subtract(player.Body.Position, new Vector2(tileSize / 2, tileSize / 2))) < tileSize)
+                            {
+                                pickup.Collect(player);
+                            }
                         }
                     }
                 }
@@ -661,6 +667,75 @@ namespace Jam25.Screens
 
             return true;
         }
+
+
+        private const int EnemyColliderHalfWidth = 16;
+        private const int EnemyColliderHalfHeight = 16;
+
+        /// <summary>
+        /// Resolves soft collisions between the player and enemies:
+        /// - Prevents entering an enemy core collider when moving
+        /// - If overlapping, gently pushes both player and enemy apart
+        /// </summary>
+        private Vector2 ResolvePlayerEnemyCollisions(Vector2 desiredPlayerPos)
+        {
+            Vector2 resolvedPos = desiredPlayerPos;
+
+            foreach (var enemy in gameScene.Enemies)
+            {
+                // Simple AABB for enemy around Body.Position
+                Rectangle enemyRect = new Rectangle(
+                    (int)(enemy.Body.Position.X - EnemyColliderHalfWidth),
+                    (int)(enemy.Body.Position.Y - EnemyColliderHalfHeight),
+                    EnemyColliderHalfWidth * 2,
+                    EnemyColliderHalfHeight * 2);
+
+                Rectangle playerRect = new Rectangle(
+                    (int)(resolvedPos.X - PlayerColliderHalfWidth),
+                    (int)(resolvedPos.Y - PlayerColliderHalfHeight),
+                    PlayerColliderHalfWidth * 2,
+                    PlayerColliderHalfHeight * 2);
+
+                if (!playerRect.Intersects(enemyRect))
+                {
+                    continue;
+                }
+
+                // Compute minimal separation vector
+                float overlapLeft = playerRect.Right - enemyRect.Left;
+                float overlapRight = enemyRect.Right - playerRect.Left;
+                float overlapTop = playerRect.Bottom - enemyRect.Top;
+                float overlapBottom = enemyRect.Bottom - playerRect.Top;
+
+                // Choose axis of least penetration
+                float xPush = (overlapLeft < overlapRight ? -overlapLeft : overlapRight);
+                float yPush = (overlapTop < overlapBottom ? -overlapTop : overlapBottom);
+
+                Vector2 separation;
+
+                if (Math.Abs(xPush) < Math.Abs(yPush))
+                {
+                    separation = new Vector2(xPush, 0f);
+                }
+                else
+                {
+                    separation = new Vector2(0f, yPush);
+                }
+
+                // Push strength: 0.5 means both move half the separation
+                const float playerShare = 0.2f;
+                const float enemyShare = 1f - playerShare;
+
+                // Apply to player
+                resolvedPos += separation * playerShare;
+
+                // Apply to enemy (soft push)
+                enemy.Body.Position -= separation * enemyShare;
+            }
+
+            return resolvedPos;
+        }
+
 
         private bool IsOverDoor(Rectangle playerRect)
         {
