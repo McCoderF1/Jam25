@@ -29,6 +29,12 @@ namespace Jam25.Screens
     {
         #region private members
 
+        private const float TORCH_FADE_IN_SPEED = 2f;
+
+        private const float SHADOW_ALPHA_CHANGE_SPEED = 5f;
+
+        private const float SHADOW_CULL_RADIUS_PADDING = 1f; 
+
         private readonly GraphicsDevice graphicsDevice;
         private readonly SpriteBatch spriteBatch;
         private readonly AudioController audioController;
@@ -59,6 +65,8 @@ namespace Jam25.Screens
         private const float FlickerFrequency = 1.5f;
         private const float FlickerStrength = 0.05f;
 
+        private float torchFadeIn;
+
         private int mapWidth = 80;
         private int mapHeight = 42;
 
@@ -73,6 +81,7 @@ namespace Jam25.Screens
         private PhysicsWorld physicsWorld;
 
         private bool[,] visibleTiles;
+        private float[,] tileShadowTransparency; // 0 = full shadow, 1 = no shadow
         private int rayCount = 360;
         private float rayStep = 8f;
 
@@ -171,6 +180,7 @@ namespace Jam25.Screens
             player.Initalise(content, graphicsDevice);
 
             visibleTiles = new bool[mapWidth, mapHeight];
+            tileShadowTransparency = new float[mapWidth, mapHeight]; 
 
             key = new KeyPickup(keyTexture);
             key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
@@ -180,7 +190,6 @@ namespace Jam25.Screens
             gameScene.Pickups.Add(key);
 
             gameUI = new GameUserInterface(spriteBatch, gfxDevice, gameContent, content, audioController, player, gameScene);
-
 
             lightMask = LightMaskFactory.CreateRadialMask(graphicsDevice, lightMaskSize);
             tileShadowMask = LightMaskFactory.CreateTileShadowMask(graphicsDevice, 64);
@@ -222,23 +231,32 @@ namespace Jam25.Screens
                 pickup.Draw(spriteBatch, tileSize);
             }
 
-            player.Draw();
-
-            var sortedEnemies = gameScene.Enemies.OrderBy(enemy => enemy.Body.Position.Y).ToList();
+            var sortedEnemies = gameScene.Enemies
+                .Where(enemy => enemy.CurrentState != Enemy.EnemyState.Dead)
+                .OrderBy(enemy => enemy.Body.Position.Y)
+                .ToList();
+            bool playerDrawn = false; // Used to sort player sprite among enemies
             for (int i = 0; i < sortedEnemies.Count; i++)
             {
-                if (sortedEnemies[i].CurrentState != Enemy.EnemyState.Dead)
-                {
-                    sortedEnemies[i].CurrentSprite.Draw(spriteBatch, sortedEnemies[i].Body.Position, whitePixelTexture, sortedEnemies[i].Health);
+                var enemy = sortedEnemies[i];
 
-                    foreach (Projectile p in sortedEnemies[i].Projectiles)
-                    {
-                        p.Draw(spriteBatch);
-                    }
+                if (!playerDrawn && enemy.Body.Position.Y > player.Body.Position.Y)
+                {
+                    player.Draw();
+                    playerDrawn = true;
+                }
+
+                enemy.CurrentSprite.Draw(spriteBatch, enemy.Body.Position);
+
+                foreach (Projectile p in enemy.Projectiles)
+                {
+                    p.Draw(spriteBatch);
                 }
             }
-
-
+            if (!playerDrawn)
+            {
+                player.Draw();
+            }
 
             //DrawLighting();
             DrawDungeon(backgroundOnly: false);
@@ -247,6 +265,15 @@ namespace Jam25.Screens
 
             DrawLighting();
 
+            // Draw enemy health bars
+            for (int i = 0; i < sortedEnemies.Count; i++)
+            {
+                var enemy = sortedEnemies[i];
+                if (TryGetTileCoords(enemy.Body.Position, out int tileX, out int tileY) && visibleTiles[tileX, tileY])
+                {
+                    enemy.CurrentSprite.DrawHealthBar(spriteBatch, enemy.Body.Position, whitePixelTexture, enemy.Health);
+                }
+            }
 
             if (CurrentLevelType == LevelType.Lava)
             {
@@ -436,6 +463,10 @@ namespace Jam25.Screens
 
 
             gameUI.UpdateWithVector(gameTime, CameraPosition);
+
+            torchFadeIn = Math.Min(torchFadeIn + TORCH_FADE_IN_SPEED * dt, 1f);
+
+            UpdateLighting(dt);
         }
 
         #region private methods
@@ -615,7 +646,7 @@ namespace Jam25.Screens
                     TileType type = gameScene.GameMap.tiles[tx, ty].Type;
 
                     // Block movement on walls always
-                    if (type == TileType.Wall1)
+                    if (type == TileType.Wall1 || type == TileType.Empty)
                     {
                         return false;
                     }
@@ -858,38 +889,14 @@ namespace Jam25.Screens
             }
         }
 
-        private void DrawLighting()
+        private void UpdateLighting(float dt)
         {
-            if (debugLightingDisabled)
-            {
-                return;
-            }
-
-            if (lightMask == null || game.Torch == null || game.UiWhitePixel == null)
-            {
-                return;
-            }
-
-            var viewport = graphicsDevice.Viewport;
-            float radius = game.Torch.CurrentRadius * currentFlicker;
-
-            var screenInWorld = new Rectangle(
-                (int)CameraPosition.X,
-                (int)CameraPosition.Y,
-                viewport.Width,
-                viewport.Height);
-
-            Vector2 lightCenter = player.Body.Position;
-
-            if (radius <= 0f)
-            {
-                spriteBatch.Draw(game.UiWhitePixel, screenInWorld, Color.Black * 0.99f);
-                return;
-            }
-
             Array.Clear(visibleTiles, 0, visibleTiles.Length);
 
-            float tileRadius = radius / tileSize;
+            float radius = GetTorchRadius();
+            Vector2 lightCenter = player.Body.Position;
+
+            float tileRadius = radius / tileSize + SHADOW_CULL_RADIUS_PADDING;
             float maxDistanceSq = tileRadius * tileRadius;
             Vector2 playerTile = lightCenter / tileSize;
 
@@ -926,6 +933,45 @@ namespace Jam25.Screens
                 }
             }
 
+            for (int y = 0; y < mapHeight; y++)
+            {
+                for (int x = 0; x < mapWidth; x++)
+                {
+                    float changeDirection = visibleTiles[x, y] ? 1f : -1f;
+                    tileShadowTransparency[x, y] = MathHelper.Clamp(tileShadowTransparency[x, y] + changeDirection * SHADOW_ALPHA_CHANGE_SPEED * dt, 0f, 1f);
+                }
+            }
+        }
+
+        private void DrawLighting()
+        {
+            if (debugLightingDisabled)
+            {
+                return;
+            }
+
+            if (lightMask == null || game.Torch == null || game.UiWhitePixel == null)
+            {
+                return;
+            }
+
+            var viewport = graphicsDevice.Viewport;
+            float radius = GetTorchRadius();
+
+            var screenInWorld = new Rectangle(
+                (int)CameraPosition.X,
+                (int)CameraPosition.Y,
+                viewport.Width,
+                viewport.Height);
+
+            Vector2 lightCenter = player.Body.Position;
+
+            if (radius <= 0f)
+            {
+                spriteBatch.Draw(game.UiWhitePixel, screenInWorld, Color.Black * 0.99f);
+                return;
+            }
+
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, null, null, null, Matrix.CreateTranslation(new Vector3(-CameraPosition, 0f)));
 
@@ -960,9 +1006,6 @@ namespace Jam25.Screens
                     if (!destRect.Intersects(tileWorldRect))
                         continue;
 
-                    if (visibleTiles[x, y])
-                        continue;
-
                     TileType tileType = gameScene.GameMap.tiles[x, y].Type;
                     if (tileType == TileType.Wall1 || tileType == TileType.Door)
                         continue;
@@ -970,7 +1013,7 @@ namespace Jam25.Screens
                     Vector2 tileCenterWorld = new Vector2(x * tileSize + tileSize / 2f, y * tileSize + tileSize / 2f);
                     float distToLight = Vector2.Distance(tileCenterWorld, lightCenter);
 
-                    if (distToLight > radius)
+                    if (distToLight > radius + SHADOW_CULL_RADIUS_PADDING)
                         continue;
 
                     int circlesPerRow = 3;
@@ -984,7 +1027,8 @@ namespace Jam25.Screens
                             int drawY = (int)(y * tileSize + cy * spacing + spacing / 2 - shadowSize / 2);
 
                             var shadowRect = new Rectangle(drawX, drawY, shadowSize, shadowSize);
-                            spriteBatch.Draw(tileShadowMask, shadowRect, Color.White);
+                            float alpha = 1f - tileShadowTransparency[x, y];
+                            spriteBatch.Draw(tileShadowMask, shadowRect, Color.White * alpha);
                         }
                     }
                 }
@@ -992,6 +1036,11 @@ namespace Jam25.Screens
 
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, Matrix.CreateTranslation(new Vector3(-CameraPosition, 0f)));
+        }
+
+        private float GetTorchRadius()
+        {
+            return game.Torch.CurrentRadius * currentFlicker * torchFadeIn;
         }
 
         private bool TryGetTileCoords(Vector2 worldPos, out int tileX, out int tileY)
@@ -1028,6 +1077,11 @@ namespace Jam25.Screens
             player.MoveSpeed = 1.0f;
 
             game.Torch.Reset();
+
+            torchFadeIn = 0f;
+
+            Array.Clear(visibleTiles, 0, visibleTiles.Length);
+            Array.Clear(tileShadowTransparency, 0, tileShadowTransparency.Length);
         }
 
         private void BuildWorld(LevelType levelType)

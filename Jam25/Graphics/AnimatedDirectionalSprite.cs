@@ -94,7 +94,7 @@ namespace Jam25.Graphics
             hasStarted = false;
         }
 
-        public void Draw(SpriteBatch spriteBatch, Vector2 position, Texture2D? whitePixel = null, Health? health = null)
+        public void Draw(SpriteBatch spriteBatch, Vector2 position)
         {
             if (spriteBatch == null)
                 throw new ArgumentNullException(nameof(spriteBatch));
@@ -119,32 +119,31 @@ namespace Jam25.Graphics
                 Vector2.One,
                 SpriteEffects.None,
                 layerDepth: 1f);
+        }
 
-
+        public void DrawHealthBar(SpriteBatch spriteBatch, Vector2 position, Texture2D whitePixel, Health health)
+        {
             // draw the health bar
-            if (health is not null && whitePixel is not null)
-            {
-                float healthPercent = Math.Clamp((float)health.Current / (float)health.Max, 0f, 1f);
+            float healthPercent = Math.Clamp((float)health.Current / (float)health.Max, 0f, 1f);
 
-                if (healthPercent == 1f || healthPercent == 0f)
-                    return;
+            if (healthPercent == 1f || healthPercent == 0f)
+                return;
 
-                int barWidth = frameWidth;
-                int barHeight = Math.Max(4, frameWidth / 16);
-                float topOfSpriteY = position.Y - (frameWidth / 2f);
-                int barX = (int)(position.X - (barWidth / 2f));
-                int barY = (int)(topOfSpriteY - 8 - barHeight);
+            int barWidth = frameWidth;
+            int barHeight = Math.Max(4, frameWidth / 16);
+            float topOfSpriteY = position.Y - (frameWidth / 2f);
+            int barX = (int)(position.X - (barWidth / 2f));
+            int barY = (int)(topOfSpriteY - 8 - barHeight);
 
-                // Background
-                var bgRect = new Rectangle(barX, barY, barWidth, barHeight);
-                spriteBatch.Draw(whitePixel, bgRect, Color.Black * 0.75f);
+            // Background
+            var bgRect = new Rectangle(barX, barY, barWidth, barHeight);
+            spriteBatch.Draw(whitePixel, bgRect, Color.Black * 0.75f);
 
-                // Fill
-                int fillWidth = (int)(barWidth * healthPercent);
-                var fillRect = new Rectangle(barX + 1, barY + 1, Math.Max(0, fillWidth - 2), barHeight - 2);
-                var fillColor = Color.Lerp(Color.Red, Color.Green, healthPercent);
-                spriteBatch.Draw(whitePixel, fillRect, fillColor);
-            }
+            // Fill
+            int fillWidth = (int)(barWidth * healthPercent);
+            var fillRect = new Rectangle(barX + 1, barY + 1, Math.Max(0, fillWidth - 2), barHeight - 2);
+            var fillColor = Color.Lerp(Color.Red, Color.Green, healthPercent);
+            spriteBatch.Draw(whitePixel, fillRect, fillColor);
         }
     }
 }
