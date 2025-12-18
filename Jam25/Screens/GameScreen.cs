@@ -227,6 +227,7 @@ namespace Jam25.Screens
             debugPixel.SetData(new[] { Color.White });
 
             boss = new Boss(content);
+            player.UpdateFromStores();
         }
 
         public void Draw()

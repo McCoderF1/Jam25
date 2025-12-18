@@ -375,6 +375,23 @@ namespace Jam25
                 layerDepth: 1f);
         }
 
+        public void UpdateFromStores()
+        {
+            Health.Max += (50 * PlayerTracker.PlayerStats.HealthLevel);
+            Health.Heal(Health.Max);
+
+            Stamina.Max += (20 * PlayerTracker.PlayerStats.SpeedLevel);
+            Stamina.TakeStamina(Stamina.Max);
+
+            var totalLvl = PlayerTracker.PlayerStats.TotalLevel;
+
+            if (totalLvl >= 5 && totalLvl < 10)
+                Level = 2;
+
+            if (totalLvl >= 10)
+                Level = 3;
+        }
+
         #region Private methods
 
         private void IncrementAnimation(float deltaSeconds)
