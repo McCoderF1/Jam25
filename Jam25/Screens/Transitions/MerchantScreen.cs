@@ -13,8 +13,6 @@ namespace Jam25.Screens.Transitions
 {
     public class MerchantScreen : TransitionBase
     {
-        public event EventHandler IntoNextArea;
-
         public MerchantScreen(SpriteBatch spriteBatch, GraphicsDeviceManager graphics, ContentManager content, AudioController audioController) : base(spriteBatch, graphics, content, audioController) 
         {
             background = content.Load<Texture2D>("Images/Transitions/Merchant");
@@ -28,11 +26,6 @@ namespace Jam25.Screens.Transitions
         }
 
         public override void Show()
-        {
-
-        }
-
-        public override void Update(GameTime gameTime)
         {
 
         }

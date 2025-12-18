@@ -13,8 +13,6 @@ namespace Jam25.Screens.Transitions
 {
     public class NextLevelScreen : TransitionBase
     {
-        public event EventHandler IntoNextArea;
-
         public NextLevelScreen(SpriteBatch spriteBatch, GraphicsDeviceManager graphics, ContentManager content, AudioController audioController) : base(spriteBatch, graphics, content, audioController) 
         {
             background = content.Load<Texture2D>("Images/Transitions/NextLevel");
@@ -28,11 +26,6 @@ namespace Jam25.Screens.Transitions
         }
 
         public override void Show()
-        {
-
-        }
-
-        public override void Update(GameTime gameTime)
         {
 
         }

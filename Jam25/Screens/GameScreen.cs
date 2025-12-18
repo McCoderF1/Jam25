@@ -105,7 +105,7 @@ namespace Jam25.Screens
 
         private Boss boss;
 
-        EnemySpawner enemySpawner;
+        private Dictionary<int, EnemySpawner> enemySpawners;
 
         private LevelType CurrentLevelType = LevelType.Dungeon;
 
@@ -113,6 +113,7 @@ namespace Jam25.Screens
 
         public EventHandler LevelCompleted { get; set; }
         public EventHandler PlayerDied { get; set; }
+        public EventHandler TransitionScreen { get; set; }
 
         public GameScreen(
             GraphicsDevice gfxDevice,
@@ -129,15 +130,36 @@ namespace Jam25.Screens
 
             EnemyFactory enemyFactory = new(game.Content, audioController);
 
-            enemySpawner = new(
-                maxEnemies: 50,
-                minSpawnDistanceFromPlayer: 200,
-                PointWithinWalls,
-                [
-                    (_ => enemyFactory.CreateSlimeEnemy(_), 0.8),
-                    (_ => enemyFactory.CreateLavaSlimeEnemy(_), 0.2),
-                    (_ => enemyFactory.CreateVampireEnemy(_), 0.2),
-                ]);
+            enemySpawners = new Dictionary<int, EnemySpawner>
+            {
+                [1] = new(
+                    maxEnemies: 50,
+                    minSpawnDistanceFromPlayer: 200,
+                    PointWithinWalls,
+                    [
+                        (_ => enemyFactory.CreateSlimeEnemy(_), 0.6),
+                        (_ => enemyFactory.CreateLavaSlimeEnemy(_), 0.2),
+                        (_ => enemyFactory.CreateVampireEnemy(_), 0.2),
+                    ]),
+                [2] = new(
+                    maxEnemies: 50,
+                    minSpawnDistanceFromPlayer: 200,
+                    PointWithinWalls,
+                    [
+                        (_ => enemyFactory.CreateSlimeEnemy(_), 0.4),
+                        (_ => enemyFactory.CreateLavaSlimeEnemy(_), 0.3),
+                        (_ => enemyFactory.CreateVampireEnemy(_), 0.3),
+                    ]),
+                [3] = new(
+                    maxEnemies: 50,
+                    minSpawnDistanceFromPlayer: 200,
+                    PointWithinWalls,
+                    [
+                        (_ => enemyFactory.CreateSlimeEnemy(_), 0.2),
+                        (_ => enemyFactory.CreateLavaSlimeEnemy(_), 0.4),
+                        (_ => enemyFactory.CreateVampireEnemy(_), 0.4),
+                    ]),
+            };
 
             wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
             doorsTexture = game.Content.Load<Texture2D>("Images/doors_lever_chest_animation");
@@ -267,7 +289,6 @@ namespace Jam25.Screens
             // Reset player state
             player.Health.Heal(player.Health.Max);
             player.LastState = Player.PlayerState.Idle;
-            player.HasKey = false;
             player.MoveSpeed = 1.0f;
 
 
@@ -278,8 +299,6 @@ namespace Jam25.Screens
 
             ResetWorld();
             BuildWorld(CurrentLevelType);
-
-            gameScene.EnemySpawner = enemySpawner;
 
             if (gameUI is GameUserInterface gui)
             {
@@ -310,6 +329,9 @@ namespace Jam25.Screens
             {
                 gameScene.GameLevel++;
                 currentLevelCompleted = false;
+
+                TransitionScreen?.Invoke("nextlevel", EventArgs.Empty);
+
                 Transition(CurrentLevelType);
                 gameUI.SkillsAndAbilitiesTrigger();
 
@@ -527,8 +549,13 @@ namespace Jam25.Screens
                 {
                     player.Body.Position = targetPosition;
 
-                    if (IsOverDoor(playerRect) && player.HasKey)
+                    CollectedItem key = gameUI.CollectedItems.Where(item => item.Name == "Key").FirstOrDefault();
+
+                    if (IsOverDoor(playerRect) && key.Name != null)
                     {
+                        if (gameUI.CollectedItems.Contains(key))
+                            gameUI.CollectedItems.Remove(key);
+
                         player.MoveSpeed = 0f;
                         LevelCompleted?.Invoke(this, EventArgs.Empty);
                     }
@@ -542,6 +569,11 @@ namespace Jam25.Screens
                     }
                 }
             }
+        }
+
+        private bool AnyKey()
+        {
+            return gameUI.CollectedItems.Where(item => item.Name == "Key").Any();
         }
 
         private bool CanMoveTo(Rectangle playerRect)
@@ -565,7 +597,7 @@ namespace Jam25.Screens
                     }
 
                     // Doors only block if you don't have the key; allow floor always
-                    if (type == TileType.Door && !player.HasKey)
+                    if (type == TileType.Door && !AnyKey())
                     {
                         return false;
                     }
@@ -969,7 +1001,6 @@ namespace Jam25.Screens
             // Reset player state
             player.Health.Heal(player.Health.Max);
             player.LastState = Player.PlayerState.Idle;
-            player.HasKey = false;
             player.MoveSpeed = 1.0f;
 
             game.Torch.Reset();
@@ -984,7 +1015,19 @@ namespace Jam25.Screens
 
                 InitialiseHealthPickups();
                 InitialiseCoalPickups();
+
+                key.Reset();
                 gameScene.Pickups.Add(key);
+
+                if (enemySpawners.TryGetValue(gameScene.GameLevel, out EnemySpawner enemySpawner))
+                {
+                    gameScene.EnemySpawner = enemySpawner;
+                }
+                else
+                {
+                    gameScene.EnemySpawner = null;
+                }
+
                 gameScene.EnemySpawner = enemySpawner;
             }
             else if (levelType == LevelType.Lava)

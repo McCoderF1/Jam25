@@ -75,7 +75,7 @@ namespace Jam25
             audioController.InstallMusic("Game2", Content.Load<Song>("Sound/Music/Shadows Rise2"));
             audioController.InstallMusic("Game3", Content.Load<Song>("Sound/Music/Shadows and Smoke1"));
             audioController.InstallMusic("Game4", Content.Load<Song>("Sound/Music/Shadows and Smoke2"));
-            audioController.InstallMusic("Death", Content.Load<Song>("Sound/Music/Shadows of the Heart"));
+            audioController.InstallMusic("Death", Content.Load<Song>("Sound/Music/Shadows of the heart"));
             audioController.InstallEffect("MetalHit", Content.Load<SoundEffect>("Sound/Effects/MetalHit"));
             audioController.InstallEffect("RetroClick", Content.Load<SoundEffect>("Sound/Effects/RetroClick"));
             audioController.InstallEffect("AppClick", Content.Load<SoundEffect>("Sound/Effects/AppClick"));

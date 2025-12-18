@@ -19,12 +19,31 @@ namespace Jam25.Screens.Transitions
 
         #endregion
 
+        public event EventHandler MovePassTransition;
+
         public TransitionHandler(MerchantScreen merchant, RestAreaScreen rest, NextLevelScreen nextLvl, BossScreen boss) 
         {
             merchantScreen = merchant;
             restAreaScreen = rest;
             nextLevelScreen = nextLvl;
             bossScreen = boss;
+
+            merchantScreen.MovePassTransition += (_, _) => MovePassTransition.Invoke(this, EventArgs.Empty);
+            restAreaScreen.MovePassTransition += (_, _) => MovePassTransition.Invoke(this, EventArgs.Empty);
+            nextLevelScreen.MovePassTransition += (_, _) => MovePassTransition.Invoke(this, EventArgs.Empty);
+            bossScreen.MovePassTransition += (_, _) => MovePassTransition.Invoke(this, EventArgs.Empty);
+        }
+
+        public IScreen TransitionTo(string screenType)
+        {
+            return screenType.ToLower() switch
+            {
+                "merchant" => merchantScreen,
+                "restarea" => restAreaScreen,
+                "nextlevel" => nextLevelScreen,
+                "boss" => bossScreen,
+                _ => throw new ArgumentException($"Invalid screen type: {screenType}"),
+            };
         }
 
         public IScreen TransitionRandom()
