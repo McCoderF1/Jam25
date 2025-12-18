@@ -13,11 +13,11 @@ namespace Jam25.Entities.Levels
 
         public GameMap Map { get; }
 
-        public Dungeon(int mapWidth, int mapHeight, Player player, KeyPickup key)
+        public Dungeon(int mapWidth, int mapHeight, Player player, KeyPickup key, TileColors tileColors = null)
         {
             GameSettings.BackgroundColor = Background;
 
-            var dungeonMap = new GameMap(mapWidth, mapHeight);
+            var dungeonMap = new GameMap(mapWidth, mapHeight, tileColors: tileColors);
             dungeonMap.MakeMap(maxRooms, minRoomSize, maxRoomSize, mapWidth, mapHeight);
             dungeonMap.AddWalls();
             dungeonMap.AddKey(key);
