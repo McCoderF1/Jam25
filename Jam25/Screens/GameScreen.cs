@@ -123,6 +123,8 @@ namespace Jam25.Screens
         public EventHandler PlayerDied { get; set; }
         public EventHandler TransitionScreen { get; set; }
 
+        public event EventHandler WinScreenTransition;
+
         public GameScreen(
             GraphicsDevice gfxDevice,
             SpriteBatch spriteBatch,
@@ -428,6 +430,11 @@ namespace Jam25.Screens
             {
                 boss.Update(gameTime, player.Body.Position);
 
+
+                if (!boss.Alive)
+                {
+                    WinScreenTransition?.Invoke(this, EventArgs.Empty);
+                }
 
 
                 // TODO: improve this

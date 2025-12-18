@@ -27,7 +27,7 @@ namespace Jam25.Entities.Enemies
         private readonly Texture2D whitePixel;
         float attackBlockedUntil = 0f;
         float attackCooldown = 500f;
-        bool Alive = true;
+        public bool Alive = true;
         Random rand = new Random();
 
 
