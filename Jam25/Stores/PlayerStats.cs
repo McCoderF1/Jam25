@@ -78,7 +78,7 @@ namespace Jam25.Stores
 
             try
             {
-                MercurySerializer.Deserialize<PlayerStats>(File.ReadAllText("Player.LESF"));
+                localStats = MercurySerializer.Deserialize<PlayerStats>(File.ReadAllText("Player.LESF"));
             }
             catch (Exception e) { /*Log Error*/  }
 
