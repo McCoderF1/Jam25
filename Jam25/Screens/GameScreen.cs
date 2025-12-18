@@ -124,7 +124,7 @@ namespace Jam25.Screens
 
         private Dictionary<int, EnemySpawner> enemySpawners;
 
-        private LevelType CurrentLevelType = LevelType.Lava;
+        private LevelType CurrentLevelType = LevelType.Dungeon;
 
         // Mini-map
         private bool[,] visitedTiles;
@@ -268,6 +268,7 @@ namespace Jam25.Screens
                 .Where(enemy => enemy.CurrentState != Enemy.EnemyState.Dead)
                 .OrderBy(enemy => enemy.Body.Position.Y)
                 .ToList();
+
             bool playerDrawn = false; // Used to sort player sprite among enemies
             for (int i = 0; i < sortedEnemies.Count; i++)
             {
@@ -279,7 +280,7 @@ namespace Jam25.Screens
                     playerDrawn = true;
                 }
 
-                enemy.CurrentSprite.Draw(spriteBatch, enemy.Body.Position);
+                enemy.CurrentSprite.Draw(spriteBatch, enemy.Body.Position, enemy.IsHitFlashing ? Color.Red : Color.White);
 
                 foreach (Projectile p in enemy.Projectiles)
                 {
@@ -457,23 +458,16 @@ namespace Jam25.Screens
             float raw = 1f + combined * FlickerStrength;
             currentFlicker = MathHelper.Clamp(raw, 1f - FlickerStrength, 1f + FlickerStrength);
 
-
-
-
-
             if (CurrentLevelType == LevelType.Lava)
             {
                 boss.Update(gameTime, player);
-
 
                 if (boss.CurrentStage == Boss.Stage.Dead)
                 {
                     WinScreenTransition?.Invoke(this, EventArgs.Empty);
                 }
 
-
-
-                if (Vector2.Distance(boss.Position, player.Body.Position) < 150 && player.IsAttacking != playerAttackState)
+                if (Vector2.Distance(boss.Position, player.Body.Position) < 200 && player.IsAttacking != playerAttackState)
                 {
                     playerAttackState = player.IsAttacking;
 

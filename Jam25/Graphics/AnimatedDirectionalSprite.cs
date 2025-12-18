@@ -96,7 +96,7 @@ namespace Jam25.Graphics
             hasStarted = false;
         }
 
-        public void Draw(SpriteBatch spriteBatch, Vector2 position)
+        public void Draw(SpriteBatch spriteBatch, Vector2 position, Color? tint = null)
         {
             if (spriteBatch == null)
                 throw new ArgumentNullException(nameof(spriteBatch));
@@ -115,7 +115,7 @@ namespace Jam25.Graphics
                 Texture,
                 position,
                 sourceRectangle,
-                Color.White,
+                tint ?? Color.White,
                 0f,
                 new Vector2(frameWidth / 2, frameWidth / 2),
                 Vector2.One,

@@ -29,6 +29,9 @@ namespace Jam25.Entities.Enemies
         private bool isWindingUp = false;
         private Player windUpTarget = null;
 
+        private float hitFlashDuration = 0.1f; // seconds
+        private float hitFlashTimer = 0f;
+
         #endregion Private Members
 
         public enum EnemyState
@@ -54,6 +57,7 @@ namespace Jam25.Entities.Enemies
 
         public Health Health { get; init; }
 
+        public bool IsHitFlashing => hitFlashTimer > 0f;
 
         public bool CanMove => (CurrentState != EnemyState.Dead) 
             && (CurrentState != EnemyState.Dying) 
@@ -92,7 +96,6 @@ namespace Jam25.Entities.Enemies
         {
             Body.Owner = this;
             Health = new Health(50);
-            //StartAttackCooldown();
         }
 
         public void TakeDamage(int amount)
@@ -118,6 +121,8 @@ namespace Jam25.Entities.Enemies
                 CurrentState = EnemyState.Hurt;
                 PlayerTracker.CollectEmber();
             }
+
+            hitFlashTimer = hitFlashDuration;
         }
 
         public void StartCooldown()
@@ -190,7 +195,6 @@ namespace Jam25.Entities.Enemies
             windUpTarget = null;
         }
 
-
         public void RefreshPlayerSighting()
         {
             playerSightMemoryTimerMs = (float)ChaseMemoryDuration.TotalMilliseconds;
@@ -204,6 +208,9 @@ namespace Jam25.Entities.Enemies
         /// <param name="gameTime">The current game time, used to determine state transitions and animation progress.</param>
         public void Update(GameTime gameTime)
         {
+            if (hitFlashTimer > 0f)
+                hitFlashTimer -= (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+
             UpdatePlayerSightingTimer(gameTime);
             if (attackBlockedUntil > 0f)
             {

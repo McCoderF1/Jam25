@@ -16,6 +16,11 @@ namespace Jam25.Entities.Enemies
 {
     public class Boss
     {
+        private float hitFlashDuration = 0.1f; // seconds
+        private float hitFlashTimer = 0f;
+
+        public bool IsHitFlashing => hitFlashTimer > 0f;
+
         public enum Stage
         {
             Phase1,
@@ -72,16 +77,20 @@ namespace Jam25.Entities.Enemies
                     CurrentStage = Stage.Dead;
                 }
             }
+
+            hitFlashTimer = hitFlashDuration;
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
             if (CurrentStage == Stage.Dead)
-            {
                 return;
-            }
+
+            float t = hitFlashTimer / hitFlashDuration;
+            Color flash = Color.Lerp(Color.White, Color.Red, t);
+
             var origin = new Vector2(Texture.Width / 2f, Texture.Height / 2f);
-            spriteBatch.Draw(Texture, Position, null, Color.White, 0, origin, 0.2f, SpriteEffects.None, 0f);
+            spriteBatch.Draw(Texture, Position, null, flash, 0, origin, 0.2f, SpriteEffects.None, 0f);
         }
 
         private void StartAttackCooldown()
@@ -115,6 +124,11 @@ namespace Jam25.Entities.Enemies
 
         public void Update(GameTime gameTime, Player player)
         {
+            float delta = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            if (hitFlashTimer > 0f)
+                hitFlashTimer -= delta;
+
             Vector2 playerPos = player.Body.Position;
             float distFromPlayer = Vector2.Distance(Position, playerPos);
 
@@ -158,8 +172,7 @@ namespace Jam25.Entities.Enemies
                         vel = 100f;
                     }
 
-                    
-                    if (distFromPlayer < 100)
+                    if (distFromPlayer < 50)
                     {
                         attackCooldown = 1500;
                         StartAttackCooldown();
