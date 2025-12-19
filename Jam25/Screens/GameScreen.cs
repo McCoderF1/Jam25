@@ -17,6 +17,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
 
 namespace Jam25.Screens
 {
@@ -36,6 +37,10 @@ namespace Jam25.Screens
     public class GameScreen : IScreen
     {
         #region private members
+
+        private const float MUSIC_STANDARD_VOLUME = 1f;
+        private const float MUSIC_QUIET_VOLUME = 0.5f;
+        private const float MUSIC_CHANGE_SPEED = 1f;
 
         private const float TORCH_FADE_IN_SPEED = 2f;
 
@@ -355,6 +360,8 @@ namespace Jam25.Screens
         {
             AudioManager.PlayMusic(string.Empty);
 
+            MediaPlayer.Volume = MUSIC_STANDARD_VOLUME;
+
             gameUI?.Hide();
         }
 
@@ -587,6 +594,14 @@ namespace Jam25.Screens
             torchFadeIn = Math.Min(torchFadeIn + TORCH_FADE_IN_SPEED * dt, 1f);
 
             UpdateLighting(dt);
+
+            float targetMusicVolume = MUSIC_STANDARD_VOLUME;
+            // Make music quieter when buffs are active
+            if (player.SeeThroughWallsTimer > 0f)
+            {
+                targetMusicVolume = MUSIC_QUIET_VOLUME;
+            }
+            MediaPlayer.Volume = StepTowards(MediaPlayer.Volume, targetMusicVolume, MUSIC_CHANGE_SPEED * dt);
         }
 
         #region private methods

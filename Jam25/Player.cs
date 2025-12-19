@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Audio;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -98,6 +99,8 @@ namespace Jam25
 
         private float hitFlashDuration = 0.1f; // seconds
         private float hitFlashTimer = 0f;
+
+        private SoundEffectInstance seeThroughWallsSound;
 
         #endregion
 
@@ -199,6 +202,15 @@ namespace Jam25
                 hitFlashTimer -= deltaSeconds;
 
             SeeThroughWallsTimer = Math.Max(SeeThroughWallsTimer - deltaSeconds, 0f);
+            if (SeeThroughWallsTimer > 0f)
+            {
+                seeThroughWallsSound ??= AudioManager.PlaySound("EyeBuff", loop: true);
+            }
+            else
+            {
+                seeThroughWallsSound?.Dispose();
+                seeThroughWallsSound = null;
+            }
 
             // ... debug T/L
             switch (LastState)

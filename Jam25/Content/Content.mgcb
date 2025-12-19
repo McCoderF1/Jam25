@@ -1877,6 +1877,12 @@
 /processorParam:Quality=Best
 /build:Sound/Effects/AppClick.wav
 
+#begin Sound/Effects/EyeBuff.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sound/Effects/EyeBuff.wav
+
 #begin Sound/Effects/GetKey.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
