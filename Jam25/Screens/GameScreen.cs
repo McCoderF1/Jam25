@@ -1359,7 +1359,7 @@ namespace Jam25.Screens
 
                     if (tile == TileType.Floor)
                     {
-                        visibleTiles[tx, ty] = rayVisibility;
+                        SetTileVisibility(tx, ty, rayVisibility);
 
                         // Check tiles around floor for walls/doors to mark as visible.
                         for (int ox = -1; ox <= 1; ox++)
@@ -1371,14 +1371,14 @@ namespace Jam25.Screens
                                 if (checkX < 0 || checkX >= mapWidth || checkY < 0 || checkY >= mapHeight)
                                     continue;
                                 TileType adjacentTile = gameScene.GameMap.tiles[checkX, checkY].Type;
-                                visibleTiles[checkX, checkY] = rayVisibility;
+                                SetTileVisibility(checkX, checkY, rayVisibility);
                             }
                         }
                     }
 
                     if (tile == TileType.Wall1 || tile == TileType.Door)
                     {
-                        visibleTiles[tx, ty] = rayVisibility;
+                        SetTileVisibility(tx, ty, rayVisibility);
 
                         if (player.SeeThroughWallsTimer > 0f)
                         {
@@ -1424,6 +1424,15 @@ namespace Jam25.Screens
                         visitedTiles[x, y] = true;
                     }
                 }
+            }
+        }
+
+        private void SetTileVisibility(int tileX, int tileY, TileVisibility visibility)
+        {
+            // Only update if new visibility is greater than existing
+            if ((int)visibility > (int)visibleTiles[tileX, tileY])
+            {
+                visibleTiles[tileX, tileY] = visibility;
             }
         }
 
