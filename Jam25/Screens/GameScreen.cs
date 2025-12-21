@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using HDT.Gaming.Audio;
+﻿using HDT.Gaming.Audio;
 using HDT.Gaming.Input;
 using HDT.Gaming.Physics;
 using HDT.Gaming.Screens;
@@ -18,6 +15,9 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Jam25.Screens
 {
@@ -139,14 +139,10 @@ namespace Jam25.Screens
 
         // Mini-map
         private bool[,] visitedTiles;
-        private bool showMiniMap = true;
-        private readonly int miniMapWidth = 200;
-        private readonly int miniMapHeight = 120;
-        private readonly int miniMapPadding = 8;
 
-        private bool showGuidanceIndicator = false;
 
         private IDungeonRenderer dungeonRenderer;
+        private NavigationOverlay navigationOverlay;
 
         #endregion
 
@@ -261,6 +257,13 @@ namespace Jam25.Screens
 
             boss = new Boss(content);
             player.UpdateFromStores();
+            navigationOverlay = new NavigationOverlay(
+                graphicsDevice,
+                whitePixelTexture,
+                font,
+                mapWidth,
+                mapHeight,
+                tileSize);
         }
 
         public void Draw()
@@ -352,10 +355,10 @@ namespace Jam25.Screens
                 boss.DrawHealthBar(spriteBatch, game.GraphicsDevice.Viewport.Width);
             }
 
-            DrawDirectionIndicator();
+            navigationOverlay.DrawDirectionIndicator(spriteBatch, gameScene.GameMap, CameraPosition, player.Body.Position, key);
 
             gameUI?.Draw();
-            DrawMiniMap();
+            navigationOverlay.DrawMiniMap(spriteBatch, gameScene.GameMap, visitedTiles, player.Body.Position, key);
         }
 
         public void Hide()
@@ -607,258 +610,6 @@ namespace Jam25.Screens
         }
 
         #region private methods
-
-        private Vector2? GetGuidanceTarget()
-        {
-            if (!key.Consumed)
-            {
-                return key.Sprite.Position + new Vector2(tileSize / 2f, tileSize / 2f);
-            }
-
-            Vector2 playerPos = player.Body.Position;
-            Vector2? closestDoorCenter = null;
-            float closestDistSq = float.MaxValue;
-
-
-            for (int x = 0; x < mapWidth; x++)
-            {
-                for (int y = 0; y < mapHeight; y++)
-                {
-                    if (gameScene.GameMap.tiles[x, y].Type != TileType.Door)
-                    {
-                        continue;
-                    }
-
-                    Vector2 doorCenter = new Vector2(
-                        x * tileSize + tileSize / 2f,
-                        y * tileSize + tileSize / 2f);
-
-                    float distSq = Vector2.DistanceSquared(playerPos, doorCenter);
-                    if (distSq < closestDistSq)
-                    {
-                        closestDistSq = distSq;
-                        closestDoorCenter = doorCenter;
-                    }
-                }
-            }
-
-            return closestDoorCenter;
-        }
-
-        private void DrawDirectionIndicator()
-        {
-            if (whitePixelTexture == null || gameScene?.GameMap?.tiles == null || !showGuidanceIndicator)
-            {
-                return;
-            }
-
-            Vector2? targetWorld = GetGuidanceTarget();
-            if (targetWorld is null)
-            {
-                return;
-            }
-
-            // Direction from screen center toward target
-            int viewportWidth = graphicsDevice.Viewport.Width;
-            int viewportHeight = graphicsDevice.Viewport.Height;
-
-            Vector2 screenCenter = new Vector2(viewportWidth / 2f, viewportHeight / 2f);
-
-            // Convert world position to screen-space (UI space)
-            Vector2 targetScreen = targetWorld.Value - CameraPosition;
-
-            // If target is on screen already, skip (optional)
-            Rectangle screenRect = new Rectangle(0, 0, viewportWidth, viewportHeight);
-            if (screenRect.Contains(targetScreen))
-            {
-                return;
-            }
-
-            Vector2 dir = targetScreen - screenCenter;
-            if (dir.LengthSquared() < 0.0001f)
-            {
-                return;
-            }
-            dir.Normalize();
-
-
-            // Clamp marker to just inside the screen bounds
-            float edgePadding = 24f;
-            float halfW = viewportWidth / 2f - edgePadding;
-            float halfH = viewportHeight / 2f - edgePadding;
-
-            float maxDistX = dir.X != 0f ? halfW / Math.Abs(dir.X) : float.MaxValue;
-            float maxDistY = dir.Y != 0f ? halfH / Math.Abs(dir.Y) : float.MaxValue;
-            float maxDist = Math.Min(maxDistX, maxDistY);
-
-            if (float.IsInfinity(maxDist) || maxDist <= 0f)
-            {
-                return;
-            }
-
-            Vector2 markerPos = screenCenter + dir * maxDist;
-
-            // Decide which letter and color to use
-            bool guidingToKey = !key.Consumed;
-            char letter = guidingToKey ? 'K' : 'D';
-            Color color = guidingToKey ? Color.Cyan : Color.Gold;
-
-            if (font == null)
-            {
-                // Fallback: small colored square if no font is available
-                float size = 10f;
-                var rect = new Rectangle(
-                    (int)(markerPos.X - size / 2f),
-                    (int)(markerPos.Y - size / 2f),
-                    (int)size,
-                    (int)size);
-
-                spriteBatch.Draw(
-                    whitePixelTexture,
-                    rect,
-                    color * 0.9f);
-
-                return;
-            }
-
-            string text = letter.ToString();
-
-            Vector2 textSize = font.MeasureString(text);
-            Vector2 textOrigin = textSize / 2f;
-
-            // Optional subtle background for readability
-            float bgPadding = 4f;
-            var bgRect = new Rectangle(
-                (int)(markerPos.X - textSize.X / 2f - bgPadding),
-                (int)(markerPos.Y - textSize.Y / 2f - bgPadding),
-                (int)(textSize.X + bgPadding * 2f),
-                (int)(textSize.Y + bgPadding * 2f));
-
-            spriteBatch.Draw(
-                whitePixelTexture,
-                bgRect,
-                Color.Black * 0.6f);
-
-            spriteBatch.DrawString(
-                font,
-                text,
-                markerPos,
-                color,
-                0f,
-                textOrigin,
-                1f,
-                SpriteEffects.None,
-                0f);
-        }
-
-        private void DrawMiniMap()
-        {
-            if (!showMiniMap || gameScene?.GameMap?.tiles == null || whitePixelTexture == null)
-            {
-                return;
-            }
-
-            int viewportWidth = graphicsDevice.Viewport.Width;
-            int viewportHeight = graphicsDevice.Viewport.Height;
-
-            // Bottom-right corner with padding
-            int mapX = viewportWidth - miniMapWidth - miniMapPadding;
-            int mapY = viewportHeight - miniMapHeight - miniMapPadding;
-
-            Rectangle miniMapRect = new Rectangle(mapX, mapY, miniMapWidth, miniMapHeight);
-
-            // Background (semi-transparent)
-            spriteBatch.Draw(
-                whitePixelTexture,
-                miniMapRect,
-                Color.Black * 0.6f);
-
-            // Calculate tile → minimap pixel scaling
-            float scaleX = miniMapWidth / (float)mapWidth;
-            float scaleY = miniMapHeight / (float)mapHeight;
-
-            // Draw tiles
-            for (int x = 0; x < mapWidth; x++)
-            {
-                for (int y = 0; y < mapHeight; y++)
-                {
-                    // Skip tiles never visited (fog of war)
-                    if (!visitedTiles[x, y])
-                    {
-                        continue;
-                    }
-
-                    var tile = gameScene.GameMap.tiles[x, y];
-
-                    Color color;
-                    switch (tile.Type)
-                    {
-                        case TileType.Wall1:
-                            color = new Color(200, 200, 200, 255); // light wall
-                            break;
-                        case TileType.Floor:
-                            color = new Color(60, 60, 60, 255); // dark floor
-                            break;
-                        case TileType.Door:
-                            color = Color.Gold; // door highlight
-                            break;
-                        default:
-                            continue;
-                    }
-
-                    // Convert tile index to minimap pixel rect
-                    int px = mapX + (int)(x * scaleX);
-                    int py = mapY + (int)(y * scaleY);
-                    int pw = Math.Max(1, (int)Math.Ceiling(scaleX));
-                    int ph = Math.Max(1, (int)Math.Ceiling(scaleY));
-
-                    Rectangle tileRect = new Rectangle(px, py, pw, ph);
-
-                    spriteBatch.Draw(
-                        whitePixelTexture,
-                        tileRect,
-                        color);
-                }
-            }
-
-            // Draw key marker (if not picked up)
-            if (!key.Consumed)
-            {
-                // Key.Position is in world space (top-left of sprite)
-                Vector2 keyCenter = key.Sprite.Position + new Vector2(tileSize / 2f, tileSize / 2f);
-
-                int keyTileX = (int)(keyCenter.X / tileSize);
-                int keyTileY = (int)(keyCenter.Y / tileSize);
-
-                if (keyTileX >= 0 && keyTileX < mapWidth &&
-                    keyTileY >= 0 && keyTileY < mapHeight &&
-                    visitedTiles[keyTileX, keyTileY])
-                {
-                    int kx = mapX + (int)(keyTileX * scaleX);
-                    int ky = mapY + (int)(keyTileY * scaleY);
-
-                    Rectangle keyRect = new Rectangle(kx - 2, ky - 2, 4, 4);
-                    spriteBatch.Draw(whitePixelTexture, keyRect, Color.Cyan);
-                }
-            }
-
-            // Draw player marker
-            {
-                Vector2 playerCenter = player.Body.Position;
-
-                float playerTileX = playerCenter.X / tileSize;
-                float playerTileY = playerCenter.Y / tileSize;
-
-                int px = mapX + (int)(playerTileX * scaleX);
-                int py = mapY + (int)(playerTileY * scaleY);
-
-                Rectangle playerRect = new Rectangle(px - 2, py - 2, 4, 4);
-                spriteBatch.Draw(whitePixelTexture, playerRect, Color.White);
-            }
-
-            // Optional: thin border around minimap
-            DrawDebugRect(miniMapRect, Color.White * 0.8f, 1f);
-        }
 
         private void DrawDebugRect(Rectangle rect, Color color, float thickness = 1f)
         {
