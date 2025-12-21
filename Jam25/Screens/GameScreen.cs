@@ -63,9 +63,7 @@ namespace Jam25.Screens
         private GameScene gameScene;
 
         // Textures
-        private Texture2D wallsFloor;
-        private Texture2D doorsTexture;
-        private Texture2D lavaSpriteSheet;
+
         private Texture2D objectSpriteSheet;
         private Texture2D keyTexture;
 
@@ -132,7 +130,6 @@ namespace Jam25.Screens
 
         private const int PlayerColliderHalfWidth = 9;
         private const int PlayerColliderHalfHeight = 1;
-        private const int WallOverlapHeight = 8;
 
         private Boss boss;
 
@@ -142,12 +139,14 @@ namespace Jam25.Screens
 
         // Mini-map
         private bool[,] visitedTiles;
-        private bool showMiniMap = false;
+        private bool showMiniMap = true;
         private readonly int miniMapWidth = 200;
         private readonly int miniMapHeight = 120;
         private readonly int miniMapPadding = 8;
 
         private bool showGuidanceIndicator = false;
+
+        private IDungeonRenderer dungeonRenderer;
 
         #endregion
 
@@ -216,11 +215,14 @@ namespace Jam25.Screens
                     ])
             };
 
-            wallsFloor = game.Content.Load<Texture2D>("Images/walls_floor");
-            doorsTexture = game.Content.Load<Texture2D>("Images/doors_lever_chest_animation");
+            dungeonRenderer = new DungeonRenderer(
+                game.Content.Load<Texture2D>("Images/walls_floor"),
+                game.Content.Load<Texture2D>("Images/doors_lever_chest_animation"),
+                game.Content.Load<Texture2D>("Images/spritesheet-lavaland"),
+                tileSize);
+
             whitePixelTexture = game.Content.Load<Texture2D>("Textures/WhiteRectangle");
             objectSpriteSheet = game.Content.Load<Texture2D>("Images/supplies_objects");
-            lavaSpriteSheet = game.Content.Load<Texture2D>("Images/spritesheet-lavaland");
             keyTexture = content.Load<Texture2D>("Images/key32");
 
             player = new Player(spriteBatch);
@@ -276,7 +278,7 @@ namespace Jam25.Screens
                 null,
                 Matrix.CreateTranslation(new Vector3(-CameraPosition, 0f)));
 
-            DrawDungeon(backgroundOnly: true);
+            dungeonRenderer.Draw(spriteBatch, gameScene.GameMap, backgroundOnly: true);
 
             foreach (IPickup pickup in gameScene.Pickups)
             {
@@ -317,7 +319,7 @@ namespace Jam25.Screens
             }
 
             //DrawLighting();
-            DrawDungeon(backgroundOnly: false);
+            dungeonRenderer.Draw(spriteBatch, gameScene.GameMap, backgroundOnly: false);
 
             DrawDebugCollision();
 
@@ -1115,212 +1117,6 @@ namespace Jam25.Screens
             return false;
         }
 
-        private void DrawDungeon(bool backgroundOnly)
-        {
-            for (int x = 0; x < mapWidth; x++)
-            {
-                for (int y = 0; y < mapHeight; y++)
-                {
-                    var tile = gameScene.GameMap.tiles[x, y];
-                    TileType tileType = tile.Type;
-
-                    // Floors and doors should be drawn fully in the background pass only
-                    if (tileType == TileType.Floor)
-                    {
-                        if (!backgroundOnly)
-                        {
-                            continue;
-                        }
-                    }
-                    else if (tileType == TileType.Wall1 || tileType == TileType.Door)
-                    {
-                        // Walls are split: upper in background pass, lower in foreground pass
-                        // so in background pass we draw the wall minus a bottom strip
-                        // in foreground pass we draw only that bottom strip.
-                    }
-                    else
-                    {
-                        continue;
-                    }
-
-                    Texture2D texture = tile.Theme switch
-                    {
-                        TileTheme.Dungeon => tile.Type switch
-                        {
-                            TileType.Floor => wallsFloor,
-                            TileType.Wall1 => wallsFloor,
-                            TileType.Door => doorsTexture,
-                            _ => null
-                        },
-                        TileTheme.Lava => lavaSpriteSheet,
-                        _ => null
-                    };
-
-                    if (texture == null)
-                    {
-                        continue;
-                    }
-
-                    Rectangle fullSourceRect = gameScene.GameMap.tiles[x, y].Theme switch
-                    {
-                        TileTheme.Dungeon => gameScene.GameMap.tiles[x, y].Type switch
-                        {
-                            TileType.Floor => new Rectangle(8, 86, 32, 32),
-                            TileType.Wall1 => gameScene.GameMap.tiles[x, y].DirectionMask switch
-                            {
-                                DirectionMask.North => new Rectangle(8, 0, 30, 24),
-                                DirectionMask.South => new Rectangle(8, 32, 32, 32),
-                                DirectionMask.West => new Rectangle(2, 8, 32, 24),
-                                DirectionMask.East => new Rectangle(14, 8, 32, 24),
-                                _ => gameScene.GameMap.tiles[x, y].TileShape switch
-                                {
-                                    TileShape.InnerCornerNW => new Rectangle(2, 0, 32, 32),
-                                    TileShape.InnerCornerNE => new Rectangle(16, 0, 30, 32),
-                                    TileShape.InnerCornerSW => new Rectangle(2, 32, 32, 32),
-                                    TileShape.InnerCornerSE => new Rectangle(14, 32, 32, 32),
-                                    TileShape.OuterCornerSE => new Rectangle(64, 32, 32, 32),
-                                    TileShape.StraightHorizontal => new Rectangle(2, 7, 44, 30),
-                                    TileShape.StraightVertical => new Rectangle(9, 0, 30, 78),
-                                    _ => Rectangle.Empty
-                                }
-                            },
-                            TileType.Door => new Rectangle(1, 32, 32, 32),
-                            _ => Rectangle.Empty
-                        },
-                        TileTheme.Lava => gameScene.GameMap.tiles[x, y].Type switch
-                        {
-                            TileType.Floor => gameScene.GameMap.tiles[x, y].DirectionMask switch
-                            {
-                                DirectionMask.North => new Rectangle(42, 6, 32, 32),
-                                DirectionMask.South => new Rectangle(42, 79, 32, 32),
-                                DirectionMask.West => new Rectangle(4, 49, 32, 32),
-                                DirectionMask.East => new Rectangle(66, 49, 32, 32),
-                                _ => gameScene.GameMap.tiles[x, y].TileShape switch
-                                {
-                                    TileShape.InnerCornerNW => new Rectangle(8, 6, 32, 32),
-                                    TileShape.InnerCornerNE => new Rectangle(75, 6, 32, 32),
-                                    TileShape.InnerCornerSW => new Rectangle(4, 74, 32, 32),
-                                    TileShape.InnerCornerSE => new Rectangle(71, 74, 32, 32),
-                                    _ => new Rectangle(32, 32, 32, 32)
-                                }
-                            },
-                            TileType.Wall1 => gameScene.GameMap.tiles[x, y].DirectionMask switch
-                            {
-                                DirectionMask.South => new Rectangle(42, 127, 32, 32),
-                                _ => gameScene.GameMap.tiles[x, y].TileShape switch
-                                {
-                                    TileShape.InnerCornerSW => new Rectangle(4, 127, 32, 32),
-                                    TileShape.InnerCornerSE => new Rectangle(71, 127, 32, 32),
-                                    _ => Rectangle.Empty
-                                }
-                            },
-                            _ => Rectangle.Empty
-                        },
-                        _ => Rectangle.Empty
-                    };
-
-                    if (fullSourceRect == Rectangle.Empty)
-                    {
-                        continue;
-                    }
-
-                    Rectangle destRect = new Rectangle(x * tileSize, y * tileSize, tileSize, tileSize);
-
-                    if (tileType == TileType.Wall1 || tileType == TileType.Door)
-                    {
-                        // Map “world” overlap height into texture space
-                        int overlapWorld = WallOverlapHeight;
-                        int overlapSource = (int)(overlapWorld * (fullSourceRect.Height / (float)tileSize));
-
-                        if (overlapSource <= 0 || overlapSource >= fullSourceRect.Height)
-                        {
-                            // Fallback: draw full wall in background
-                            if (backgroundOnly)
-                            {
-                                spriteBatch.Draw(
-                                    texture,
-                                    destRect,
-                                    fullSourceRect,
-                                    tile.Colors.WallTint,
-                                    0f,
-                                    Vector2.Zero,
-                                    SpriteEffects.None,
-                                    0f);
-                            }
-
-                            continue;
-                        }
-
-                        if (!backgroundOnly)
-                        {
-                            // Upper part: full wall minus bottom overlap strip
-                            Rectangle upperSource = new Rectangle(
-                                fullSourceRect.X,
-                                fullSourceRect.Y,
-                                fullSourceRect.Width,
-                                fullSourceRect.Height - overlapSource);
-
-                            Rectangle upperDest = new Rectangle(
-                                destRect.X,
-                                destRect.Y,
-                                destRect.Width,
-                                destRect.Height - overlapWorld);
-
-                            spriteBatch.Draw(
-                                texture,
-                                upperDest,
-                                upperSource,
-                                tile.Colors.WallTint,
-                                0f,
-                                Vector2.Zero,
-                                SpriteEffects.None,
-                                0f);
-                        }
-                        else
-                        {
-                            // Foreground strip: only the bottom overlap strip
-                            Rectangle lowerSource = new Rectangle(
-                                fullSourceRect.X,
-                                fullSourceRect.Bottom - overlapSource,
-                                fullSourceRect.Width,
-                                overlapSource);
-
-                            Rectangle lowerDest = new Rectangle(
-                                destRect.X,
-                                destRect.Bottom - overlapWorld,
-                                destRect.Width,
-                                overlapWorld);
-
-                            spriteBatch.Draw(
-                                texture,
-                                lowerDest,
-                                lowerSource,
-                                tile.Colors.WallTint,
-                                0f,
-                                Vector2.Zero,
-                                SpriteEffects.None,
-                                0f);
-                        }
-
-                        continue;
-                    }
-
-                    // Floors and doors: draw once in background pass
-                    if (backgroundOnly)
-                    {
-                        spriteBatch.Draw(
-                            texture,
-                            destRect,
-                            fullSourceRect,
-                            tile.Colors.FloorTint,
-                            0f,
-                            Vector2.Zero,
-                            SpriteEffects.None,
-                            0f);
-                    }
-                }
-            }
-        }
 
         private void UpdateLighting(float dt)
         {
