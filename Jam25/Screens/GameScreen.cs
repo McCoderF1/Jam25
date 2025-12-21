@@ -6,7 +6,6 @@ using Jam25.Entities;
 using Jam25.Entities.Enemies;
 using Jam25.Entities.Levels;
 using Jam25.Entities.Pickups;
-using Jam25.Graphics;
 using Jam25.Models;
 using Jam25.Scenes;
 using Jam25.Screens.UserInterface;
@@ -42,12 +41,6 @@ namespace Jam25.Screens
         private const float MUSIC_QUIET_VOLUME = 0.5f;
         private const float MUSIC_CHANGE_SPEED = 1f;
 
-        private const float TORCH_FADE_IN_SPEED = 2f;
-
-        private const float SHADOW_ALPHA_CHANGE_SPEED = 5f;
-
-        private const float SHADOW_CULL_RADIUS_PADDING = 64f;
-
         private static readonly TileColors[] levelTileColors = new TileColors[]
         {
             TileColors.Default,
@@ -71,20 +64,6 @@ namespace Jam25.Screens
         private KeyPickup key;
         private Player player;
 
-        // lighting
-        private Texture2D lightMask;
-        private Texture2D tileShadowMask;
-        private int lightMaskSize = 1024;
-        private bool debugLightingDisabled = false;
-
-        // Torch flicker
-        private readonly Random flickerRandom = new Random();
-        private float flickerTimer;
-        private float currentFlicker = 1f;
-        private const float FlickerFrequency = 1.5f;
-        private const float FlickerStrength = 0.05f;
-
-        private float torchFadeIn;
 
         private int mapWidth = 80;
         private int mapHeight = 42;
@@ -101,10 +80,6 @@ namespace Jam25.Screens
         private const int tileSize = 32;
         private PhysicsWorld physicsWorld;
 
-        private TileVisibility[,] visibleTiles;
-        private float[,] tileShadowTransparency; // 0 = full shadow, 1 = no shadow
-        private int rayCount = 360;
-        private float rayStep = 8f;
         private SpriteFont font;
         private GameUserInterface gameUI;
         private readonly Random spawnRandom = new Random();
@@ -140,9 +115,9 @@ namespace Jam25.Screens
         // Mini-map
         private bool[,] visitedTiles;
 
-
-        private IDungeonRenderer dungeonRenderer;
-        private NavigationOverlay navigationOverlay;
+        private readonly IDungeonRenderer dungeonRenderer;
+        private readonly NavigationOverlay navigationOverlay;
+        private readonly TorchLightingSystem torchLightingSystem;
 
         #endregion
 
@@ -224,10 +199,6 @@ namespace Jam25.Screens
             player = new Player(spriteBatch);
             player.Initalise(content, graphicsDevice);
 
-            visibleTiles = new TileVisibility[mapWidth, mapHeight];
-            tileShadowTransparency = new float[mapWidth, mapHeight];
-            visitedTiles = new bool[mapWidth, mapHeight];
-
             key = new KeyPickup(keyTexture);
 
             var dungeonLevel = new Dungeon(mapWidth, mapHeight, player, key);
@@ -240,8 +211,11 @@ namespace Jam25.Screens
 
             key.PickedUp += (_, _) => gameUI.CollectedItems.Add(new CollectedItem(key.Sprite.Texture, "Key"));
 
-            lightMask = LightMaskFactory.CreateRadialMask(graphicsDevice, lightMaskSize);
-            tileShadowMask = LightMaskFactory.CreateTileShadowMask(graphicsDevice, 64);
+            torchLightingSystem = new TorchLightingSystem(
+                graphicsDevice,
+                mapWidth,
+                mapHeight,
+                tileSize);
 
             this.LevelCompleted += (_, _) =>
             {
@@ -326,13 +300,13 @@ namespace Jam25.Screens
 
             DrawDebugCollision();
 
-            DrawLighting();
+            torchLightingSystem.Draw(spriteBatch, CameraPosition, player.Body.Position, gameScene.GameMap, game.Torch);
 
             // Draw enemy health bars
             for (int i = 0; i < sortedEnemies.Count; i++)
             {
                 var enemy = sortedEnemies[i];
-                if (TryGetTileCoords(enemy.Body.Position, out int tileX, out int tileY) && visibleTiles[tileX, tileY] != TileVisibility.Hidden)
+                if (TryGetTileCoords(enemy.Body.Position, out int tileX, out int tileY) && torchLightingSystem.VisibleTiles[tileX, tileY] != TileVisibility.Hidden)
                 {
                     enemy.CurrentSprite.DrawHealthBar(spriteBatch, enemy.Body.Position, whitePixelTexture, enemy.Health);
                 }
@@ -358,7 +332,7 @@ namespace Jam25.Screens
             navigationOverlay.DrawDirectionIndicator(spriteBatch, gameScene.GameMap, CameraPosition, player.Body.Position, key);
 
             gameUI?.Draw();
-            navigationOverlay.DrawMiniMap(spriteBatch, gameScene.GameMap, visitedTiles, player.Body.Position, key);
+            navigationOverlay.DrawMiniMap(spriteBatch, gameScene.GameMap, torchLightingSystem.VisitedTiles, player.Body.Position, key);
         }
 
         public void Hide()
@@ -391,7 +365,7 @@ namespace Jam25.Screens
 
             BuildWorld(CurrentLevelType);
 
-            debugLightingDisabled = (CurrentLevelType == LevelType.Lava);
+            torchLightingSystem.DebugLightingDisabled = (CurrentLevelType == LevelType.Lava);
 
             if (gameUI is GameUserInterface gui)
             {
@@ -528,15 +502,13 @@ namespace Jam25.Screens
             if (KeyboardInput.HasBeenPressed(Keys.P))
             {
                 Player.DebugInvincibleMode = !Player.DebugInvincibleMode;
-                debugLightingDisabled = Player.DebugInvincibleMode;
+                torchLightingSystem.DebugLightingDisabled = Player.DebugInvincibleMode;
             }
 
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-            flickerTimer += dt;
 
             MovePlayer(gameTime);
             gameScene.Update(gameTime);
-
 
             Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
 
@@ -547,12 +519,6 @@ namespace Jam25.Screens
 
             CameraPosition.X = MathHelper.Clamp(targetCameraPosition.X, cameraMinX, cameraMaxX);
             CameraPosition.Y = MathHelper.Clamp(targetCameraPosition.Y, cameraMinY, cameraMaxY);
-
-            float sine = (float)Math.Sin(flickerTimer * MathHelper.TwoPi * FlickerFrequency);
-            float noise = (float)(flickerRandom.NextDouble() * 2.0 - 1.0);
-            float combined = sine * 0.7f + noise * 0.3f;
-            float raw = 1f + combined * FlickerStrength;
-            currentFlicker = MathHelper.Clamp(raw, 1f - FlickerStrength, 1f + FlickerStrength);
 
             if (CurrentLevelType == LevelType.Lava)
             {
@@ -596,9 +562,8 @@ namespace Jam25.Screens
 
             gameUI.UpdateWithVector(gameTime, CameraPosition);
 
-            torchFadeIn = Math.Min(torchFadeIn + TORCH_FADE_IN_SPEED * dt, 1f);
+            torchLightingSystem.Update(gameTime, player.Body.Position, game.Torch, gameScene.GameMap, player);
 
-            UpdateLighting(dt);
 
             float targetMusicVolume = MUSIC_STANDARD_VOLUME;
             // Make music quieter when buffs are active
@@ -606,7 +571,7 @@ namespace Jam25.Screens
             {
                 targetMusicVolume = MUSIC_QUIET_VOLUME;
             }
-            MediaPlayer.Volume = StepTowards(MediaPlayer.Volume, targetMusicVolume, MUSIC_CHANGE_SPEED * dt);
+            MediaPlayer.Volume = torchLightingSystem.StepTowards(MediaPlayer.Volume, targetMusicVolume, MUSIC_CHANGE_SPEED * dt);
         }
 
         #region private methods
@@ -869,230 +834,6 @@ namespace Jam25.Screens
         }
 
 
-        private void UpdateLighting(float dt)
-        {
-            Array.Clear(visibleTiles, 0, visibleTiles.Length);
-
-            float radius = GetTorchRadius();
-            Vector2 lightCenter = player.Body.Position;
-
-            float tileRadius = radius / tileSize + SHADOW_CULL_RADIUS_PADDING;
-            float maxDistanceSq = tileRadius * tileRadius;
-            Vector2 playerTile = lightCenter / tileSize;
-
-            for (int i = 0; i < rayCount; i++)
-            {
-                float angle = MathHelper.ToRadians(i * (360f / rayCount));
-                Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
-
-                Vector2 pos = lightCenter;
-                float traveled = 0f;
-
-                var rayVisibility = TileVisibility.Full;
-
-                while (traveled <= radius)
-                {
-                    pos += dir * rayStep;
-                    traveled += rayStep;
-
-                    if (!TryGetTileCoords(pos, out int tx, out int ty))
-                        break;
-
-                    Vector2 tileCenter = new Vector2(tx + 0.5f, ty + 0.5f);
-                    if (Vector2.DistanceSquared(tileCenter, playerTile) > maxDistanceSq)
-                        break;
-
-                    TileType tile = gameScene.GameMap.tiles[tx, ty].Type;
-
-                    if (tile == TileType.Floor)
-                    {
-                        SetTileVisibility(tx, ty, rayVisibility);
-
-                        // Check tiles around floor for walls/doors to mark as visible.
-                        for (int ox = -1; ox <= 1; ox++)
-                        {
-                            for (int oy = -1; oy <= 1; oy++)
-                            {
-                                int checkX = tx + ox;
-                                int checkY = ty + oy;
-                                if (checkX < 0 || checkX >= mapWidth || checkY < 0 || checkY >= mapHeight)
-                                    continue;
-                                TileType adjacentTile = gameScene.GameMap.tiles[checkX, checkY].Type;
-                                SetTileVisibility(checkX, checkY, rayVisibility);
-                            }
-                        }
-                    }
-
-                    if (tile == TileType.Wall1 || tile == TileType.Door)
-                    {
-                        SetTileVisibility(tx, ty, rayVisibility);
-
-                        if (player.SeeThroughWallsTimer > 0f)
-                        {
-                            // Continue raymarch with partial visibility
-                            rayVisibility = TileVisibility.Partial;
-                        }
-                        else
-                        {
-                            // Finish raymarch
-                            break;
-                        }
-                    }
-                }
-            }
-
-            for (int y = 0; y < mapHeight; y++)
-            {
-                for (int x = 0; x < mapWidth; x++)
-                {
-                    float targetTransparency = visibleTiles[x, y] switch {
-                        TileVisibility.Hidden => 0f,
-                        TileVisibility.Partial => 0.9f,
-                        TileVisibility.Full => 1f,
-                    };
-                    
-                    float changeSpeed = SHADOW_ALPHA_CHANGE_SPEED * dt;
-                    if (player.SeeThroughWallsTimer > 0f)
-                    {
-                        changeSpeed *= 0.2f;
-                    }
-
-                    tileShadowTransparency[x, y] = StepTowards(tileShadowTransparency[x, y], targetTransparency, changeSpeed);
-                }
-            }
-
-            // Mark tiles we can currently see as permanently visited (for minimap)
-            for (int y = 0; y < mapHeight; y++)
-            {
-                for (int x = 0; x < mapWidth; x++)
-                {
-                    if (visibleTiles[x, y] != TileVisibility.Hidden)
-                    {
-                        visitedTiles[x, y] = true;
-                    }
-                }
-            }
-        }
-
-        private void SetTileVisibility(int tileX, int tileY, TileVisibility visibility)
-        {
-            // Only update if new visibility is greater than existing
-            if ((int)visibility > (int)visibleTiles[tileX, tileY])
-            {
-                visibleTiles[tileX, tileY] = visibility;
-            }
-        }
-
-        // step should be positive, fromValue and toValue can be anything
-        private float StepTowards(float fromValue, float toValue, float step)
-        {
-            if (fromValue < toValue - step)
-                return fromValue + step;
-            if (fromValue > toValue + step)
-                return fromValue - step;
-            return toValue;
-        }
-
-        private void DrawLighting()
-        {
-            if (debugLightingDisabled)
-            {
-                return;
-            }
-
-            if (lightMask == null || game.Torch == null || game.UiWhitePixel == null)
-            {
-                return;
-            }
-
-            var viewport = graphicsDevice.Viewport;
-            float radius = GetTorchRadius();
-
-            var screenInWorld = new Rectangle(
-                (int)CameraPosition.X,
-                (int)CameraPosition.Y,
-                viewport.Width,
-                viewport.Height);
-
-            Vector2 lightCenter = player.Body.Position;
-
-            if (radius <= 0f)
-            {
-                spriteBatch.Draw(game.UiWhitePixel, screenInWorld, Color.Black * 0.99f);
-                return;
-            }
-
-            spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, null, null, null, Matrix.CreateTranslation(new Vector3(-CameraPosition, 0f)));
-
-            float baseRadius = lightMaskSize / 2f;
-            float scale = radius / baseRadius;
-            int maskSize = (int)(lightMaskSize * scale);
-
-            var destRect = new Rectangle(
-                (int)(lightCenter.X - maskSize / 2f),
-                (int)(lightCenter.Y - maskSize / 2f),
-                maskSize,
-                maskSize);
-
-            spriteBatch.Draw(lightMask, destRect, Color.White);
-
-            if (destRect.Top > screenInWorld.Top)
-                spriteBatch.Draw(game.UiWhitePixel, new Rectangle(screenInWorld.X, screenInWorld.Y, screenInWorld.Width, destRect.Top - screenInWorld.Top), Color.Black);
-            if (destRect.Bottom < screenInWorld.Bottom)
-                spriteBatch.Draw(game.UiWhitePixel, new Rectangle(screenInWorld.X, destRect.Bottom, screenInWorld.Width, screenInWorld.Bottom - destRect.Bottom), Color.Black);
-            if (destRect.Left > screenInWorld.Left)
-                spriteBatch.Draw(game.UiWhitePixel, new Rectangle(screenInWorld.X, destRect.Top, destRect.Left - screenInWorld.Left, destRect.Height), Color.Black);
-            if (destRect.Right < screenInWorld.Right)
-                spriteBatch.Draw(game.UiWhitePixel, new Rectangle(destRect.Right, destRect.Top, screenInWorld.Right - destRect.Right, destRect.Height), Color.Black);
-
-            int shadowSize = (int)(tileSize * 0.8f);
-
-            for (int x = 0; x < mapWidth; x++)
-            {
-                for (int y = 0; y < mapHeight; y++)
-                {
-                    var tileWorldRect = new Rectangle(x * tileSize, y * tileSize, tileSize, tileSize);
-                    if (!destRect.Intersects(tileWorldRect))
-                        continue;
-
-                    TileType tileType = gameScene.GameMap.tiles[x, y].Type;
-                    //if (tileType == TileType.Wall1 || tileType == TileType.Door)
-                    //    continue;
-
-                    Vector2 tileCenterWorld = new Vector2(x * tileSize + tileSize / 2f, y * tileSize + tileSize / 2f);
-                    float distToLight = Vector2.Distance(tileCenterWorld, lightCenter);
-
-                    if (distToLight > radius + SHADOW_CULL_RADIUS_PADDING)
-                        continue;
-
-                    int circlesPerRow = 3;
-                    float spacing = tileSize / (float)circlesPerRow;
-
-                    for (int cx = 0; cx < circlesPerRow; cx++)
-                    {
-                        for (int cy = 0; cy < circlesPerRow; cy++)
-                        {
-                            int drawX = (int)(x * tileSize + cx * spacing + spacing / 2 - shadowSize / 2);
-                            int drawY = (int)(y * tileSize + cy * spacing + spacing / 2 - shadowSize / 2);
-
-                            var shadowRect = new Rectangle(drawX, drawY, shadowSize, shadowSize);
-                            float alpha = 1f - tileShadowTransparency[x, y];
-                            spriteBatch.Draw(tileShadowMask, shadowRect, Color.White * alpha);
-                        }
-                    }
-                }
-            }
-
-            spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, Matrix.CreateTranslation(new Vector3(-CameraPosition, 0f)));
-        }
-
-        private float GetTorchRadius()
-        {
-            return game.Torch.CurrentRadius * currentFlicker * torchFadeIn;
-        }
-
         private bool TryGetTileCoords(Vector2 worldPos, out int tileX, out int tileY)
         {
             tileX = (int)(worldPos.X / tileSize);
@@ -1109,7 +850,7 @@ namespace Jam25.Screens
             ResetWorld();
             BuildWorld(levelType);
 
-            debugLightingDisabled = (levelType == LevelType.Lava);
+            torchLightingSystem.DebugLightingDisabled = (levelType == LevelType.Lava);
 
             return;
         }
@@ -1133,11 +874,8 @@ namespace Jam25.Screens
 
             game.Torch.Reset();
 
-            torchFadeIn = 0f;
+            torchLightingSystem.Reset();
 
-            Array.Clear(visibleTiles, 0, visibleTiles.Length);
-            Array.Clear(tileShadowTransparency, 0, tileShadowTransparency.Length);
-            Array.Clear(visitedTiles, 0, visitedTiles.Length);
         }
 
         private void BuildWorld(LevelType levelType)
