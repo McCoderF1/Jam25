@@ -112,12 +112,10 @@ namespace Jam25.Screens
 
         private LevelType CurrentLevelType = LevelType.Dungeon;
 
-        // Mini-map
-        private bool[,] visitedTiles;
-
         private readonly IDungeonRenderer dungeonRenderer;
         private readonly NavigationOverlay navigationOverlay;
         private readonly TorchLightingSystem torchLightingSystem;
+        private readonly PlayerMovementController playerMovementController;
 
         #endregion
 
@@ -235,6 +233,14 @@ namespace Jam25.Screens
                 graphicsDevice,
                 whitePixelTexture,
                 font,
+                mapWidth,
+                mapHeight,
+                tileSize);
+
+            playerMovementController = new PlayerMovementController(
+                gameScene,
+                gameUI,
+                key,
                 mapWidth,
                 mapHeight,
                 tileSize);
@@ -507,7 +513,10 @@ namespace Jam25.Screens
 
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            MovePlayer(gameTime);
+            bool levelComplete = playerMovementController.MovePlayer(gameTime, player);
+            if(levelComplete)
+                LevelCompleted?.Invoke(this, EventArgs.Empty);
+
             gameScene.Update(gameTime);
 
             Vector2 targetCameraPosition = player.Body.Position - new Vector2(game.GraphicsDevice.Viewport.Width / 2, game.GraphicsDevice.Viewport.Height / 2);
@@ -651,188 +660,6 @@ namespace Jam25.Screens
 
             return Vector2.Multiply(pos, tileSize);
         }
-
-        private void MovePlayer(GameTime gameTime)
-        {
-            KeyboardInput.GetInput();
-            KeyboardState keyboardState = Keyboard.GetState();
-            Vector2? probableTargetPosition = player.Update(gameTime, keyboardState);
-
-            if (probableTargetPosition is not null)
-            {
-                Vector2 currentPos = player.Body.Position;
-                Vector2 targetPos = probableTargetPosition.Value;
-                Vector2 delta = targetPos - currentPos;
-
-                // 1) Try move along X
-                if (delta.X != 0f)
-                {
-
-                    Vector2 testPosX = currentPos + new Vector2(delta.X, 0f);
-
-                    Rectangle rectX = new Rectangle(
-                        (int)(testPosX.X - PlayerColliderHalfWidth),
-                        (int)(testPosX.Y - PlayerColliderHalfHeight),
-                        PlayerColliderHalfWidth * 2,
-                        PlayerColliderHalfHeight * 2);
-
-                    if (CanMoveTo(rectX))
-                    {
-                        currentPos = testPosX;
-                    }
-                }
-
-                // 2) Then try move along Y from updated X position
-                if (delta.Y != 0f)
-                {
-                    Vector2 testPosY = currentPos + new Vector2(0f, delta.Y);
-
-                    Rectangle rectY = new Rectangle(
-                        (int)(testPosY.X - PlayerColliderHalfWidth),
-                        (int)(testPosY.Y - PlayerColliderHalfHeight),
-                        PlayerColliderHalfWidth * 2,
-                        PlayerColliderHalfHeight * 2);
-
-                    if (CanMoveTo(rectY))
-                    {
-                        currentPos = testPosY;
-                    }
-                }
-
-                // After axis-resolved movement, did we move at all?
-                if (currentPos != player.Body.Position)
-                {
-                    // After axis-resolved movement, did we move at all?
-                    if (currentPos != player.Body.Position)
-                    {
-                        // First resolve soft collisions with enemies
-                        Vector2 resolvedPos = ResolvePlayerEnemyCollisions(currentPos);
-                        player.Body.Position = resolvedPos;
-
-                        Rectangle playerRect = new Rectangle(
-                            (int)(resolvedPos.X - PlayerColliderHalfWidth),
-                            (int)(resolvedPos.Y - PlayerColliderHalfHeight),
-                            PlayerColliderHalfWidth * 2,
-                            PlayerColliderHalfHeight * 2);
-
-                        CollectedItem key = gameUI.CollectedItems.Where(item => item.Name == "Key").FirstOrDefault();
-
-                        if (IsOverDoor(playerRect) && key.Name != null)
-                        {
-                            if (gameUI.CollectedItems.Contains(key))
-                                gameUI.CollectedItems.Remove(key);
-
-                            player.MoveSpeed = 0f;
-                            LevelCompleted?.Invoke(this, EventArgs.Empty);
-                        }
-
-                        foreach (IPickup pickup in gameScene.Pickups)
-                        {
-                            if (Vector2.Distance(pickup.Sprite.Position, Vector2.Subtract(player.Body.Position, new Vector2(tileSize / 2, tileSize / 2))) < tileSize)
-                            {
-                                pickup.Collect(player);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        private bool AnyKey()
-        {
-            return gameUI.CollectedItems.Where(item => item.Name == "Key").Any();
-        }
-
-        private bool CanMoveTo(Rectangle playerRect)
-        {
-            // Convert world rect to tile indices
-            int minTileX = Math.Max(0, playerRect.Left / tileSize);
-            int maxTileX = Math.Min(mapWidth - 1, playerRect.Right / tileSize);
-            int minTileY = Math.Max(0, playerRect.Top / tileSize);
-            int maxTileY = Math.Min(mapHeight - 1, playerRect.Bottom / tileSize);
-
-            for (int tx = minTileX; tx <= maxTileX; tx++)
-            {
-                for (int ty = minTileY; ty <= maxTileY; ty++)
-                {
-                    TileType type = gameScene.GameMap.tiles[tx, ty].Type;
-
-                    // Block movement on walls always
-                    if (type == TileType.Wall1 || type == TileType.Empty)
-                    {
-                        return false;
-                    }
-
-                    // Doors only block if you don't have the key; allow floor always
-                    if (type == TileType.Door && !AnyKey())
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-
-
-        private const int EnemyColliderHalfWidth = 8;
-        private const int EnemyColliderHalfHeight = 8;
-
-        /// <summary>
-        /// Resolves collisions between the player and enemies without pushing:
-        /// - If the desired position would overlap an enemy, the move is rejected.
-        /// - Enemies are never moved.
-        /// </summary>
-        private Vector2 ResolvePlayerEnemyCollisions(Vector2 desiredPlayerPos)
-        {
-            // Rectangle at the desired position
-            Rectangle desiredPlayerRect = new Rectangle(
-                (int)(desiredPlayerPos.X - PlayerColliderHalfWidth),
-                (int)(desiredPlayerPos.Y - PlayerColliderHalfHeight),
-                PlayerColliderHalfWidth * 2,
-                PlayerColliderHalfHeight * 2);
-
-            foreach (var enemy in gameScene.Enemies)
-            {
-                Rectangle enemyRect = new Rectangle(
-                    (int)(enemy.Body.Position.X - EnemyColliderHalfWidth),
-                    (int)(enemy.Body.Position.Y - EnemyColliderHalfHeight),
-                    EnemyColliderHalfWidth * 2,
-                    EnemyColliderHalfHeight * 2);
-
-                if (desiredPlayerRect.Intersects(enemyRect))
-                {
-                    // Reject movement into enemy: stay at current position
-                    return player.Body.Position;
-                }
-            }
-
-            // No enemy collision: accept desired position
-            return desiredPlayerPos;
-        }
-
-
-        private bool IsOverDoor(Rectangle playerRect)
-        {
-            int minTileX = Math.Max(0, playerRect.Left / tileSize);
-            int maxTileX = Math.Min(mapWidth - 1, playerRect.Right / tileSize);
-            int minTileY = Math.Max(0, playerRect.Top / tileSize);
-            int maxTileY = Math.Min(mapHeight - 1, playerRect.Bottom / tileSize);
-
-            for (int tx = minTileX; tx <= maxTileX; tx++)
-            {
-                for (int ty = minTileY; ty <= maxTileY; ty++)
-                {
-                    if (gameScene.GameMap.tiles[tx, ty].Type == TileType.Door)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
 
         private bool TryGetTileCoords(Vector2 worldPos, out int tileX, out int tileY)
         {
